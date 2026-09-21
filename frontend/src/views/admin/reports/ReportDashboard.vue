@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import api from '@/api/client'
+import { useToast } from '@/composables/useToast'
 
+const toast = useToast()
 const now = new Date()
 const q = reactive({ period: 'month', year: now.getFullYear(), month: now.getMonth() + 1 })
 const summary = ref<any>(null)
@@ -11,16 +13,20 @@ const invoice = ref<any>(null)
 
 async function load() {
   const params = { ...q }
-  const [s, c, p, i] = await Promise.all([
-    api.get('/admin/reports/summary', { params }),
-    api.get('/admin/reports/by-category', { params }),
-    api.get('/admin/reports/payment-status', { params }),
-    api.get('/admin/reports/invoice-tax', { params }),
-  ])
-  summary.value = s.data
-  byCategory.value = c.data
-  payment.value = p.data
-  invoice.value = i.data
+  try {
+    const [s, c, p, i] = await Promise.all([
+      api.get('/admin/reports/summary', { params }),
+      api.get('/admin/reports/by-category', { params }),
+      api.get('/admin/reports/payment-status', { params }),
+      api.get('/admin/reports/invoice-tax', { params }),
+    ])
+    summary.value = s.data
+    byCategory.value = c.data
+    payment.value = p.data
+    invoice.value = i.data
+  } catch (e: any) {
+    toast.error(e.response?.data?.detail?.detail || e.response?.data?.detail || '报表加载失败')
+  }
 }
 onMounted(load)
 
@@ -32,6 +38,21 @@ function exportUrl(format: string) {
     ...(q.period === 'month' ? { month: String(q.month) } : {}),
   })
   return `/ext/api/v1/admin/reports/export?${sp}`
+}
+
+function doExport(format: string) {
+  try {
+    const url = exportUrl(format)
+    const a = document.createElement('a')
+    a.href = url
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    toast.success(format === 'xlsx' ? '已开始导出 Excel' : '已开始导出 CSV')
+  } catch {
+    toast.error('导出失败，请重试')
+  }
 }
 </script>
 
@@ -45,9 +66,9 @@ function exportUrl(format: string) {
       </select>
       <input v-model.number="q.year" type="number" class="input w-24" />
       <input v-if="q.period==='month'" v-model.number="q.month" type="number" min="1" max="12" class="input w-16" />
-      <button class="btn-primary" @click="load">查询</button>
-      <a class="btn-secondary" :href="exportUrl('csv')">导出 CSV</a>
-      <a class="btn-secondary" :href="exportUrl('xlsx')">导出 Excel</a>
+      <button type="button" class="btn-primary" @click="load">查询</button>
+      <button type="button" class="btn-secondary" @click="doExport('csv')">导出 CSV</button>
+      <button type="button" class="btn-secondary" @click="doExport('xlsx')">导出 Excel</button>
     </div>
 
     <div v-if="summary" class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -79,6 +100,7 @@ function exportUrl(format: string) {
           </tr>
         </tbody>
       </table></div>
+      <p v-if="!byCategory.length" class="text-sm muted mt-2">当前周期暂无分类数据</p>
     </div>
 
     <div v-if="invoice" class="card p-4 text-sm grid grid-cols-2 gap-4">
@@ -91,6 +113,6 @@ function exportUrl(format: string) {
         <p>金额 {{ invoice.without_invoice.amount }}</p>
       </div>
     </div>
-    <p class="text-xs muted">V1 不含分红与自动报税。</p>
+    <p class="text-xs muted">V1 不含折旧与自动报税。</p>
   </div>
 </template>

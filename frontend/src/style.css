@@ -341,4 +341,29 @@
   .muted {
     color: var(--ops-muted);
   }
+
+  .file-picker {
+    @apply inline-flex items-center gap-2 max-w-full cursor-pointer;
+    border-radius: var(--ops-radius);
+    border: 1px solid var(--ops-border);
+    background-color: var(--ops-bg);
+    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  }
+  .file-picker:hover {
+    border-color: #475569;
+  }
+  .file-picker-btn {
+    @apply shrink-0 px-2.5 py-1 text-xs font-medium;
+    border-radius: 6px;
+    background-color: #334155;
+    color: var(--ops-text);
+  }
+  .file-picker:hover .file-picker-btn {
+    background-color: #475569;
+  }
+  .file-picker-name {
+    @apply text-xs truncate;
+    color: var(--ops-muted);
+    max-width: 14rem;
+  }
 }

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute, RouterLink, RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import ToastHost from '@/components/ToastHost.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -52,5 +53,6 @@ const embedded = computed(() => document.cookie.includes('ops_ui_mode=embedded')
     <main class="flex-1 p-4 max-w-6xl w-full mx-auto">
       <RouterView :key="route.fullPath" />
     </main>
+    <ToastHost />
   </div>
 </template>
