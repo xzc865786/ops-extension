@@ -46,47 +46,47 @@ async function toggleCenter(c: any) {
 
 <template>
   <div>
-    <h1 class="text-xl font-semibold mb-4">主数据（供应商 / 成本中心 / 付款账户）</h1>
+    <h1 class="page-title mb-4">主数据（供应商 / 成本中心 / 付款账户）</h1>
     <div class="flex gap-2 mb-4 text-sm">
-      <button class="px-3 py-1 rounded border" :class="tab==='suppliers'?'bg-sky-600 text-white':''" @click="tab='suppliers'">供应商</button>
-      <button class="px-3 py-1 rounded border" :class="tab==='centers'?'bg-sky-600 text-white':''" @click="tab='centers'">成本中心</button>
-      <button class="px-3 py-1 rounded border" :class="tab==='accounts'?'bg-sky-600 text-white':''" @click="tab='accounts'">付款账户</button>
+      <button class="tab" :class="tab==='suppliers' ? 'tab-active' : ''" @click="tab='suppliers'">供应商</button>
+      <button class="tab" :class="tab==='centers' ? 'tab-active' : ''" @click="tab='centers'">成本中心</button>
+      <button class="tab" :class="tab==='accounts' ? 'tab-active' : ''" @click="tab='accounts'">付款账户</button>
     </div>
 
-    <div v-if="tab==='suppliers'" class="bg-white rounded shadow p-4 space-y-3">
+    <div v-if="tab==='suppliers'" class="card p-4 space-y-3">
       <div class="flex gap-2 text-sm">
-        <input v-model="sForm.name" class="border rounded px-2 py-1" placeholder="名称" />
-        <input v-model="sForm.supplier_type" class="border rounded px-2 py-1" placeholder="类型" />
-        <button class="bg-sky-600 text-white px-3 py-1 rounded" @click="addSupplier">新增</button>
+        <input v-model="sForm.name" class="input" placeholder="名称" />
+        <input v-model="sForm.supplier_type" class="input" placeholder="类型" />
+        <button class="btn-primary px-3 py-1 rounded" @click="addSupplier">新增</button>
       </div>
       <ul class="text-sm divide-y">
-        <li v-for="s in suppliers" :key="s.id" class="py-2">{{ s.name }} <span class="text-slate-400">{{ s.supplier_type }}</span></li>
+        <li v-for="s in suppliers" :key="s.id" class="py-2">{{ s.name }} <span class="muted">{{ s.supplier_type }}</span></li>
       </ul>
     </div>
 
-    <div v-if="tab==='centers'" class="bg-white rounded shadow p-4 space-y-3">
+    <div v-if="tab==='centers'" class="card p-4 space-y-3">
       <div class="flex gap-2 text-sm">
-        <input v-model="cForm.code" class="border rounded px-2 py-1" placeholder="CODE" />
-        <input v-model="cForm.name" class="border rounded px-2 py-1" placeholder="名称" />
-        <button class="bg-sky-600 text-white px-3 py-1 rounded" @click="addCenter">新增</button>
+        <input v-model="cForm.code" class="input" placeholder="CODE" />
+        <input v-model="cForm.name" class="input" placeholder="名称" />
+        <button class="btn-primary px-3 py-1 rounded" @click="addCenter">新增</button>
       </div>
       <ul class="text-sm divide-y">
         <li v-for="c in centers" :key="c.id" class="py-2 flex justify-between">
           <span>{{ c.code }} — {{ c.name }}</span>
-          <button class="text-sky-700" @click="toggleCenter(c)">{{ c.enabled ? '禁用' : '启用' }}</button>
+          <button class="link" @click="toggleCenter(c)">{{ c.enabled ? '禁用' : '启用' }}</button>
         </li>
       </ul>
     </div>
 
-    <div v-if="tab==='accounts'" class="bg-white rounded shadow p-4 space-y-3">
+    <div v-if="tab==='accounts'" class="card p-4 space-y-3">
       <div class="flex flex-wrap gap-2 text-sm">
-        <input v-model="aForm.name" class="border rounded px-2 py-1" placeholder="账户名" />
-        <select v-model="aForm.account_type" class="border rounded px-2 py-1">
+        <input v-model="aForm.name" class="input" placeholder="账户名" />
+        <select v-model="aForm.account_type" class="input">
           <option>COMPANY_BANK</option><option>ALIPAY</option><option>WECHAT</option>
           <option>PERSONAL_BANK</option><option>OTHER</option>
         </select>
-        <input v-model="aForm.account_no_masked" class="border rounded px-2 py-1" placeholder="脱敏账号" />
-        <button class="bg-sky-600 text-white px-3 py-1 rounded" @click="addAccount">新增</button>
+        <input v-model="aForm.account_no_masked" class="input" placeholder="脱敏账号" />
+        <button class="btn-primary px-3 py-1 rounded" @click="addAccount">新增</button>
       </div>
       <ul class="text-sm divide-y">
         <li v-for="a in accounts" :key="a.id" class="py-2">{{ a.name }} · {{ a.account_type }} · {{ a.account_no_masked }}</li>

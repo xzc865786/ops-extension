@@ -36,22 +36,22 @@ const tabs = [
 
 <template>
   <div>
-    <h1 class="text-xl font-semibold mb-4">工单管理</h1>
+    <h1 class="page-title mb-4">工单管理</h1>
     <div class="flex flex-wrap gap-2 mb-3 text-sm">
       <button
         v-for="t in tabs"
         :key="t.id"
-        class="px-3 py-1 rounded border"
-        :class="tab === t.id ? 'bg-sky-600 text-white border-sky-600' : 'bg-white'"
+        class="tab"
+        :class="tab === t.id ? 'tab-active' : ''"
         @click="tab = t.id; load()"
       >{{ t.label }}</button>
     </div>
     <div class="mb-3 flex gap-2">
-      <input v-model="keyword" class="border rounded px-2 py-1 text-sm" placeholder="搜索单号/标题" @keyup.enter="load" />
-      <button class="border px-2 py-1 rounded text-sm" @click="load">搜索</button>
+      <input v-model="keyword" class="input" placeholder="搜索单号/标题" @keyup.enter="load" />
+      <button class="btn-secondary btn-sm" @click="load">搜索</button>
     </div>
-    <table class="w-full bg-white shadow rounded text-sm">
-      <thead class="bg-slate-100 text-left">
+    <div class="table-wrap"><table class="table">
+      <thead class="text-left">
         <tr>
           <th class="p-2">单号</th>
           <th class="p-2">标题</th>
@@ -64,7 +64,7 @@ const tabs = [
       <tbody>
         <tr v-for="t in items" :key="t.id" class="border-t">
           <td class="p-2">
-            <RouterLink class="text-sky-700" :to="`/admin/tickets/${t.id}`">{{ t.ticket_no }}</RouterLink>
+            <RouterLink class="link" :to="`/admin/tickets/${t.id}`">{{ t.ticket_no }}</RouterLink>
           </td>
           <td class="p-2">{{ t.title }}</td>
           <td class="p-2">{{ t.priority }}</td>
@@ -73,6 +73,6 @@ const tabs = [
           <td class="p-2">{{ t.created_at }}</td>
         </tr>
       </tbody>
-    </table>
+    </table></div>
   </div>
 </template>

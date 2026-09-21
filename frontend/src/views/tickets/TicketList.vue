@@ -28,22 +28,22 @@ const statusLabel: Record<string, string> = {
 <template>
   <div>
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-xl font-semibold">我的工单</h1>
+      <h1 class="page-title">我的工单</h1>
       <RouterLink
         to="/tickets/new"
-        class="bg-sky-600 text-white px-3 py-1.5 rounded text-sm hover:bg-sky-700"
+        class="btn-primary"
       >新建工单</RouterLink>
     </div>
     <div class="mb-3 flex gap-2 items-center text-sm">
       <label>状态</label>
-      <select v-model="status" class="border rounded px-2 py-1" @change="load">
+      <select v-model="status" class="input" @change="load">
         <option value="">全部</option>
         <option v-for="(l, k) in statusLabel" :key="k" :value="k">{{ l }}</option>
       </select>
     </div>
-    <div v-if="loading" class="text-slate-500">加载中…</div>
-    <table v-else class="w-full bg-white shadow rounded overflow-hidden text-sm">
-      <thead class="bg-slate-100 text-left">
+    <div v-if="loading" class="muted">加载中…</div>
+    <div v-else class="table-wrap"><table class="table">
+      <thead class="text-left">
         <tr>
           <th class="p-2">单号</th>
           <th class="p-2">标题</th>
@@ -54,9 +54,9 @@ const statusLabel: Record<string, string> = {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="t in items" :key="t.id" class="border-t hover:bg-slate-50">
+        <tr v-for="t in items" :key="t.id" class="border-t hover:bg-dark-700/40">
           <td class="p-2">
-            <RouterLink class="text-sky-700" :to="`/tickets/${t.id}`">{{ t.ticket_no }}</RouterLink>
+            <RouterLink class="link" :to="`/tickets/${t.id}`">{{ t.ticket_no }}</RouterLink>
           </td>
           <td class="p-2">{{ t.title }}</td>
           <td class="p-2">{{ t.category }}</td>
@@ -64,8 +64,8 @@ const statusLabel: Record<string, string> = {
           <td class="p-2">{{ statusLabel[t.status] || t.status }}</td>
           <td class="p-2">{{ t.created_at }}</td>
         </tr>
-        <tr v-if="!items.length"><td colspan="6" class="p-4 text-center text-slate-400">暂无工单</td></tr>
+        <tr v-if="!items.length"><td colspan="6" class="p-4 text-center muted">暂无工单</td></tr>
       </tbody>
-    </table>
+    </table></div>
   </div>
 </template>
