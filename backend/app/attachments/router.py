@@ -19,7 +19,13 @@ def download_attachment(
     db: Session = Depends(get_db),
     user: CurrentUser = Depends(require_login),
 ):
-    """Download ticket or expense attachment after authz. Prefer short-lived presigned URL."""
+    """Download ticket or expense attachment after authz.
+
+    Default: stream bytes through this authenticated API (works with compose-internal MinIO).
+    Optional: if MINIO_PUBLIC_ENDPOINT / MINIO_PUBLIC_URL is set, redirect to a short-lived
+    presigned URL signed against that browser-reachable host. Never redirect to the internal
+    compose hostname alone.
+    """
     if source == "expense":
         if not user.is_admin:
             raise forbidden()
@@ -42,14 +48,14 @@ def download_attachment(
         filename = att.file_name
         mime = att.mime_type
 
-    try:
-        url = get_storage().presigned_get(object_key, expires_seconds=180)
-        return RedirectResponse(url)
-    except Exception:
-        # fallback stream
-        data = get_storage().get_bytes(object_key)
-        return Response(
-            content=data,
-            media_type=mime,
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-        )
+    storage = get_storage()
+    public_url = storage.presigned_get_public(object_key, expires_seconds=180)
+    if public_url:
+        return RedirectResponse(public_url)
+
+    data = storage.get_bytes(object_key)
+    return Response(
+        content=data,
+        media_type=mime,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

@@ -18,12 +18,30 @@ from app.deps import CurrentUser
 
 
 def generate_ticket_no(db: Session) -> str:
+    """Allocate next ticket_no for today using PG advisory lock + max+1.
+
+    Callers should still retry on unique conflicts for non-PG dialects / races.
+    """
+    import hashlib
+
     today = datetime.now(timezone.utc).strftime("%Y%m%d")
     prefix = f"T{today}"
-    count = db.scalar(
-        select(func.count()).select_from(Ticket).where(Ticket.ticket_no.like(f"{prefix}%"))
-    ) or 0
-    return f"{prefix}{count + 1:04d}"
+    bind = db.get_bind()
+    if bind.dialect.name == "postgresql":
+        lock_key = int(hashlib.sha256(prefix.encode()).hexdigest()[:8], 16) % (2**31 - 1)
+        db.execute(text("SELECT pg_advisory_xact_lock(:k)"), {"k": lock_key})
+
+    last = db.scalar(
+        select(func.max(Ticket.ticket_no)).where(Ticket.ticket_no.like(f"{prefix}%"))
+    )
+    if last and last.startswith(prefix):
+        try:
+            seq = int(last[len(prefix) :]) + 1
+        except ValueError:
+            seq = 1
+    else:
+        seq = 1
+    return f"{prefix}{seq:04d}"
 
 
 def add_event(
@@ -46,49 +64,65 @@ def add_event(
 
 
 def create_ticket(db: Session, user: CurrentUser, data) -> Ticket:
+    from sqlalchemy.exc import IntegrityError
+
     try:
         category = TicketCategory(data.category)
     except ValueError as exc:
         raise bad_request("无效分类", "INVALID_CATEGORY") from exc
 
-    ticket = Ticket(
-        ticket_no=generate_ticket_no(db),
-        creator_user_id=user.id,
-        title=data.title.strip(),
-        description=data.description.strip(),
-        category=category.value,
-        priority=TicketPriority.P2.value,  # forced
-        status=TicketStatus.OPEN.value,
-        ref_ticket_no=data.ref_ticket_no,
-        request_id=data.request_id,
-        model_name=data.model_name,
-        api_endpoint=data.api_endpoint,
-        occurred_at=data.occurred_at,
-        error_message=data.error_message,
-    )
-    db.add(ticket)
-    db.flush()
-    # first message mirrors description
-    msg = TicketMessage(
-        ticket_id=ticket.id,
-        sender_user_id=user.id,
-        sender_role=user.sub2api_role,
-        content=data.description.strip(),
-        is_internal=False,
-    )
-    db.add(msg)
-    add_event(db, ticket.id, user.id, TicketEventType.CREATED.value, new_value={"ticket_no": ticket.ticket_no})
-    if data.ref_ticket_no:
-        add_event(
-            db,
-            ticket.id,
-            user.id,
-            TicketEventType.REF_TICKET_LINKED.value,
-            new_value={"ref_ticket_no": data.ref_ticket_no},
-        )
-    db.commit()
-    db.refresh(ticket)
-    return ticket
+    last_err: Exception | None = None
+    for _attempt in range(8):
+        try:
+            ticket = Ticket(
+                ticket_no=generate_ticket_no(db),
+                creator_user_id=user.id,
+                title=data.title.strip(),
+                description=data.description.strip(),
+                category=category.value,
+                priority=TicketPriority.P2.value,  # forced
+                status=TicketStatus.OPEN.value,
+                ref_ticket_no=data.ref_ticket_no,
+                request_id=data.request_id,
+                model_name=data.model_name,
+                api_endpoint=data.api_endpoint,
+                occurred_at=data.occurred_at,
+                error_message=data.error_message,
+            )
+            db.add(ticket)
+            db.flush()
+            # first message mirrors description
+            msg = TicketMessage(
+                ticket_id=ticket.id,
+                sender_user_id=user.id,
+                sender_role=user.sub2api_role,
+                content=data.description.strip(),
+                is_internal=False,
+            )
+            db.add(msg)
+            add_event(
+                db,
+                ticket.id,
+                user.id,
+                TicketEventType.CREATED.value,
+                new_value={"ticket_no": ticket.ticket_no},
+            )
+            if data.ref_ticket_no:
+                add_event(
+                    db,
+                    ticket.id,
+                    user.id,
+                    TicketEventType.REF_TICKET_LINKED.value,
+                    new_value={"ref_ticket_no": data.ref_ticket_no},
+                )
+            db.commit()
+            db.refresh(ticket)
+            return ticket
+        except IntegrityError as exc:
+            last_err = exc
+            db.rollback()
+            continue
+    raise conflict("工单号分配冲突，请重试", "TICKET_NO_CONFLICT") from last_err
 
 
 def get_ticket_or_404(db: Session, ticket_id: int) -> Ticket:

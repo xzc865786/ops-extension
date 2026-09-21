@@ -3,10 +3,9 @@ from dataclasses import dataclass
 from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
-from app.auth.session import get_valid_session
+from app.auth.session import get_valid_session, revalidate_session_if_needed
 from app.common.errors import forbidden, unauthorized
 from app.config import get_settings
-from app.db.models.user import ExtensionUser
 from app.db.session import get_db
 
 
@@ -31,7 +30,8 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> Current
     pair = get_valid_session(db, sid)
     if not pair:
         raise unauthorized("会话已过期", "SESSION_EXPIRED")
-    _sess, user = pair
+    sess, user = pair
+    user = revalidate_session_if_needed(db, sess, user)
     if user.sub2api_role not in ("user", "admin"):
         raise forbidden("不支持的角色")
     return CurrentUser(

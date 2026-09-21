@@ -1,5 +1,9 @@
 # Include from main site nginx that also proxies Sub2API.
 # Ops Extension same-origin paths under /ext/*
+#
+# NOTE: `map` and `log_format` must live in the http {} context.
+# Put them in nginx.conf (or an http-level include), then include the
+# location blocks inside the relevant server {}.
 
 # Optional: scrub token from access logs
 map $request_uri $ops_safe_uri {
@@ -12,6 +16,7 @@ log_format ops_ext '$remote_addr - $remote_user [$time_local] '
                    '$status $body_bytes_sent';
 
 location /ext/app/ {
+    access_log /var/log/nginx/ops_ext.access.log ops_ext;
     proxy_pass http://ops-frontend:80/ext/app/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -20,6 +25,7 @@ location /ext/app/ {
 }
 
 location /ext/api/ {
+    access_log /var/log/nginx/ops_ext.access.log ops_ext;
     proxy_pass http://ops-backend:8090/ext/api/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -29,6 +35,7 @@ location /ext/api/ {
 }
 
 location /ext/auth/ {
+    access_log /var/log/nginx/ops_ext.access.log ops_ext;
     proxy_pass http://ops-backend:8090/ext/auth/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;

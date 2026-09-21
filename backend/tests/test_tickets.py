@@ -114,3 +114,37 @@ def test_user_forbidden_admin_api(client, db):
     user = make_user(db, sub2api_id=6, role="user", username="u6")
     login_as(client, db, user)
     assert client.get("/ext/api/v1/admin/tickets").status_code == 403
+
+
+def test_ticket_no_unique_under_sequential_creates(client, db):
+    """Sequential creates get distinct ticket_no (max+1); conflict-safe allocator."""
+    from app.db.models.ticket import Ticket
+    from app.tickets.service import generate_ticket_no
+
+    user = make_user(db, sub2api_id=77, role="user", username="seq")
+    login_as(client, db, user)
+    nos = set()
+    for i in range(5):
+        r = client.post(
+            "/ext/api/v1/tickets",
+            json={"title": f"t{i}", "description": "d", "category": "OTHER"},
+        )
+        assert r.status_code == 201, r.text
+        nos.add(r.json()["ticket_no"])
+    assert len(nos) == 5
+
+    n1 = generate_ticket_no(db)
+    t = Ticket(
+        ticket_no=n1,
+        creator_user_id=user.id,
+        title="x",
+        description="y",
+        category="OTHER",
+        priority="P2",
+        status="OPEN",
+    )
+    db.add(t)
+    db.commit()
+    n2 = generate_ticket_no(db)
+    assert n1 != n2
+    assert n2 > n1

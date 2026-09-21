@@ -37,5 +37,8 @@ class Session(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ip: Mapped[str | None] = mapped_column(String(64))
     user_agent: Mapped[str | None] = mapped_column(Text)
+    # Sealed Sub2API bearer (periodic /auth/me revalidation only). Never log or return.
+    token_enc: Mapped[str | None] = mapped_column(Text)
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     user: Mapped[ExtensionUser] = relationship(back_populates="sessions")

@@ -6,6 +6,7 @@ import re
 import uuid
 from dataclasses import dataclass
 from io import BytesIO
+from urllib.parse import urlparse
 
 from minio import Minio
 
@@ -59,6 +60,37 @@ def validate_attachment(filename: str, content_type: str | None, size: int) -> t
         raise bad_request("不支持的文件类型（仅图片/PDF/日志）", "INVALID_FILE_TYPE")
     return fname, mime
 
+
+
+
+def resolve_public_minio_target() -> tuple[str, bool] | None:
+    """Return (endpoint host:port, secure) for browser-facing presign, or None.
+
+    When neither MINIO_PUBLIC_ENDPOINT nor MINIO_PUBLIC_URL is set, callers must
+    stream through the API and must not redirect to the internal compose hostname.
+    """
+    settings = get_settings()
+    if settings.minio_public_endpoint:
+        ep = settings.minio_public_endpoint.strip()
+        secure = settings.minio_use_ssl
+        if "://" in ep:
+            parsed = urlparse(ep)
+            host = parsed.hostname or ""
+            port = parsed.port
+            if parsed.scheme in ("http", "https"):
+                secure = parsed.scheme == "https"
+            ep = f"{host}:{port}" if port else host
+        return (ep, secure) if ep else None
+    if settings.minio_public_url:
+        parsed = urlparse(settings.minio_public_url.strip())
+        if not parsed.hostname:
+            return None
+        host = parsed.hostname
+        port = parsed.port
+        secure = parsed.scheme == "https"
+        ep = f"{host}:{port}" if port else host
+        return ep, secure
+    return None
 
 @dataclass
 class StoredObject:
@@ -127,6 +159,26 @@ class MinioStorage:
             self.bucket, object_key, expires=timedelta(seconds=expires_seconds)
         )
 
+
+    def presigned_get_public(self, object_key: str, expires_seconds: int = 180) -> str | None:
+        """Presign using MINIO_PUBLIC_ENDPOINT / MINIO_PUBLIC_URL when configured; else None."""
+        target = resolve_public_minio_target()
+        if not target:
+            return None
+        endpoint, secure = target
+        settings = get_settings()
+        public_client = Minio(
+            endpoint,
+            access_key=settings.minio_access_key,
+            secret_key=settings.minio_secret_key,
+            secure=secure,
+        )
+        from datetime import timedelta
+
+        return public_client.presigned_get_object(
+            self.bucket, object_key, expires=timedelta(seconds=expires_seconds)
+        )
+
     def get_bytes(self, object_key: str) -> bytes:
         resp = self.client.get_object(self.bucket, object_key)
         try:
@@ -144,3 +196,8 @@ def get_storage() -> MinioStorage:
     if _storage is None:
         _storage = MinioStorage()
     return _storage
+
+
+def reset_storage_for_tests() -> None:
+    global _storage
+    _storage = None

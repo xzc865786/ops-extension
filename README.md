@@ -91,13 +91,20 @@ DEV_AUTH_BYPASS=true ./scripts/smoke_test.sh
 1. 读取 query `token`（短暂）→ `Authorization: Bearer` 调 Sub2API `/api/v1/auth/me`
 2. 要求 `status == active`；用户主键用响应 **`data.id`**（不是 `user_id`）
 3. Upsert `extension_users`；写 `sessions`；Set-Cookie `ops_session` HttpOnly Secure SameSite=Lax Path=`/ext`
-4. **禁止**把 token 写入业务库或明文日志；Nginx 示例已提示脱敏
+4. Token **不以明文**入库或写日志：Bootstrap 将 bearer **密封**存入 `sessions.token_enc`，仅用于周期性重验；Nginx `access_log ... ops_ext` 脱敏 query token
+5. **Session 重验**：请求鉴权时若 `last_checked_at` 早于 `SESSION_REVALIDATE_SECONDS`（默认 300），再次调用 Sub2API `/api/v1/auth/me`；刷新 role 快照；`status!=active` 或鉴权失败则清 Session 并 401
 
 V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留但未用于授权。报账/报表仅 admin。
 
 ## 环境变量
 
-见 `.env.example`。切勿提交真实密钥。
+见 `.env.example`。切勿提交真实密钥。关键项：
+
+| 变量 | 说明 |
+|------|------|
+| `SESSION_REVALIDATE_SECONDS` | Session 周期性重验 `/auth/me` 间隔，默认 `300` |
+| `MINIO_ENDPOINT` | 后端访问 MinIO（可为 compose 内网 `minio:9000`） |
+| `MINIO_PUBLIC_ENDPOINT` / `MINIO_PUBLIC_URL` | 可选；配置后下载可 302 Presigned；**未配置则始终 API 流式代理** |
 
 ## 验收相关行为（产品定稿）
 
@@ -105,6 +112,8 @@ V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留�
 - CLOSED 终态不可重开；内部备注对用户 API 永不返回
 - 认领使用原子 `UPDATE ... WHERE claimed_by_user_id IS NULL`；管理员可直接接管
 - 附件 ≤20MB；白名单：图片 / PDF / `.log`/`.txt`
+- 附件下载默认经 **后端鉴权流式代理**（不依赖浏览器直连 compose 内 `minio:9000`）。仅当配置 `MINIO_PUBLIC_ENDPOINT` 或 `MINIO_PUBLIC_URL` 时才 302 到公网 Presigned URL
+- 工单号按日序列分配（PG advisory lock + unique 冲突重试），避免并发撞号 500
 - 报账：`COMPANY_DIRECT` / `PERSONAL_ADVANCE`；结构化 `payment_accounts`；默认 CNY
 
 ## 目录
