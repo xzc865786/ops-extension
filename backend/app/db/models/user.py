@@ -2,7 +2,7 @@ from app.db.types import BigInt, BigIntPK
 import uuid
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -37,8 +37,8 @@ class Session(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ip: Mapped[str | None] = mapped_column(String(64))
     user_agent: Mapped[str | None] = mapped_column(Text)
-    # Sealed Sub2API bearer (periodic /auth/me revalidation only). Never log or return.
-    token_enc: Mapped[str | None] = mapped_column(Text)
+    # Bootstrap freshness only (role/status snapshots live on extension_users).
+    # Sub2API bearer is NEVER stored here or elsewhere.
     last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     user: Mapped[ExtensionUser] = relationship(back_populates="sessions")

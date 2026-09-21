@@ -84,15 +84,15 @@ DEV_AUTH_BYPASS=true ./scripts/smoke_test.sh
 | 报账管理 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/expenses` |
 | 费用报表 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/reports` |
 
-建议 `hide_open_button=true`。iframe 会自动追加 `user_id`/`token`/`theme`/`lang`/`ui_mode`；Bootstrap 校验后 302 到干净 URL（无 token）。
+建议 `hide_open_button=true`。iframe 会自动追加 `user_id`/`token`/`theme`/`lang`/`ui_mode`；Bootstrap 校验后 302 到干净 URL（无 token）。**菜单必须指向 bootstrap**（不要直链 `/ext/app/...`），以便无入库 token 时仍能刷新身份快照与 Session。
 
 ## Auth Bridge 要点
 
 1. 读取 query `token`（短暂）→ `Authorization: Bearer` 调 Sub2API `/api/v1/auth/me`
 2. 要求 `status == active`；用户主键用响应 **`data.id`**（不是 `user_id`）
-3. Upsert `extension_users`；写 `sessions`；Set-Cookie `ops_session` HttpOnly Secure SameSite=Lax Path=`/ext`
-4. Token **不以明文**入库或写日志：Bootstrap 将 bearer **密封**存入 `sessions.token_enc`，仅用于周期性重验；Nginx `access_log ... ops_ext` 脱敏 query token
-5. **Session 重验**：请求鉴权时若 `last_checked_at` 早于 `SESSION_REVALIDATE_SECONDS`（默认 300），再次调用 Sub2API `/api/v1/auth/me`；刷新 role 快照；`status!=active` 或鉴权失败则清 Session 并 401
+3. Upsert `extension_users`（刷新 username/email/role **快照**）；写 `sessions`（仅 id / user_id / expires / `last_checked_at`）；Set-Cookie `ops_session` HttpOnly Secure SameSite=Lax Path=`/ext`
+4. **Token 禁止写入业务库**（含密文/密封）、禁止写 Redis/文件，也禁止写入日志明文。Bearer 仅在 Bootstrap 请求生命周期内使用，用完即弃。Nginx `access_log ... ops_ext` 脱敏 query token
+5. **Session 新鲜度（无存 token 重验）**：Custom Menu **必须**指向 `/ext/auth/bootstrap`。Bootstrap 刷新快照并重置 `last_checked_at`。两次 Bootstrap 之间信任快照，直到 `SESSION_TTL_HOURS` 到期，或距上次 Bootstrap 超过 `SESSION_MAX_AGE_WITHOUT_BOOTSTRAP`（默认 2h）→ 清 Session 并 **401 `SESSION_REBOOTSTRAP_REQUIRED`**，前端/宿主引导用户重新打开菜单走 Bootstrap。**不会**用入库 bearer 回调 Sub2API `/auth/me`
 
 V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留但未用于授权。报账/报表仅 admin。
 
@@ -102,7 +102,8 @@ V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留�
 
 | 变量 | 说明 |
 |------|------|
-| `SESSION_REVALIDATE_SECONDS` | Session 周期性重验 `/auth/me` 间隔，默认 `300` |
+| `SESSION_TTL_HOURS` | Session / Cookie 绝对 TTL，默认 `2` |
+| `SESSION_MAX_AGE_WITHOUT_BOOTSTRAP` | 距上次 Bootstrap 的最大秒数，超时 401 强制重登，默认 `7200` |
 | `MINIO_ENDPOINT` | 后端访问 MinIO（可为 compose 内网 `minio:9000`） |
 | `MINIO_PUBLIC_ENDPOINT` / `MINIO_PUBLIC_URL` | 可选；配置后下载可 302 Presigned；**未配置则始终 API 流式代理** |
 

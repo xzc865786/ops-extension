@@ -64,15 +64,6 @@ def test_auth_me(client, db):
     assert r.json()["sub2api_role"] == "admin"
 
 
-def test_token_seal_roundtrip():
-    from app.auth.token_seal import seal_token, unseal_token
-
-    sealed = seal_token("secret", "bearer-abc")
-    assert sealed != "bearer-abc"
-    assert unseal_token("secret", sealed) == "bearer-abc"
-    assert unseal_token("wrong", sealed) is None
-
-
 def test_resolve_public_minio_unset_by_default(monkeypatch):
     from app.attachments.minio_client import resolve_public_minio_target
     from app.config import get_settings
@@ -187,68 +178,107 @@ def test_download_presign_redirect_when_public_endpoint(client, db, monkeypatch)
     monkeypatch.delenv("MINIO_PUBLIC_ENDPOINT", raising=False)
 
 
-def test_session_revalidate_clears_inactive(client, db, monkeypatch):
+def test_bootstrap_never_persists_bearer(client, db):
+    """Sub2API bearer must not be written to sessions (or any business table)."""
+    from app.db.models.user import Session as UserSession
+    from sqlalchemy import inspect as sa_inspect
+
+    fake = Sub2APIUser(id=77, username="nb", email="nb@e.com", role="user", status="active")
+    with patch("app.auth.bridge.get_identity_provider") as gp:
+        provider = MagicMock()
+        provider.verify_and_get_user.return_value = fake
+        gp.return_value = provider
+        resp = client.get(
+            "/ext/auth/bootstrap",
+            params={"token": "must-not-be-stored", "user_id": 77, "next": "/ext/app/tickets"},
+            follow_redirects=False,
+        )
+    assert resp.status_code == 302
+    sid = resp.cookies.get("ops_session")
+    assert sid
+    sess = db.get(UserSession, __import__("uuid").UUID(sid))
+    assert sess is not None
+    assert sess.last_checked_at is not None
+    # Column must not exist on model / mapped instance
+    assert not hasattr(sess, "token_enc")
+    cols = {c.key for c in sa_inspect(UserSession).mapper.column_attrs}
+    assert "token_enc" not in cols
+
+
+def test_stale_session_requires_rebootstrap(client, db, monkeypatch):
+    """When last Bootstrap is older than SESSION_MAX_AGE_WITHOUT_BOOTSTRAP → 401, no DB bearer."""
     from datetime import datetime, timedelta, timezone
-    from unittest.mock import MagicMock, patch
 
     from app.auth.session import create_session
     from app.config import get_settings
     from app.db.models.user import Session as UserSession
-    from app.identity.provider import Sub2APIUser
 
-    monkeypatch.setenv("SESSION_REVALIDATE_SECONDS", "0")
+    monkeypatch.setenv("SESSION_MAX_AGE_WITHOUT_BOOTSTRAP", "60")
     get_settings.cache_clear()
 
-    user = make_user(db, sub2api_id=50, role="user", username="rv")
-    sess = create_session(db, user, bearer_token="tok-50")
-    sess.last_checked_at = datetime.now(timezone.utc) - timedelta(hours=1)
+    user = make_user(db, sub2api_id=50, role="user", username="stale")
+    sess = create_session(db, user)
+    sess.last_checked_at = datetime.now(timezone.utc) - timedelta(hours=2)
     db.commit()
-    client.cookies.set("ops_session", str(sess.id), path="/ext")
-
-    inactive = Sub2APIUser(
-        id=50, username="rv", email="rv@e.com", role="user", status="disabled"
-    )
-    with patch("app.identity.sub2api.get_identity_provider") as gp:
-        provider = MagicMock()
-        provider.verify_and_get_user.return_value = inactive
-        gp.return_value = provider
-        r = client.get("/ext/api/v1/auth/me")
-    assert r.status_code == 401
     sid = sess.id
+    client.cookies.set("ops_session", str(sid), path="/ext")
+
+    r = client.get("/ext/api/v1/auth/me")
+    assert r.status_code == 401
+    body = r.json()
+    detail = body.get("detail") or body
+    if isinstance(detail, dict):
+        assert detail.get("code") == "SESSION_REBOOTSTRAP_REQUIRED"
+    else:
+        # FastAPI may nest differently
+        assert "SESSION_REBOOTSTRAP_REQUIRED" in str(body)
+
     db.expunge_all()
     assert db.get(UserSession, sid) is None
     get_settings.cache_clear()
-    monkeypatch.delenv("SESSION_REVALIDATE_SECONDS", raising=False)
+    monkeypatch.delenv("SESSION_MAX_AGE_WITHOUT_BOOTSTRAP", raising=False)
 
 
-def test_session_revalidate_refreshes_role(client, db, monkeypatch):
-    from datetime import datetime, timedelta, timezone
-    from unittest.mock import MagicMock, patch
+def test_fresh_session_trusted_without_remote_call(client, db, monkeypatch):
+    """Within bootstrap freshness window, trust snapshots — do not call Sub2API."""
+    from unittest.mock import patch
 
     from app.auth.session import create_session
     from app.config import get_settings
-    from app.identity.provider import Sub2APIUser
 
-    monkeypatch.setenv("SESSION_REVALIDATE_SECONDS", "0")
+    monkeypatch.setenv("SESSION_MAX_AGE_WITHOUT_BOOTSTRAP", "7200")
     get_settings.cache_clear()
 
-    user = make_user(db, sub2api_id=51, role="user", username="promo")
-    sess = create_session(db, user, bearer_token="tok-51")
-    sess.last_checked_at = datetime.now(timezone.utc) - timedelta(hours=1)
-    db.commit()
+    user = make_user(db, sub2api_id=51, role="admin", username="fresh")
+    sess = create_session(db, user)
     client.cookies.set("ops_session", str(sess.id), path="/ext")
 
-    promoted = Sub2APIUser(
-        id=51, username="promo", email="p@e.com", role="admin", status="active"
-    )
     with patch("app.identity.sub2api.get_identity_provider") as gp:
-        provider = MagicMock()
-        provider.verify_and_get_user.return_value = promoted
-        gp.return_value = provider
         r = client.get("/ext/api/v1/auth/me")
+        gp.assert_not_called()
     assert r.status_code == 200
     assert r.json()["sub2api_role"] == "admin"
-    db.refresh(user)
-    assert user.sub2api_role == "admin"
     get_settings.cache_clear()
-    monkeypatch.delenv("SESSION_REVALIDATE_SECONDS", raising=False)
+    monkeypatch.delenv("SESSION_MAX_AGE_WITHOUT_BOOTSTRAP", raising=False)
+
+
+def test_expired_session_ttl_requires_rebootstrap(client, db, monkeypatch):
+    """expires_at past → session cleared, 401 SESSION_EXPIRED (no stored bearer path)."""
+    from datetime import datetime, timedelta, timezone
+
+    from app.auth.session import create_session
+    from app.config import get_settings
+    from app.db.models.user import Session as UserSession
+
+    get_settings.cache_clear()
+    user = make_user(db, sub2api_id=52, role="user", username="exp")
+    sess = create_session(db, user)
+    sess.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+    db.commit()
+    sid = sess.id
+    client.cookies.set("ops_session", str(sid), path="/ext")
+
+    r = client.get("/ext/api/v1/auth/me")
+    assert r.status_code == 401
+    db.expunge_all()
+    assert db.get(UserSession, sid) is None

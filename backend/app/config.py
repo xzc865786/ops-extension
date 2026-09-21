@@ -8,9 +8,12 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://ops:ops@localhost:5432/qiyuan_ops"
     sub2api_base_url: str = "http://sub2api:8080"
     session_secret: str = "dev-secret-change-me"
-    session_ttl_hours: int = 24
-    # Re-check Sub2API /auth/me when session last_checked_at is older than this (seconds).
-    session_revalidate_seconds: int = 300
+    # Short TTL: Sub2API bearer is never stored; Custom Menu must re-hit Bootstrap.
+    session_ttl_hours: int = 2
+    # If last Bootstrap (last_checked_at) is older than this many seconds, clear
+    # session and 401 with SESSION_REBOOTSTRAP_REQUIRED — never call Sub2API with a
+    # stored bearer. Default matches TTL (2h).
+    session_max_age_without_bootstrap: int = 7200
     cookie_name: str = "ops_session"
     cookie_secure: bool = False
     cookie_samesite: str = "lax"

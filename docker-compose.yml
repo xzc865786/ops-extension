@@ -52,7 +52,8 @@ services:
       DATABASE_URL: postgresql+psycopg://ops:ops_change_me@ops-db:5432/qiyuan_ops
       SUB2API_BASE_URL: http://sub2api:8080
       SESSION_SECRET: change-me-to-a-long-random-string
-      SESSION_TTL_HOURS: "24"
+      SESSION_TTL_HOURS: "2"
+      SESSION_MAX_AGE_WITHOUT_BOOTSTRAP: "7200"
       COOKIE_NAME: ops_session
       COOKIE_SECURE: "true"
       PUBLIC_BASE_URL: https://api.example.com

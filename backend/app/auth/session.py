@@ -4,8 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session as DbSession
 
-from app.auth.token_seal import seal_token, unseal_token
-from app.common.errors import AppError, unauthorized
+from app.common.errors import unauthorized
 from app.config import get_settings
 from app.db.models.user import ExtensionUser, Session as UserSession
 
@@ -18,19 +17,17 @@ def create_session(
     *,
     ip: str | None = None,
     user_agent: str | None = None,
-    bearer_token: str | None = None,
 ) -> UserSession:
+    """Create an Ops session. Sub2API bearer is NEVER persisted (DB/redis/files)."""
     settings = get_settings()
     now = datetime.now(timezone.utc)
-    token_enc = seal_token(settings.session_secret, bearer_token) if bearer_token else None
     sess = UserSession(
         id=uuid.uuid4(),
         user_id=user.id,
         expires_at=now + timedelta(hours=settings.session_ttl_hours),
         ip=ip,
         user_agent=user_agent,
-        token_enc=token_enc,
-        last_checked_at=now,
+        last_checked_at=now,  # Bootstrap freshness marker (snapshots only)
     )
     db.add(sess)
     db.commit()
@@ -106,81 +103,42 @@ def upsert_extension_user(
     return user
 
 
-def revalidate_session_if_needed(
+def enforce_bootstrap_freshness(
     db: DbSession,
     sess: UserSession,
     user: ExtensionUser,
 ) -> ExtensionUser:
-    """Periodically re-check Sub2API /auth/me; clear session + 401 if inactive/auth fails.
+    """Trust role/status snapshots until SESSION_MAX_AGE_WITHOUT_BOOTSTRAP.
 
-    Sessions without a sealed token (tests / legacy) skip the remote call.
+    Never calls Sub2API with a stored bearer (tokens are not persisted). When
+    the Bootstrap freshness window elapses, clear the session and 401 so the
+    client must re-enter via Custom Menu → /ext/auth/bootstrap.
     """
     settings = get_settings()
     now = datetime.now(timezone.utc)
     last = sess.last_checked_at
-    if last is not None and last.tzinfo is None:
+    if last is None:
+        logger.info("session missing last_checked_at sid=%s — force re-bootstrap", sess.id)
+        db.delete(sess)
+        db.commit()
+        raise unauthorized(
+            "请重新从菜单进入以刷新登录",
+            "SESSION_REBOOTSTRAP_REQUIRED",
+        )
+    if last.tzinfo is None:
         last = last.replace(tzinfo=timezone.utc)
-    interval = max(0, int(settings.session_revalidate_seconds))
-    if last is not None and (now - last).total_seconds() < interval:
-        return user
-    if not sess.token_enc:
-        sess.last_checked_at = now
-        db.commit()
-        return user
-
-    token = unseal_token(settings.session_secret, sess.token_enc)
-    if not token:
-        logger.info("session revalidate: token unseal failed sid=%s", sess.id)
-        db.delete(sess)
-        db.commit()
-        raise unauthorized("会话已失效", "SESSION_REVALIDATE_FAILED")
-
-    from app.identity.sub2api import get_identity_provider
-
-    provider = get_identity_provider()
-    try:
-        remote = provider.verify_and_get_user(token)
-    except AppError:
-        logger.info("session revalidate: auth/me failed sid=%s", sess.id)
-        db.delete(sess)
-        db.commit()
-        raise unauthorized("会话已失效", "SESSION_REVALIDATE_FAILED")
-    except Exception:
-        logger.warning("session revalidate: unexpected error sid=%s", sess.id)
-        db.delete(sess)
-        db.commit()
-        raise unauthorized("会话已失效", "SESSION_REVALIDATE_FAILED")
-
-    if remote.status != "active":
+    max_age = max(0, int(settings.session_max_age_without_bootstrap))
+    if (now - last).total_seconds() > max_age:
         logger.info(
-            "session revalidate: inactive sub2api_id=%s status=%s",
-            remote.id,
-            remote.status,
+            "session bootstrap stale sid=%s age_s=%.0f max=%s — force re-bootstrap",
+            sess.id,
+            (now - last).total_seconds(),
+            max_age,
         )
         db.delete(sess)
         db.commit()
-        raise unauthorized("用户状态不可用", "USER_INACTIVE")
-
-    if int(remote.id) != int(user.sub2api_user_id):
-        logger.warning(
-            "session revalidate: id mismatch sess_user=%s me.id=%s",
-            user.sub2api_user_id,
-            remote.id,
+        raise unauthorized(
+            "请重新从菜单进入以刷新登录",
+            "SESSION_REBOOTSTRAP_REQUIRED",
         )
-        db.delete(sess)
-        db.commit()
-        raise unauthorized("会话已失效", "SESSION_REVALIDATE_FAILED")
-
-    if remote.role not in ("user", "admin"):
-        db.delete(sess)
-        db.commit()
-        raise unauthorized("不支持的角色", "UNSUPPORTED_ROLE")
-
-    user.username_snapshot = remote.username
-    user.email_snapshot = remote.email
-    user.sub2api_role = remote.role
-    user.updated_at = now
-    sess.last_checked_at = now
-    db.commit()
-    db.refresh(user)
     return user

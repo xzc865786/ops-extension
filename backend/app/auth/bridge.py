@@ -84,7 +84,7 @@ def bootstrap(
     )
     client_ip = request.client.host if request.client else None
     ua = request.headers.get("user-agent")
-    sess = create_session(db, user, ip=client_ip, user_agent=ua, bearer_token=token)
+    sess = create_session(db, user, ip=client_ip, user_agent=ua)
 
     dest = _sanitize_next(next)
     redirect = RedirectResponse(url=dest, status_code=302, headers=headers)
