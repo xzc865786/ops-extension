@@ -1,0 +1,39 @@
+# Include from main site nginx that also proxies Sub2API.
+# Ops Extension same-origin paths under /ext/*
+
+# Optional: scrub token from access logs
+map $request_uri $ops_safe_uri {
+    default $request_uri;
+    "~*^(?<prefix>.*[?&])token=[^&]*(?<suffix>&?.*)$" "${prefix}token=REDACTED${suffix}";
+}
+
+log_format ops_ext '$remote_addr - $remote_user [$time_local] '
+                   '"$request_method $ops_safe_uri $server_protocol" '
+                   '$status $body_bytes_sent';
+
+location /ext/app/ {
+    proxy_pass http://ops-frontend:80/ext/app/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+
+location /ext/api/ {
+    proxy_pass http://ops-backend:8090/ext/api/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    client_max_body_size 25m;
+}
+
+location /ext/auth/ {
+    proxy_pass http://ops-backend:8090/ext/auth/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    # Avoid caching bootstrap responses with tokens in query
+    add_header Cache-Control "no-store" always;
+}

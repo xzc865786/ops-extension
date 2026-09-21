@@ -1,0 +1,96 @@
+services:
+  ops-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ops
+      POSTGRES_PASSWORD: ops_change_me
+      POSTGRES_DB: qiyuan_ops
+    volumes:
+      - ops-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ops -d qiyuan_ops"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - qiyuan-network
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin_change_me
+    volumes:
+      - ops-minio:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - qiyuan-network
+
+  createbuckets:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 3;
+      mc alias set local http://minio:9000 minioadmin minioadmin_change_me;
+      mc mb -p local/qiyuan-ops || true;
+      mc anonymous set none local/qiyuan-ops;
+      exit 0;
+      "
+    networks:
+      - qiyuan-network
+
+  ops-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://ops:ops_change_me@ops-db:5432/qiyuan_ops
+      SUB2API_BASE_URL: http://sub2api:8080
+      SESSION_SECRET: change-me-to-a-long-random-string
+      SESSION_TTL_HOURS: "24"
+      COOKIE_NAME: ops_session
+      COOKIE_SECURE: "true"
+      PUBLIC_BASE_URL: https://api.example.com
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin_change_me
+      MINIO_BUCKET: qiyuan-ops
+      MINIO_USE_SSL: "false"
+      ATTACHMENT_MAX_BYTES: "20971520"
+      LOG_LEVEL: INFO
+    depends_on:
+      ops-db:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    ports:
+      - "8090:8090"
+    networks:
+      - qiyuan-network
+
+  ops-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8088:80"
+    depends_on:
+      - ops-backend
+    networks:
+      - qiyuan-network
+
+volumes:
+  ops-pgdata:
+  ops-minio:
+
+networks:
+  # Join Sub2API's network when available:
+  #   docker network create qiyuan-network   # or use existing
+  # For standalone demo, compose creates it.
+  qiyuan-network:
+    name: qiyuan-network
