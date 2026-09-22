@@ -28,7 +28,7 @@ def test_reports_summary_and_export(client, db):
         params={"period": "year", "year": today.year},
     )
     assert s.status_code == 200
-    assert s.json()["count"] >= 1
+    assert s.json()["currencies"][0]["count"] >= 1
 
     byc = client.get(
         "/ext/api/v1/admin/reports/by-category",

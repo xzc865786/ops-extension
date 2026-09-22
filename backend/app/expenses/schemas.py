@@ -93,13 +93,13 @@ class InvoiceUpdate(BaseModel):
 
 
 class PaymentCreate(BaseModel):
-    amount: Decimal
-    currency: str = "CNY"
+    amount: Decimal = Field(..., gt=0, max_digits=18, decimal_places=2)
+    currency: str | None = None
     paid_at: datetime | None = None
     payment_account_id: int | None = None
     reference_no: str | None = None
     notes: str | None = None
-    mark_paid: bool = True
+    mark_paid: bool | None = None  # legacy clients; never overrides the paid total
 
 
 class RejectBody(BaseModel):
@@ -112,6 +112,28 @@ class ExpenseItemOut(BaseModel):
     quantity: Decimal
     unit_price: Decimal
     amount: Decimal
+    model_config = {"from_attributes": True}
+
+
+class ExpensePaymentOut(BaseModel):
+    id: int
+    payment_account_id: int | None
+    amount: Decimal
+    currency: str
+    paid_at: datetime
+    reference_no: str | None
+    notes: str | None
+    created_by_user_id: int
+    model_config = {"from_attributes": True}
+
+
+class ExpenseAttachmentOut(BaseModel):
+    id: int
+    attachment_type: str
+    file_name: str
+    mime_type: str
+    file_size: int
+    created_at: datetime
     model_config = {"from_attributes": True}
 
 
@@ -153,3 +175,11 @@ class ExpenseOut(BaseModel):
     updated_at: datetime
     items: list[ExpenseItemOut] = []
     model_config = {"from_attributes": True}
+
+
+class ExpenseDetailOut(ExpenseOut):
+    payments: list[ExpensePaymentOut]
+    attachments: list[ExpenseAttachmentOut]
+    paid_total: Decimal
+    remaining_amount: Decimal
+    payment_reconciliation_required: bool

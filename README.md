@@ -8,8 +8,8 @@
 |------|------|
 | Auth Bridge | Bootstrap 用 Sub2API `GET /api/v1/auth/me`（字段 `data.id`）签发 HttpOnly Session（`Path=/ext`） |
 | 工单 | 用户建单（固定 P2）/回复/关单/附件；管理员认领·释放·接管·内部备注·改状态/分类/优先级 |
-| 报账 | 仅 admin；供应商/成本中心/付款账户；公司直付 vs 个人垫付；允许申请人=审批人 |
-| 报表 | 月/年、分类/供应商/成本中心、已付未付、有票无票税额；CSV/Excel |
+| 报账 | 仅 admin；供应商/成本中心/付款账户；公司直付 vs 个人垫付；允许申请人=审批人；分次付款、完整发票信息和附件 |
+| 报表 | 按币种分别展示月/年、分类/供应商/成本中心、付款和发票统计；明细与汇总 CSV/Excel |
 
 ## 路径约定
 
@@ -24,6 +24,8 @@
 - DB: `qiyuan_ops` · Bucket: `qiyuan-ops`
 
 ## 快速开始（Docker Compose）
+
+Compose 使用 [MinIO 官方容器文档](https://min.io/docs/minio/container/index.html)中的 Quay 镜像地址；部署前确认可访问该镜像仓库。
 
 ```bash
 # 若需与 Sub2API 同网互通 auth/me：
@@ -116,6 +118,22 @@ V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留�
 - 附件下载默认经 **后端鉴权流式代理**（不依赖浏览器直连 compose 内 `minio:9000`）。仅当配置 `MINIO_PUBLIC_ENDPOINT` 或 `MINIO_PUBLIC_URL` 时才 302 到公网 Presigned URL
 - 工单号按日序列分配（PG advisory lock + unique 冲突重试），避免并发撞号 500
 - 报账：`COMPANY_DIRECT` / `PERSONAL_ADVANCE`；结构化 `payment_accounts`；默认 CNY
+
+## 报账付款与报表口径
+
+- 付款仅对 `APPROVED` 单开放；金额须大于零、精确到分，币种与单据相同且不得超过未付余额。允许分次付款，累计恰好付清时自动转为 `PAID`；`PAID` 不再接收付款。
+- `POST /ext/api/v1/admin/expenses/{id}/payments` 示例：`{"amount":"30.00","reference_no":"bank-ref"}`。省略 `currency` 时继承单据币种。旧请求的 `mark_paid=true` 不能使不足额付款变为已付，不足额时返回 `PAYMENT_INCOMPLETE`。
+- `GET /ext/api/v1/admin/expenses/{id}` 增加 `payments`、`attachments`、`paid_total`、`remaining_amount`、`payment_reconciliation_required`；报账列表响应保持原结构。附件下载示例：`/ext/api/v1/attachments/{id}/download?source=expense`（仅管理员）。
+- 费用支出只计 `APPROVED` 和 `PAID`；`SUBMITTED`、`REJECTED` 分别列示。已付取实际付款流水，未付取审批单剩余金额。均按费用日期归期，按币种分别汇总，不进行汇率换算或跨币种相加。历史异常付款不计入付款统计，并在页面显示待核对单号。
+- **报表 API 响应结构已调整**：`GET /ext/api/v1/admin/reports/summary?period=year&year=2026` 返回 `{"period":"year","year":2026,"currencies":[{"currency":"CNY","count":1,"total_amount":100.0,"tax_amount":6.0,"by_status":{"APPROVED":{"count":1,"amount":100.0}}}]}`（另含 `month/start/end`）；付款、发票接口也使用 `currencies` 数组。分类、供应商、成本中心及新增 `by-month` 返回每行含 `currency` 的数组。以上接口支持可选 `currency` 筛选，前后端须配套部署。
+- `GET /ext/api/v1/admin/reports/export` 支持 `format=csv|xlsx` 与 `view=detail|summary|month|category|supplier|cost_center|payment|invoice|all`。CSV 每次选一种视图；Excel 使用 `view=all` 可一次导出全部工作表。省略 `view` 继续导出明细；空结果保留表头。明细导出含 `payment_reconciliation_required`，历史付款异常须先核对。
+
+## 历史付款核对与发布
+
+1. 发布前备份 Ops 数据库，并在独立环境安装后端锁定依赖、执行迁移及测试。此版本不新增数据库列，也不自动修复历史数据。
+2. 从 `backend` 目录运行 `python -m scripts.reconcile_payments audit > payment-audit.csv`。该命令只读，列出已付未足额、超付、付款币种不符的单据。业务人员逐单核对其他付款凭证；有异常且未核清时，付款报表不能作为财务验收结果。
+3. 对确认无其他付款的 `PAID` 单，用 `restore_approved` 恢复为 `APPROVED`；对有外部付款凭证的，用 `record_payment` 补录。仅允许处理核对清单中指定的单号，并校验 `expected_amount`、`expected_paid`。清单列为 `claim_no,expected_amount,expected_paid,action,reason,reference_no,payment_date`；补录必须提供交易号及带时区的 ISO 付款时间。超付和币种不符须另行调查，不通过此工具猜测修正。
+4. 核对后运行 `python -m scripts.reconcile_payments apply --approved-list reviewed.csv --actor-user-id <extension_admin_id>`。整份清单在一次事务内执行；任何金额变化或校验失败都回滚，成功写入 `PAYMENT_RECONCILED` 事件。再次运行 `audit` 并复核报表。上线时同步发布后端与前端；如需回滚代码，先保留数据库备份和修正清单，历史修正只能依据事件和凭证逐单反向处理。
 
 ## 目录
 

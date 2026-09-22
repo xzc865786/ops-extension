@@ -182,6 +182,13 @@ async function upload() {
         <span :class="isClosed ? 'text-red-400 font-medium' : ''">{{ ticket.status }}</span>
       </p>
       <div class="whitespace-pre-wrap text-sm mt-2">{{ ticket.description }}</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-1 text-sm mt-3">
+        <p v-if="ticket.request_id">Request ID：{{ ticket.request_id }}</p>
+        <p v-if="ticket.model_name">模型：{{ ticket.model_name }}</p>
+        <p v-if="ticket.api_endpoint">API 接口：{{ ticket.api_endpoint }}</p>
+        <p v-if="ticket.occurred_at">发生时间：{{ ticket.occurred_at }}</p>
+        <p v-if="ticket.error_message" class="whitespace-pre-wrap md:col-span-2">错误信息：{{ ticket.error_message }}</p>
+      </div>
 
       <div
         v-if="showCloseConfirm"

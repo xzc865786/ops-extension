@@ -148,3 +148,25 @@ def test_ticket_no_unique_under_sequential_creates(client, db):
     n2 = generate_ticket_no(db)
     assert n1 != n2
     assert n2 > n1
+
+
+def test_admin_close_through_patch_records_one_close_event(client, db):
+    admin = make_user(db, sub2api_id=400, role="admin", username="closer")
+    login_as(client, db, admin)
+    for path in ("patch", "close"):
+        created = client.post(
+            "/ext/api/v1/tickets",
+            json={"title": path, "description": "d", "category": "OTHER"},
+        ).json()
+        ticket_id = created["id"]
+        if path == "patch":
+            result = client.patch(f"/ext/api/v1/admin/tickets/{ticket_id}", json={"status": "CLOSED"})
+        else:
+            result = client.post(f"/ext/api/v1/admin/tickets/{ticket_id}/close")
+        assert result.status_code == 200
+        detail = client.get(f"/ext/api/v1/admin/tickets/{ticket_id}").json()
+        assert detail["closed_by"] == "ADMIN"
+        assert detail["closed_at"]
+        types = [event["event_type"] for event in detail["events"]]
+        assert types.count("CLOSED_BY_ADMIN") == 1
+        assert types.count("STATUS_CHANGED") == (1 if path == "patch" else 0)

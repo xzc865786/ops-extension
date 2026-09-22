@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 from sqlalchemy.orm import Session
 
@@ -11,6 +13,7 @@ from app.expenses.schemas import (
     CostCenterIn,
     CostCenterOut,
     ExpenseCreate,
+    ExpenseDetailOut,
     ExpenseOut,
     ExpenseUpdate,
     InvoiceUpdate,
@@ -23,6 +26,25 @@ from app.expenses.schemas import (
 )
 
 router = APIRouter(prefix="/ext/api/v1/admin", tags=["expenses"])
+
+
+def _detail_out(claim) -> dict:
+    paid_total = sum((payment.amount for payment in claim.payments if payment.currency == claim.currency), Decimal("0"))
+    reconciliation_required = (
+        any(payment.currency != claim.currency for payment in claim.payments)
+        or any(payment.amount <= 0 for payment in claim.payments)
+        or paid_total > claim.amount_tax_included
+        or (claim.status == "APPROVED" and paid_total == claim.amount_tax_included)
+        or (claim.status == "PAID" and paid_total != claim.amount_tax_included)
+    )
+    return ExpenseDetailOut.model_validate({
+        **ExpenseOut.model_validate(claim).model_dump(),
+        "payments": claim.payments,
+        "attachments": claim.attachments,
+        "paid_total": paid_total,
+        "remaining_amount": claim.amount_tax_included - paid_total,
+        "payment_reconciliation_required": reconciliation_required,
+    }).model_dump()
 
 
 # ---- meta / masters ----
@@ -166,7 +188,7 @@ def create_expense(
 @router.get("/expenses/{claim_id}")
 def get_expense(claim_id: int, db: Session = Depends(get_db), admin: CurrentUser = Depends(require_admin)):
     claim = service.load_claim(db, claim_id)
-    return ExpenseOut.model_validate(claim).model_dump()
+    return _detail_out(claim)
 
 
 @router.patch("/expenses/{claim_id}")
@@ -214,7 +236,7 @@ def add_payment(
 ):
     claim = service.load_claim(db, claim_id)
     claim = service.add_payment(db, claim, admin, body)
-    return ExpenseOut.model_validate(claim).model_dump()
+    return _detail_out(claim)
 
 
 @router.put("/expenses/{claim_id}/invoice")
