@@ -254,17 +254,21 @@ def reply_ticket(
     return msg
 
 
-def close_ticket(db: Session, ticket: Ticket, user: CurrentUser, *, by_admin: bool) -> Ticket:
-    if ticket.status == TicketStatus.CLOSED.value:
-        raise bad_request("工单已关闭", "TICKET_CLOSED")
-    if not by_admin and ticket.creator_user_id != user.id:
-        raise forbidden()
+def _record_close(db: Session, ticket: Ticket, user: CurrentUser, *, by_admin: bool) -> None:
     ticket.status = TicketStatus.CLOSED.value
     ticket.closed_by = ClosedBy.ADMIN.value if by_admin else ClosedBy.USER.value
     ticket.closed_at = datetime.now(timezone.utc)
     ticket.updated_at = datetime.now(timezone.utc)
     et = TicketEventType.CLOSED_BY_ADMIN.value if by_admin else TicketEventType.CLOSED_BY_USER.value
     add_event(db, ticket.id, user.id, et)
+
+
+def close_ticket(db: Session, ticket: Ticket, user: CurrentUser, *, by_admin: bool) -> Ticket:
+    if ticket.status == TicketStatus.CLOSED.value:
+        raise bad_request("工单已关闭", "TICKET_CLOSED")
+    if not by_admin and ticket.creator_user_id != user.id:
+        raise forbidden()
+    _record_close(db, ticket, user, by_admin=by_admin)
     db.commit()
     db.refresh(ticket)
     return ticket
@@ -356,12 +360,12 @@ def patch_ticket_admin(db: Session, ticket: Ticket, admin: CurrentUser, data) ->
                 if new_status != TicketStatus.CLOSED:
                     raise bad_request(f"不允许从 {cur} 转到 {new_status}", "INVALID_TRANSITION")
             old = ticket.status
-            ticket.status = new_status.value
+            if new_status == TicketStatus.CLOSED:
+                _record_close(db, ticket, admin, by_admin=True)
+            else:
+                ticket.status = new_status.value
             if new_status == TicketStatus.RESOLVED:
                 ticket.resolved_at = datetime.now(timezone.utc)
-            if new_status == TicketStatus.CLOSED:
-                ticket.closed_by = ClosedBy.ADMIN.value
-                ticket.closed_at = datetime.now(timezone.utc)
             add_event(
                 db,
                 ticket.id,

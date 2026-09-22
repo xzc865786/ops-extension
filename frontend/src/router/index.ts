@@ -45,6 +45,12 @@ const router = createRouter({
       component: () => import('@/views/admin/expenses/ExpenseForm.vue'),
     },
     {
+      path: '/admin/expenses/:id/edit',
+      name: 'admin-expense-edit',
+      meta: { admin: true },
+      component: () => import('@/views/admin/expenses/ExpenseForm.vue'),
+    },
+    {
       path: '/admin/expenses/:id',
       name: 'admin-expense-detail',
       meta: { admin: true },

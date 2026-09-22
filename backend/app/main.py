@@ -2,6 +2,7 @@ import logging
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -44,7 +45,7 @@ async def app_error_handler(_request: Request, exc: AppError):
 
 @app.exception_handler(RequestValidationError)
 async def validation_handler(_request: Request, exc: RequestValidationError):
-    return JSONResponse(status_code=422, content={"detail": exc.errors(), "code": "VALIDATION_ERROR"})
+    return JSONResponse(status_code=422, content={"detail": jsonable_encoder(exc.errors()), "code": "VALIDATION_ERROR"})
 
 
 @app.get("/ext/api/health")

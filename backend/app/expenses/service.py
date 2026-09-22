@@ -214,23 +214,45 @@ def cancel_claim(db: Session, claim: ExpenseClaim, user: CurrentUser) -> Expense
 
 
 def add_payment(db: Session, claim: ExpenseClaim, user: CurrentUser, data) -> ExpenseClaim:
-    if claim.status not in (ExpenseStatus.APPROVED.value, ExpenseStatus.PAID.value):
-        raise bad_request("仅已审批可登记付款", "INVALID_STATUS")
+    # Serialize payments for one claim on PostgreSQL. Read the total after taking
+    # the row lock; the previously loaded relationship may be stale.
+    claim = db.scalar(
+        select(ExpenseClaim).where(ExpenseClaim.id == claim.id)
+        .with_for_update().execution_options(populate_existing=True)
+    )
+    if claim is None:
+        raise not_found("报账单不存在", "EXPENSE_NOT_FOUND")
+    if claim.status != ExpenseStatus.APPROVED.value:
+        raise bad_request("仅已审批未付清可登记付款", "INVALID_STATUS")
+    amount = data.amount
+    if amount <= 0 or amount != amount.quantize(Decimal("0.01")):
+        raise bad_request("付款金额必须大于零且精确到分", "INVALID_PAYMENT_AMOUNT")
+    currency = (data.currency or claim.currency).upper()
+    if currency != claim.currency:
+        raise bad_request("付款币种与报账单不一致", "PAYMENT_CURRENCY_MISMATCH")
+    payments = db.scalars(select(ExpensePayment).where(ExpensePayment.claim_id == claim.id)).all()
+    if any(p.currency != claim.currency for p in payments):
+        raise bad_request("历史付款币种不一致，请先核对", "PAYMENT_RECONCILIATION_REQUIRED")
+    total_paid = sum((p.amount for p in payments), Decimal("0"))
+    new_total = total_paid + amount
+    if new_total > claim.amount_tax_included:
+        raise bad_request("付款金额超过剩余应付", "PAYMENT_EXCEEDS_BALANCE")
+    if data.mark_paid is True and new_total < claim.amount_tax_included:
+        raise bad_request("未付清时不能标记已付", "PAYMENT_INCOMPLETE")
     paid_at = data.paid_at or datetime.now(timezone.utc)
     pay = ExpensePayment(
         claim_id=claim.id,
         payment_account_id=data.payment_account_id or claim.payment_account_id,
-        amount=data.amount,
-        currency=data.currency or claim.currency,
+        amount=amount,
+        currency=currency,
         paid_at=paid_at,
         reference_no=data.reference_no,
         notes=data.notes,
         created_by_user_id=user.id,
     )
     db.add(pay)
-    add_event(db, claim.id, user.id, ExpenseEventType.PAYMENT_ADDED.value, new={"amount": str(data.amount)})
-    total_paid = sum((p.amount for p in claim.payments), Decimal("0")) + Decimal(data.amount)
-    if data.mark_paid or total_paid >= claim.amount_tax_included:
+    add_event(db, claim.id, user.id, ExpenseEventType.PAYMENT_ADDED.value, new={"amount": str(amount), "currency": currency})
+    if new_total == claim.amount_tax_included:
         claim.status = ExpenseStatus.PAID.value
         claim.paid_at = paid_at
         claim.paid_by_user_id = user.id
@@ -254,8 +276,10 @@ def update_invoice(db: Session, claim: ExpenseClaim, user: CurrentUser, data) ->
         "tax_rate",
         "amount_tax_excluded",
     ):
-        val = getattr(data, field)
-        if val is not None:
+        if field in data.model_fields_set:
+            val = getattr(data, field)
+            if field == "invoice_status" and val is None:
+                raise bad_request("发票状态不可清空", "INVALID_INVOICE_STATUS")
             setattr(claim, field, val)
     add_event(db, claim.id, user.id, ExpenseEventType.INVOICE_ADDED.value)
     db.commit()
