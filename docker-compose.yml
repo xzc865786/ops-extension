@@ -4,16 +4,16 @@ services:
     environment:
       POSTGRES_USER: ops
       POSTGRES_PASSWORD: ops_change_me
-      POSTGRES_DB: qiyuan_ops
+      POSTGRES_DB: huima_ops
     volumes:
       - ops-pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ops -d qiyuan_ops"]
+      test: ["CMD-SHELL", "pg_isready -U ops -d huima_ops"]
       interval: 5s
       timeout: 5s
       retries: 10
     networks:
-      - qiyuan-network
+      - huima-network
 
   minio:
     image: quay.io/minio/minio:latest
@@ -27,7 +27,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     networks:
-      - qiyuan-network
+      - huima-network
 
   createbuckets:
     image: quay.io/minio/mc:latest
@@ -37,19 +37,19 @@ services:
       /bin/sh -c "
       sleep 3;
       mc alias set local http://minio:9000 minioadmin minioadmin_change_me;
-      mc mb -p local/qiyuan-ops || true;
-      mc anonymous set none local/qiyuan-ops;
+      mc mb -p local/huima-ops || true;
+      mc anonymous set none local/huima-ops;
       exit 0;
       "
     networks:
-      - qiyuan-network
+      - huima-network
 
   ops-backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql+psycopg://ops:ops_change_me@ops-db:5432/qiyuan_ops
+      DATABASE_URL: postgresql+psycopg://ops:ops_change_me@ops-db:5432/huima_ops
       SUB2API_BASE_URL: http://sub2api:8080
       SESSION_SECRET: change-me-to-a-long-random-string
       SESSION_TTL_HOURS: "2"
@@ -60,7 +60,7 @@ services:
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin_change_me
-      MINIO_BUCKET: qiyuan-ops
+      MINIO_BUCKET: huima-ops
       MINIO_USE_SSL: "false"
       ATTACHMENT_MAX_BYTES: "20971520"
       LOG_LEVEL: INFO
@@ -72,7 +72,7 @@ services:
     ports:
       - "8090:8090"
     networks:
-      - qiyuan-network
+      - huima-network
 
   ops-frontend:
     build:
@@ -83,7 +83,7 @@ services:
     depends_on:
       - ops-backend
     networks:
-      - qiyuan-network
+      - huima-network
 
 volumes:
   ops-pgdata:
@@ -91,7 +91,7 @@ volumes:
 
 networks:
   # Join Sub2API's network when available:
-  #   docker network create qiyuan-network   # or use existing
+  #   docker network create huima-network   # or use existing
   # For standalone demo, compose creates it.
-  qiyuan-network:
-    name: qiyuan-network
+  huima-network:
+    name: huima-network

@@ -43,7 +43,7 @@ docker compose build ops-backend ops-frontend
 
 ### Phase 1
 - [x] Monorepo 骨架、docker-compose、`.env.example`、nginx 示例
-- [x] SQLAlchemy models + Alembic `001_initial`（库名 `qiyuan_ops`，bucket `qiyuan-ops`）
+- [x] SQLAlchemy models + Alembic `001_initial`（库名 `huima_ops`，bucket `huima-ops`）
 - [x] Identity Adapter + Auth Bootstrap/Logout/Me + Session（Cookie Path=/ext）
 - [x] `require_login` / `require_admin`（仅 `sub2api_role`）
 - [x] MinIO 客户端 + 附件白名单/20MB
@@ -83,4 +83,4 @@ Docker Compose / 真实 Postgres+MinIO+Sub2API 联调：本环境无 Docker，�
 1. **SQLite 测试**：PK 使用 `BigInteger.with_variant(Integer, "sqlite")`，仅影响测试方言；Postgres 仍为 BIGINT。
 2. **DEV_AUTH_BYPASS**：可选开发捷径，默认关闭；生产必须走真实 `/auth/me`。
 3. **主数据前端**：供应商/成本中心/付款账户合并为 `/admin/suppliers` 单页 Tab（路由仍保留 redirect）。
-4. **Compose 网络**：`qiyuan-network` 默认由 compose 创建（非 external），便于独立拉起；与 Sub2API 共用时改为 external 即可。
+4. **Compose 网络**：`huima-network` 默认由 compose 创建（非 external），便于独立拉起；与 Sub2API 共用时改为 external 即可。

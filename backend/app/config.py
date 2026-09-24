@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    database_url: str = "postgresql+psycopg://ops:ops@localhost:5432/qiyuan_ops"
+    database_url: str = "postgresql+psycopg://ops:ops@localhost:5432/huima_ops"
     sub2api_base_url: str = "http://sub2api:8080"
     session_secret: str = "dev-secret-change-me"
     # Short TTL: Sub2API bearer is never stored; Custom Menu must re-hit Bootstrap.
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     minio_endpoint: str = "localhost:9000"
     minio_access_key: str = "minioadmin"
     minio_secret_key: str = "minioadmin"
-    minio_bucket: str = "qiyuan-ops"
+    minio_bucket: str = "huima-ops"
     minio_use_ssl: bool = False
     # Optional browser-reachable host for presigned download redirects.
     # If unset, downloads always stream through the authenticated API proxy.

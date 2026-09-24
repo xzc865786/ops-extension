@@ -21,7 +21,7 @@
 
 - Backend: FastAPI + SQLAlchemy 2 + Alembic + PostgreSQL + MinIO
 - Frontend: Vue3 + Vite + TypeScript + Tailwind + Pinia
-- DB: `qiyuan_ops` · Bucket: `qiyuan-ops`
+- DB: `huima_ops` · Bucket: `huima-ops`
 
 ## 快速开始（Docker Compose）
 
@@ -29,7 +29,7 @@ Compose 使用 [MinIO 官方容器文档](https://min.io/docs/minio/container/in
 
 ```bash
 # 若需与 Sub2API 同网互通 auth/me：
-# docker network create qiyuan-network   # 或加入已有网络
+# docker network create huima-network   # 或加入已有网络
 
 cp .env.example .env   # 修改密钥
 docker compose up -d --build
@@ -47,7 +47,7 @@ docker compose up -d --build
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-export DATABASE_URL=postgresql+psycopg://ops:ops@localhost:5432/qiyuan_ops
+export DATABASE_URL=postgresql+psycopg://ops:ops@localhost:5432/huima_ops
 export DEV_AUTH_BYPASS=true   # 本地可跳过真实 Sub2API；bootstrap token 用 JSON
 alembic upgrade head
 python -m scripts.seed_defaults
