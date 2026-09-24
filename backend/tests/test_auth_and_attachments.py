@@ -164,7 +164,7 @@ def test_download_presign_redirect_when_public_endpoint(client, db, monkeypatch)
 
     mock_storage = MagicMock()
     mock_storage.presigned_get_public.return_value = (
-        "https://files.example.com:9000/qiyuan-ops/obj?X-Amz-Signature=x"
+        "https://files.example.com:9000/huima-ops/obj?X-Amz-Signature=x"
     )
     with patch("app.attachments.router.get_storage", return_value=mock_storage):
         r = client.get(
