@@ -6,17 +6,19 @@ import ToastHost from '@/components/ToastHost.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
-const embedded = computed(() => document.cookie.includes('ops_ui_mode=embedded'))
+// The bootstrap cookie persists when the page is opened in a new tab.
+// Check the frame as well so the standalone view keeps its navigation.
+const embedded = computed(() => window.self !== window.top)
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col bg-dark-900 text-dark-100">
+  <div class="app-shell" :class="{ 'app-shell-embedded': embedded }">
     <header
       v-if="!embedded"
-      class="border-b border-dark-700 bg-dark-900 px-4 py-2.5 flex items-center justify-between"
+      class="app-header"
     >
       <div class="flex items-center gap-3 min-w-0">
-        <span class="font-semibold tracking-wide text-white shrink-0">Ops Extension</span>
+        <span class="font-semibold text-gray-900 dark:text-white shrink-0">Ops Extension</span>
         <nav class="flex gap-1 text-sm overflow-x-auto">
           <RouterLink class="nav-link" to="/tickets">我的工单</RouterLink>
           <template v-if="auth.isAdmin">
@@ -27,8 +29,8 @@ const embedded = computed(() => document.cookie.includes('ops_ui_mode=embedded')
           </template>
         </nav>
       </div>
-      <div class="text-sm flex items-center gap-3 shrink-0 text-dark-400">
-        <span v-if="auth.me" class="text-dark-300">{{ auth.me.username }}（{{ auth.me.sub2api_role }}）</span>
+      <div class="text-sm flex items-center gap-3 shrink-0 text-gray-500 dark:text-dark-400">
+        <span v-if="auth.me" class="text-gray-700 dark:text-dark-300">{{ auth.me.username }}（{{ auth.me.sub2api_role }}）</span>
         <button
           v-if="auth.me"
           type="button"
@@ -39,18 +41,7 @@ const embedded = computed(() => document.cookie.includes('ops_ui_mode=embedded')
         </button>
       </div>
     </header>
-    <header
-      v-else
-      class="border-b border-dark-700 bg-dark-900 px-3 py-1.5 flex gap-1 text-sm overflow-x-auto"
-    >
-      <RouterLink class="nav-link" to="/tickets">我的工单</RouterLink>
-      <template v-if="auth.isAdmin">
-        <RouterLink class="nav-link" to="/admin/tickets">工单管理</RouterLink>
-        <RouterLink class="nav-link" to="/admin/expenses">报账</RouterLink>
-        <RouterLink class="nav-link" to="/admin/reports">报表</RouterLink>
-      </template>
-    </header>
-    <main class="flex-1 p-4 max-w-6xl w-full mx-auto">
+    <main class="app-main">
       <RouterView :key="route.fullPath" />
     </main>
     <ToastHost />

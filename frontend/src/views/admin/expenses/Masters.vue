@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
 
@@ -80,36 +81,41 @@ async function toggleCenter(c: any) {
 
 <template>
   <div>
-    <h1 class="page-title mb-4">主数据（供应商 / 成本中心 / 付款账户）</h1>
+    <div class="page-toolbar">
+      <div>
+        <RouterLink to="/admin/expenses" class="link text-sm">← 返回报账管理</RouterLink>
+        <h1 class="page-title mt-1">主数据</h1>
+      </div>
+    </div>
     <div
       v-if="error"
-      class="mb-3 rounded-lg border border-red-500/40 bg-red-500/15 text-red-300 px-3 py-2 text-sm"
+      class="alert-error mb-4"
     >{{ error }}</div>
-    <div class="flex gap-2 mb-4 text-sm">
+    <div class="tabs mb-4 w-fit max-w-full">
       <button type="button" class="tab" :class="tab==='suppliers' ? 'tab-active' : ''" @click="tab='suppliers'">供应商</button>
       <button type="button" class="tab" :class="tab==='centers' ? 'tab-active' : ''" @click="tab='centers'">成本中心</button>
       <button type="button" class="tab" :class="tab==='accounts' ? 'tab-active' : ''" @click="tab='accounts'">付款账户</button>
     </div>
 
-    <div v-if="tab==='suppliers'" class="card p-4 space-y-3">
-      <div class="flex gap-2 text-sm">
+    <div v-if="tab==='suppliers'" class="card p-5 sm:p-6 space-y-4">
+      <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
         <input v-model="sForm.name" class="input" placeholder="名称" />
         <input v-model="sForm.supplier_type" class="input" placeholder="类型" />
-        <button type="button" class="btn-primary px-3 py-1 rounded" @click="addSupplier">新增</button>
+        <button type="button" class="btn-primary" @click="addSupplier">新增</button>
       </div>
       <ul v-if="suppliers.length" class="text-sm divide-y">
         <li v-for="s in suppliers" :key="s.id" class="py-2">{{ s.name }} <span class="muted">{{ s.supplier_type }}</span></li>
       </ul>
-      <div v-else class="rounded-lg border border-dashed border-slate-600 bg-slate-900/40 px-3 py-4 text-sm muted">
+      <div v-else class="empty-state">
         暂无供应商。请使用上方表单填写名称后点击「新增」创建。
       </div>
     </div>
 
-    <div v-if="tab==='centers'" class="card p-4 space-y-3">
-      <div class="flex gap-2 text-sm">
+    <div v-if="tab==='centers'" class="card p-5 sm:p-6 space-y-4">
+      <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
         <input v-model="cForm.code" class="input" placeholder="CODE" />
         <input v-model="cForm.name" class="input" placeholder="名称" />
-        <button type="button" class="btn-primary px-3 py-1 rounded" @click="addCenter">新增</button>
+        <button type="button" class="btn-primary" @click="addCenter">新增</button>
       </div>
       <ul v-if="centers.length" class="text-sm divide-y">
         <li v-for="c in centers" :key="c.id" class="py-2 flex justify-between">
@@ -117,25 +123,25 @@ async function toggleCenter(c: any) {
           <button type="button" class="link" @click="toggleCenter(c)">{{ c.enabled ? '禁用' : '启用' }}</button>
         </li>
       </ul>
-      <div v-else class="rounded-lg border border-dashed border-slate-600 bg-slate-900/40 px-3 py-4 text-sm muted">
+      <div v-else class="empty-state">
         暂无成本中心。请使用上方表单填写 CODE 与名称后点击「新增」创建。
       </div>
     </div>
 
-    <div v-if="tab==='accounts'" class="card p-4 space-y-3">
-      <div class="flex flex-wrap gap-2 text-sm">
+    <div v-if="tab==='accounts'" class="card p-5 sm:p-6 space-y-4">
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
         <input v-model="aForm.name" class="input" placeholder="账户名" />
         <select v-model="aForm.account_type" class="input">
           <option>COMPANY_BANK</option><option>ALIPAY</option><option>WECHAT</option>
           <option>PERSONAL_BANK</option><option>OTHER</option>
         </select>
         <input v-model="aForm.account_no_masked" class="input" placeholder="脱敏账号" />
-        <button type="button" class="btn-primary px-3 py-1 rounded" @click="addAccount">新增</button>
+        <button type="button" class="btn-primary" @click="addAccount">新增</button>
       </div>
       <ul v-if="accounts.length" class="text-sm divide-y">
         <li v-for="a in accounts" :key="a.id" class="py-2">{{ a.name }} · {{ a.account_type }} · {{ a.account_no_masked }}</li>
       </ul>
-      <div v-else class="rounded-lg border border-dashed border-slate-600 bg-slate-900/40 px-3 py-4 text-sm muted">
+      <div v-else class="empty-state">
         暂无付款账户。请使用上方表单填写账户信息后点击「新增」创建。
       </div>
     </div>

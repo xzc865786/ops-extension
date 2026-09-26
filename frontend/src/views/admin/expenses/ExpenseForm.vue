@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
 
@@ -76,70 +76,71 @@ async function submit() {
 </script>
 
 <template>
-  <div class="card p-4 max-w-3xl space-y-3">
+  <div class="card p-5 sm:p-6 max-w-4xl space-y-5">
+    <RouterLink to="/admin/expenses" class="link inline-block text-sm">← 返回报账管理</RouterLink>
     <h1 class="page-title">{{ isEdit ? '编辑报账' : '新建报账' }}</h1>
-    <div class="grid grid-cols-2 gap-3 text-sm">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
       <div>
-        <label class="block mb-1">费用日期</label>
+        <label class="input-label">费用日期</label>
         <input v-model="form.expense_date" type="date" class="input" />
       </div>
       <div>
-        <label class="block mb-1">分类</label>
+        <label class="input-label">分类</label>
         <select v-model="form.category" class="input">
           <option v-for="c in meta.categories" :key="c.value" :value="c.value">{{ c.label }}</option>
         </select>
       </div>
       <div>
-        <label class="block mb-1">成本中心</label>
+        <label class="input-label">成本中心</label>
         <select v-model="form.cost_center_id" class="input">
           <option :value="null">未指定</option>
           <option v-for="c in centers" :key="c.id" :value="c.id">{{ c.name }}</option>
         </select>
       </div>
       <div>
-        <label class="block mb-1">供应商</label>
+        <label class="input-label">供应商</label>
         <select v-model="form.supplier_id" class="input">
           <option :value="null">未指定</option>
           <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
       </div>
       <div>
-        <label class="block mb-1">付款类型</label>
+        <label class="input-label">付款类型</label>
         <select v-model="form.pay_type" class="input">
           <option v-for="p in meta.pay_types" :key="p.value" :value="p.value">{{ p.label }}</option>
         </select>
       </div>
       <div>
-        <label class="block mb-1">付款账户</label>
+        <label class="input-label">付款账户</label>
         <select v-model="form.payment_account_id" class="input">
           <option :value="null">未指定</option>
           <option v-for="a in accounts" :key="a.id" :value="a.id">{{ a.name }}</option>
         </select>
       </div>
       <div>
-        <label class="block mb-1">币种</label>
+        <label class="input-label">币种</label>
         <select v-model="form.currency" class="input">
           <option v-for="c in meta.currencies" :key="c" :value="c">{{ c }}</option>
         </select>
       </div>
     </div>
     <div>
-      <label class="block text-sm mb-1">说明</label>
+      <label class="input-label">说明</label>
       <textarea v-model="form.description" rows="2" class="input" />
     </div>
     <label class="flex items-center gap-2 text-sm"><input v-model="form.invoice_required" type="checkbox" />需要发票</label>
     <div>
       <div class="flex justify-between items-center mb-1">
-        <h2 class="font-medium text-sm">明细</h2>
+        <h2 class="section-title">明细</h2>
         <button type="button" class="link text-sm" @click="addItem">+ 行</button>
       </div>
-      <div v-for="(it, idx) in form.items" :key="idx" class="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 mb-2 text-sm">
+      <div v-for="(it, idx) in form.items" :key="idx" class="grid grid-cols-1 gap-2 mb-3 text-sm sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
         <input v-model="it.description" placeholder="描述" class="input" />
         <input v-model.number="it.quantity" type="number" step="0.01" placeholder="数量" class="input" />
         <input v-model.number="it.unit_price" type="number" step="0.01" placeholder="单价" class="input" />
         <button type="button" class="btn-secondary" :disabled="form.items.length <= 1" @click="removeItem(idx)">移除</button>
       </div>
     </div>
-    <button class="btn-primary px-4 py-2 rounded text-sm" @click="submit">保存草稿</button>
+    <button class="btn-primary" @click="submit">保存草稿</button>
   </div>
 </template>

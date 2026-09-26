@@ -3,52 +3,40 @@
 @tailwind utilities;
 
 :root {
-  --ops-bg: #0f172a;
-  --ops-panel: #1e293b;
-  --ops-border: #334155;
-  --ops-border-subtle: #1e293b;
-  --ops-text: #f1f5f9;
-  --ops-muted: #94a3b8;
-  --ops-primary: #14b8a6;
-  --ops-primary-hover: #0d9488;
-  --ops-success: #10b981;
-  --ops-radius: 8px;
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 @layer base {
   html {
-    color-scheme: dark;
     @apply antialiased;
   }
 
   body {
-    @apply min-h-screen font-sans;
-    background-color: var(--ops-bg);
-    color: var(--ops-text);
+    @apply min-h-screen bg-gray-50 font-sans text-gray-900 dark:bg-dark-950 dark:text-gray-100;
   }
 
   * {
-    border-color: var(--ops-border);
+    @apply border-gray-200 dark:border-dark-700;
   }
 
   ::selection {
-    background-color: rgba(20, 184, 166, 0.25);
-    color: #f1f5f9;
+    @apply bg-primary-500/20 text-primary-900 dark:text-primary-100;
   }
 
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    @apply h-2 w-2;
   }
+
   ::-webkit-scrollbar-track {
-    background: transparent;
+    @apply bg-transparent;
   }
+
   ::-webkit-scrollbar-thumb {
-    background: #475569;
-    border-radius: 9999px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
+    @apply rounded-full bg-gray-300/50 dark:bg-dark-600/50;
   }
 
   input[type='number']::-webkit-inner-spin-button,
@@ -56,216 +44,176 @@
     -webkit-appearance: none;
     margin: 0;
   }
+
   input[type='number'] {
     -moz-appearance: textfield;
-  }
-}
-
-@layer components {
-  .btn {
-    @apply inline-flex items-center justify-center gap-1.5;
-    @apply px-3 py-1.5 text-sm font-medium;
-    border-radius: var(--ops-radius);
-    @apply transition-colors duration-150;
-    @apply focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:ring-offset-0;
-    @apply disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  .btn-primary {
-    @apply btn text-white;
-    background-color: var(--ops-primary);
-  }
-  .btn-primary:hover {
-    background-color: var(--ops-primary-hover);
-  }
-
-  .btn-secondary {
-    @apply btn;
-    background-color: var(--ops-bg);
-    color: var(--ops-text);
-    border: 1px solid var(--ops-border);
-  }
-  .btn-secondary:hover {
-    background-color: #334155;
-    color: #fff;
-  }
-
-  .btn-ghost {
-    @apply btn bg-transparent;
-    color: var(--ops-muted);
-  }
-  .btn-ghost:hover {
-    background-color: var(--ops-panel);
-    color: var(--ops-text);
-  }
-
-  .btn-danger {
-    @apply btn bg-transparent text-red-400;
-    border: 1px solid var(--ops-border);
-  }
-  .btn-danger:hover {
-    background-color: rgba(248, 113, 113, 0.1);
-    border-color: rgba(248, 113, 113, 0.4);
-  }
-
-  .btn-sm {
-    @apply px-2.5 py-1 text-xs;
-    border-radius: 6px;
-  }
-
-  .input {
-    @apply w-full px-2.5 py-1.5 text-sm;
-    border-radius: var(--ops-radius);
-    background-color: var(--ops-bg);
-    color: var(--ops-text);
-    border: 1px solid var(--ops-border);
-  }
-  .input::placeholder {
-    color: #64748b;
-  }
-  .input:focus {
-    outline: none;
-    border-color: var(--ops-primary);
-    box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.35);
-  }
-
-  .input-label {
-    @apply mb-1 block text-sm font-medium;
-    color: var(--ops-muted);
-  }
-
-  input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']),
-  select,
-  textarea {
-    @apply px-2.5 py-1.5 text-sm;
-    border-radius: var(--ops-radius);
-    background-color: var(--ops-bg);
-    color: var(--ops-text);
-    border: 1px solid var(--ops-border);
-  }
-  input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden'])::placeholder,
-  textarea::placeholder {
-    color: #64748b;
-  }
-  input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']):focus,
-  select:focus,
-  textarea:focus {
-    outline: none;
-    border-color: var(--ops-primary);
-    box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.35);
   }
 
   input[type='checkbox'],
   input[type='radio'] {
-    accent-color: var(--ops-primary);
+    @apply accent-primary-500;
   }
 
   input[type='file'] {
-    @apply text-sm;
-    color: var(--ops-muted);
+    @apply max-w-full text-sm text-gray-600 dark:text-dark-300;
   }
+
   input[type='file']::file-selector-button {
-    margin-right: 0.5rem;
-    border-radius: 6px;
-    border: 0;
-    background-color: #334155;
-    padding: 0.25rem 0.625rem;
-    font-size: 0.75rem;
-    color: var(--ops-text);
-    cursor: pointer;
+    @apply mr-2 cursor-pointer rounded-lg border-0 bg-gray-100 px-3 py-2 text-xs font-medium text-gray-700 dark:bg-dark-700 dark:text-gray-200;
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply flex min-h-screen flex-col bg-gray-50 dark:bg-dark-950;
+  }
+
+  .app-shell-embedded {
+    @apply bg-gradient-to-b from-gray-50 to-white dark:from-dark-900 dark:to-dark-950;
+  }
+
+  .app-header {
+    @apply flex flex-wrap items-center justify-between gap-3 border-b border-gray-200/50 bg-white/80 px-4 py-3 backdrop-blur-xl dark:border-dark-700/50 dark:bg-dark-800/80;
+  }
+
+  .app-main {
+    @apply mx-auto w-full min-w-0 flex-1 p-4 md:p-6 lg:p-8;
+  }
+
+  .app-shell-embedded .app-main {
+    @apply p-4 sm:p-6;
+  }
+
+  .app-shell-embedded .shell-page-title {
+    @apply sr-only;
+  }
+
+  .page-toolbar {
+    @apply mb-5 flex flex-wrap items-center gap-3;
+  }
+
+  .page-toolbar-actions {
+    @apply ml-auto flex flex-wrap items-center gap-2;
+  }
+
+  .filter-bar {
+    @apply mb-5 flex flex-wrap items-center gap-3;
+  }
+
+  .filter-bar .input,
+  .page-toolbar .input {
+    @apply w-full sm:w-auto;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium;
+    @apply transition-all duration-200 ease-out active:scale-[0.98];
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-offset-2 dark:focus:ring-offset-dark-900;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md shadow-primary-500/25;
+    @apply hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:shadow-primary-500/30;
+  }
+
+  .btn-secondary {
+    @apply btn border border-gray-200 bg-white text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50;
+    @apply dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200 dark:hover:border-dark-500 dark:hover:bg-dark-700;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-dark-800;
+  }
+
+  .btn-danger {
+    @apply btn bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md shadow-red-500/25;
+    @apply hover:from-red-600 hover:to-red-700;
+  }
+
+  .btn-sm {
+    @apply rounded-lg px-3 py-1.5 text-xs;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900;
+    @apply placeholder:text-gray-400 transition-all duration-200;
+    @apply focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30;
+    @apply disabled:cursor-not-allowed disabled:bg-gray-100;
+    @apply dark:border-dark-600 dark:bg-dark-800 dark:text-gray-100 dark:placeholder:text-dark-400 dark:disabled:bg-dark-900;
+  }
+
+  .input-label {
+    @apply mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300;
   }
 
   .card {
-    border-radius: var(--ops-radius);
-    background-color: var(--ops-panel);
-    border: 1px solid var(--ops-border);
+    @apply rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-dark-700/50 dark:bg-dark-800/50;
   }
 
   .card-body {
-    @apply p-4;
+    @apply p-5 sm:p-6;
   }
 
   .stat-card {
-    @apply card p-3;
+    @apply card p-5;
   }
 
   .stat-label {
-    @apply text-xs;
-    color: var(--ops-muted);
+    @apply text-sm text-gray-500 dark:text-dark-400;
   }
 
   .stat-value {
-    @apply mt-1 text-2xl font-semibold tabular-nums;
-    color: #fff;
+    @apply mt-1 truncate text-2xl font-bold tabular-nums text-gray-900 dark:text-white;
   }
 
   .table-wrap {
-    @apply overflow-x-auto;
-    border-radius: var(--ops-radius);
-    border: 1px solid var(--ops-border);
-    background-color: var(--ops-panel);
+    @apply min-w-0 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-dark-700 dark:bg-dark-800;
   }
 
   .table {
-    @apply w-full text-sm;
-  }
-
-  .table thead {
-    text-align: left;
-    color: var(--ops-muted);
-    background-color: rgba(15, 23, 42, 0.55);
+    @apply w-full min-w-max text-sm;
   }
 
   .table th {
-    @apply px-3 py-2 font-medium;
-    border-bottom: 1px solid var(--ops-border);
+    @apply whitespace-nowrap border-b border-gray-200 bg-gray-50 px-4 py-3 text-left font-medium text-gray-600;
+    @apply dark:border-dark-700 dark:bg-dark-800/50 dark:text-dark-300;
   }
 
   .table td {
-    @apply px-3 py-2;
-    color: var(--ops-text);
-    border-bottom: 1px solid #334155;
+    @apply border-b border-gray-100 px-4 py-3 text-gray-700 dark:border-dark-700/50 dark:text-gray-300;
   }
 
   .table tbody tr {
-    @apply transition-colors duration-100;
+    @apply transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-dark-700/30;
   }
-  .table tbody tr:hover {
-    background-color: rgba(51, 65, 85, 0.35);
-  }
+
   .table tbody tr:last-child td {
-    border-bottom: 0;
+    @apply border-b-0;
   }
 
   .badge {
-    @apply inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium;
-    border-radius: 6px;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
 
   .badge-primary {
-    @apply badge;
-    background-color: rgba(20, 184, 166, 0.15);
-    color: var(--ops-primary);
+    @apply badge bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400;
   }
 
   .badge-success {
-    @apply badge;
-    background-color: rgba(16, 185, 129, 0.15);
-    color: var(--ops-success);
+    @apply badge bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400;
   }
 
   .badge-warning {
-    @apply badge bg-amber-500/15 text-amber-400;
+    @apply badge bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400;
   }
 
   .badge-danger {
-    @apply badge bg-red-500/15 text-red-400;
+    @apply badge bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400;
   }
 
   .badge-gray {
-    @apply badge;
-    background-color: #334155;
-    color: var(--ops-muted);
+    @apply badge bg-gray-100 text-gray-700 dark:bg-dark-700 dark:text-dark-300;
   }
 
   .badge-dot::before {
@@ -278,92 +226,74 @@
   }
 
   .tabs {
-    @apply flex flex-wrap gap-1.5 text-sm;
+    @apply flex flex-wrap gap-1 rounded-xl bg-gray-100 p-1 dark:bg-dark-800;
   }
 
   .tab {
-    @apply px-3 py-1;
-    border-radius: var(--ops-radius);
-    border: 1px solid var(--ops-border);
-    background-color: var(--ops-bg);
-    color: var(--ops-muted);
-    @apply transition-colors duration-150;
-  }
-  .tab:hover {
-    color: var(--ops-text);
-    border-color: #475569;
+    @apply rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition-all duration-200;
+    @apply hover:text-gray-900 dark:text-dark-400 dark:hover:text-white;
   }
 
   .tab-active {
-    border-color: rgba(20, 184, 166, 0.5);
-    background-color: rgba(20, 184, 166, 0.15);
-    color: var(--ops-primary);
-  }
-  .tab-active:hover {
-    border-color: rgba(20, 184, 166, 0.5);
-    color: var(--ops-primary);
+    @apply bg-white text-gray-900 shadow-sm dark:bg-dark-700 dark:text-white;
   }
 
   .nav-link {
-    @apply px-2.5 py-1.5 text-sm whitespace-nowrap;
-    border-radius: var(--ops-radius);
-    color: var(--ops-muted);
-    @apply transition-colors duration-150;
-  }
-  .nav-link:hover {
-    background-color: var(--ops-panel);
-    color: var(--ops-text);
+    @apply whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200;
+    @apply hover:bg-gray-100 hover:text-gray-900 dark:text-dark-300 dark:hover:bg-dark-700 dark:hover:text-white;
   }
 
-  .nav-link.router-link-active,
-  .nav-link-active {
-    background-color: rgba(20, 184, 166, 0.15);
-    color: var(--ops-primary);
+  .nav-link.router-link-active {
+    @apply bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400;
   }
 
   .link {
-    color: var(--ops-primary);
-  }
-  .link:hover {
-    color: #2dd4bf;
+    @apply font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300;
   }
 
   .page-title {
-    @apply text-lg font-semibold;
-    color: #fff;
+    @apply text-xl font-bold text-gray-900 dark:text-white sm:text-2xl;
   }
 
-  .page-subtitle {
-    @apply text-sm;
-    color: var(--ops-muted);
-  }
-
+  .page-subtitle,
   .muted {
-    color: var(--ops-muted);
+    @apply text-gray-500 dark:text-dark-400;
+  }
+
+  .section-title {
+    @apply text-base font-semibold text-gray-900 dark:text-white;
+  }
+
+  .empty-state {
+    @apply rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-10 text-center text-sm text-gray-500;
+    @apply dark:border-dark-600 dark:bg-dark-800/50 dark:text-dark-400;
+  }
+
+  .alert-success {
+    @apply rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800;
+    @apply dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-300;
+  }
+
+  .alert-error {
+    @apply rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800;
+    @apply dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300;
+  }
+
+  .alert-warning {
+    @apply rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800;
+    @apply dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-300;
   }
 
   .file-picker {
-    @apply inline-flex items-center gap-2 max-w-full cursor-pointer;
-    border-radius: var(--ops-radius);
-    border: 1px solid var(--ops-border);
-    background-color: var(--ops-bg);
-    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+    @apply inline-flex max-w-full cursor-pointer items-center gap-2 rounded-xl border border-gray-200 bg-white p-1;
+    @apply hover:border-gray-300 dark:border-dark-600 dark:bg-dark-800 dark:hover:border-dark-500;
   }
-  .file-picker:hover {
-    border-color: #475569;
-  }
+
   .file-picker-btn {
-    @apply shrink-0 px-2.5 py-1 text-xs font-medium;
-    border-radius: 6px;
-    background-color: #334155;
-    color: var(--ops-text);
+    @apply shrink-0 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 dark:bg-dark-700 dark:text-gray-200;
   }
-  .file-picker:hover .file-picker-btn {
-    background-color: #475569;
-  }
+
   .file-picker-name {
-    @apply text-xs truncate;
-    color: var(--ops-muted);
-    max-width: 14rem;
+    @apply max-w-56 truncate pr-2 text-xs text-gray-500 dark:text-dark-400;
   }
 }

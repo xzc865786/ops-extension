@@ -2,9 +2,14 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '@/api/client'
+import StatusBadge from '@/components/StatusBadge.vue'
 
 const items = ref<any[]>([])
 const status = ref('')
+const payTypeLabel: Record<string, string> = {
+  COMPANY_DIRECT: '公司直付',
+  PERSONAL_ADVANCE: '个人垫付',
+}
 
 async function load() {
   const { data } = await api.get('/admin/expenses', {
@@ -17,15 +22,20 @@ onMounted(load)
 
 <template>
   <div>
-    <div class="flex justify-between mb-4">
-      <h1 class="page-title">报账管理</h1>
-      <RouterLink to="/admin/expenses/new" class="btn-primary">新建报账</RouterLink>
+    <div class="page-toolbar">
+      <h1 class="page-title shell-page-title">报账管理</h1>
+      <div class="page-toolbar-actions">
+        <RouterLink to="/admin/suppliers" class="btn-secondary">主数据</RouterLink>
+        <RouterLink to="/admin/expenses/new" class="btn-primary">新建报账</RouterLink>
+      </div>
     </div>
-    <select v-model="status" class="input mb-3" @change="load">
-      <option value="">全部状态</option>
-      <option>DRAFT</option><option>SUBMITTED</option><option>APPROVED</option>
-      <option>REJECTED</option><option>PAID</option><option>CANCELLED</option>
-    </select>
+    <div class="filter-bar">
+      <select v-model="status" class="input" aria-label="报账状态" @change="load">
+        <option value="">全部状态</option>
+        <option value="DRAFT">草稿</option><option value="SUBMITTED">待审批</option><option value="APPROVED">已审批</option>
+        <option value="REJECTED">已驳回</option><option value="PAID">已付款</option><option value="CANCELLED">已取消</option>
+      </select>
+    </div>
     <div class="table-wrap"><table class="table">
       <thead class="text-left">
         <tr>
@@ -34,14 +44,15 @@ onMounted(load)
         </tr>
       </thead>
       <tbody>
-        <tr v-for="e in items" :key="e.id" class="border-t">
+        <tr v-for="e in items" :key="e.id">
           <td class="p-2"><RouterLink class="link" :to="`/admin/expenses/${e.id}`">{{ e.claim_no }}</RouterLink></td>
           <td class="p-2">{{ e.expense_date }}</td>
           <td class="p-2">{{ e.category }}</td>
           <td class="p-2">{{ e.currency }} {{ e.amount_tax_included }}</td>
-          <td class="p-2">{{ e.pay_type }}</td>
-          <td class="p-2">{{ e.status }}</td>
+          <td class="p-2">{{ payTypeLabel[e.pay_type] || e.pay_type }}</td>
+          <td class="p-2"><StatusBadge :status="e.status" kind="expense" /></td>
         </tr>
+        <tr v-if="!items.length"><td colspan="6" class="p-8 text-center muted">暂无报账单</td></tr>
       </tbody>
     </table></div>
   </div>

@@ -71,18 +71,20 @@ function doExport(format: string, view: string) {
 
 <template>
   <div class="space-y-4">
-    <div class="flex flex-wrap items-end gap-3">
-      <h1 class="page-title mr-auto">费用报表</h1>
-      <select v-model="q.period" class="input"><option value="month">按月</option><option value="year">按年</option></select>
-      <input v-model.number="q.year" type="number" class="input w-24" aria-label="年份" />
-      <input v-if="q.period==='month'" v-model.number="q.month" type="number" min="1" max="12" class="input w-16" aria-label="月份" />
-      <select v-model="q.currency" class="input" aria-label="币种">
-        <option value="">全部币种（分别显示）</option>
-        <option v-for="currency in availableCurrencies" :key="currency" :value="currency">{{ currency }}</option>
-      </select>
-      <button class="btn-primary" @click="load">查询</button>
+    <div class="page-toolbar">
+      <h1 class="page-title shell-page-title">费用报表</h1>
+      <div class="page-toolbar-actions">
+        <select v-model="q.period" class="input"><option value="month">按月</option><option value="year">按年</option></select>
+        <input v-model.number="q.year" type="number" class="input w-24" aria-label="年份" />
+        <input v-if="q.period==='month'" v-model.number="q.month" type="number" min="1" max="12" class="input w-16" aria-label="月份" />
+        <select v-model="q.currency" class="input" aria-label="币种">
+          <option value="">全部币种（分别显示）</option>
+          <option v-for="currency in availableCurrencies" :key="currency" :value="currency">{{ currency }}</option>
+        </select>
+        <button class="btn-primary" @click="load">查询</button>
+      </div>
     </div>
-    <div class="flex flex-wrap gap-2 items-center">
+    <div class="filter-bar">
       <select v-model="exportView" class="input" aria-label="CSV 报表类型">
         <option v-for="[value, label] in viewOptions" :key="value" :value="value">{{ label }}</option>
       </select>
@@ -90,19 +92,20 @@ function doExport(format: string, view: string) {
       <button class="btn-secondary" @click="doExport('xlsx', 'all')">导出完整 Excel</button>
     </div>
 
-    <div v-for="group in summary?.currencies || []" :key="group.currency" class="card p-4 text-sm">
-      <h2 class="font-medium">{{ group.currency }} 费用支出</h2>
-      <p>已审批/已付 {{ group.count }} 笔 · {{ group.total_amount }} · 税额 {{ group.tax_amount }}</p>
-      <p>待审批 {{ group.by_status.SUBMITTED?.count || 0 }} 笔 · {{ group.by_status.SUBMITTED?.amount || 0 }}</p>
-      <p>已驳回 {{ group.by_status.REJECTED?.count || 0 }} 笔 · {{ group.by_status.REJECTED?.amount || 0 }}</p>
+    <div v-for="group in summary?.currencies || []" :key="group.currency" class="stat-card">
+      <p class="stat-label">{{ group.currency }} 费用支出 · 已审批/已付 {{ group.count }} 笔</p>
+      <p class="stat-value">{{ group.total_amount }}</p>
+      <p class="mt-2 text-sm muted">税额 {{ group.tax_amount }}</p>
+      <p class="mt-3 text-sm muted">待审批 {{ group.by_status.SUBMITTED?.count || 0 }} 笔 · {{ group.by_status.SUBMITTED?.amount || 0 }}</p>
+      <p class="text-sm muted">已驳回 {{ group.by_status.REJECTED?.count || 0 }} 笔 · {{ group.by_status.REJECTED?.amount || 0 }}</p>
     </div>
-    <p v-if="summary && !summary.currencies.length" class="muted text-sm">当前筛选条件下暂无数据</p>
+    <p v-if="summary && !summary.currencies.length" class="empty-state">当前筛选条件下暂无数据</p>
 
     <div v-for="section in [
       { key: 'month', title: '按月份' }, { key: 'category', title: '按分类' },
       { key: 'supplier', title: '按供应商' }, { key: 'cost_center', title: '按成本中心' },
-    ]" :key="section.key" class="card p-4">
-      <h2 class="font-medium mb-2">{{ section.title }}</h2>
+    ]" :key="section.key" class="card p-5 sm:p-6">
+      <h2 class="section-title mb-3">{{ section.title }}</h2>
       <div class="table-wrap"><table class="table text-sm">
         <thead><tr><th>币种</th><th>{{ section.key === 'month' ? '月份' : '项目' }}</th><th>笔数</th><th>金额</th><th v-if="section.key === 'month'">税额</th></tr></thead>
         <tbody><tr v-for="(row, index) in dimensions[section.key]" :key="index">
@@ -110,32 +113,36 @@ function doExport(format: string, view: string) {
           <td>{{ row.count }}</td><td>{{ row.amount }}</td><td v-if="section.key === 'month'">{{ row.tax_amount }}</td>
         </tr></tbody>
       </table></div>
-      <p v-if="!dimensions[section.key].length" class="muted text-sm mt-2">暂无数据</p>
+      <p v-if="!dimensions[section.key].length" class="empty-state mt-3">暂无数据</p>
     </div>
 
-    <div class="card p-4">
-      <h2 class="font-medium mb-2">付款状态</h2>
+    <div class="card p-5 sm:p-6">
+      <h2 class="section-title mb-3">付款状态</h2>
       <div class="table-wrap"><table class="table text-sm">
         <thead><tr><th>币种</th><th>实际已付</th><th>已审批待付</th><th>已驳回金额</th><th>异常单据</th></tr></thead>
         <tbody><tr v-for="row in payment?.currencies || []" :key="row.currency">
           <td>{{ row.currency }}</td><td>{{ row.paid_amount }}</td><td>{{ row.unpaid_approved_amount }}</td>
           <td>{{ row.rejected_amount }}（{{ row.rejected_count }} 笔）</td>
           <td>{{ row.anomaly_count ? row.anomalies.join(', ') : '—' }}</td>
-        </tr></tbody>
+        </tr>
+        <tr v-if="payment && !payment.currencies?.length"><td colspan="5" class="p-8 text-center muted">暂无数据</td></tr>
+        </tbody>
       </table></div>
-      <p v-if="payment?.currencies?.some((row: any) => row.anomaly_count)" class="text-amber-300 text-sm mt-2">
+      <p v-if="payment?.currencies?.some((row: any) => row.anomaly_count)" class="alert-warning mt-3">
         存在历史付款异常；异常单未计入已付和待付统计，须先核对后用于财务验收。
       </p>
     </div>
 
-    <div class="card p-4">
-      <h2 class="font-medium mb-2">发票统计</h2>
+    <div class="card p-5 sm:p-6">
+      <h2 class="section-title mb-3">发票统计</h2>
       <div class="table-wrap"><table class="table text-sm">
         <thead><tr><th>币种</th><th>有票金额</th><th>无票/待票金额</th><th>税额</th><th>预计可抵扣税额</th></tr></thead>
         <tbody><tr v-for="row in invoice?.currencies || []" :key="row.currency">
           <td>{{ row.currency }}</td><td>{{ row.with_invoice_amount }}</td><td>{{ row.without_invoice_amount }}</td>
           <td>{{ row.tax_amount }}</td><td>{{ row.deductible_tax }}</td>
-        </tr></tbody>
+        </tr>
+        <tr v-if="invoice && !invoice.currencies?.length"><td colspan="5" class="p-8 text-center muted">暂无数据</td></tr>
+        </tbody>
       </table></div>
     </div>
   </div>

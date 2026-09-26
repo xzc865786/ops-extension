@@ -88,6 +88,10 @@ DEV_AUTH_BYPASS=true ./scripts/smoke_test.sh
 
 建议 `hide_open_button=true`。iframe 会自动追加 `user_id`/`token`/`theme`/`lang`/`ui_mode`；Bootstrap 校验后 302 到干净 URL（无 token）。**菜单必须指向 bootstrap**（不要直链 `/ext/app/...`），以便无入库 token 时仍能刷新身份快照与 Session。
 
+### 前端视觉适配
+
+扩展前端按 Sub2API 官方主线的浅色、深色设计体系维护独立样式，不引用宿主 CSS。Bootstrap 保存的 `ops_theme` Cookie 会在页面渲染前应用；没有主题参数时默认浅色。iframe 中隐藏扩展自身导航，由 Sub2API 侧边栏的四个自定义菜单切换模块；独立打开扩展时仍显示自身导航。“主数据”从“报账管理”页面进入。视觉基准参考 [Sub2API 的样式定义](https://github.com/Wei-Shaw/sub2api/blob/a3eb7ef302961cba716dc78b39b93b60c467db0e/frontend/src/style.css)，宿主升级后可据此核对控件与主题差异。
+
 ## Auth Bridge 要点
 
 1. 读取 query `token`（短暂）→ `Authorization: Bearer` 调 Sub2API `/api/v1/auth/me`
