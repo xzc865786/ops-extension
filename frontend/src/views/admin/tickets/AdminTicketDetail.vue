@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
+import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
 const toast = useToast()
@@ -162,24 +163,25 @@ async function upload() {
 
 <template>
   <div v-if="ticket" class="space-y-4">
+    <RouterLink to="/admin/tickets" class="link inline-block text-sm">← 返回工单管理</RouterLink>
     <div
       v-if="successBanner"
-      class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 px-3 py-2 text-sm"
+      class="alert-success"
     >
       {{ successBanner }}
     </div>
     <div
       v-if="error"
-      class="rounded-lg border border-red-500/40 bg-red-500/15 text-red-300 px-3 py-2 text-sm"
+      class="alert-error"
     >
       {{ error }}
     </div>
 
-    <div class="card p-4">
+    <div class="card p-5 sm:p-6">
       <h1 class="page-title">{{ ticket.title }}</h1>
       <p class="text-sm muted">
-        {{ ticket.ticket_no }} · 创建者 {{ ticket.creator_user_id }} ·
-        <span :class="isClosed ? 'text-red-400 font-medium' : ''">{{ ticket.status }}</span>
+        {{ ticket.ticket_no }} · 创建者 {{ ticket.creator_user_id }}
+        <StatusBadge :status="ticket.status" kind="ticket" />
       </p>
       <div class="whitespace-pre-wrap text-sm mt-2">{{ ticket.description }}</div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-1 text-sm mt-3">
@@ -192,9 +194,9 @@ async function upload() {
 
       <div
         v-if="showCloseConfirm"
-        class="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm space-y-2"
+        class="alert-warning mt-4 space-y-2"
       >
-        <p class="text-amber-200">确认关闭工单？关闭后不可重开。</p>
+        <p>确认关闭工单？关闭后不可重开。</p>
         <div class="flex gap-2">
           <button type="button" class="btn-danger btn-sm" :disabled="closing" @click="confirmClose">
             {{ closing ? '关闭中…' : '确认关闭' }}
@@ -214,7 +216,7 @@ async function upload() {
           @click="askClose"
         >关闭</button>
       </div>
-      <div class="grid grid-cols-3 gap-2 mt-3 text-sm">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3 text-sm">
         <select v-model="patch.status" class="input" :disabled="isClosed">
           <option v-for="s in meta.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
         </select>
@@ -228,13 +230,13 @@ async function upload() {
       <button
         v-if="!isClosed"
         type="button"
-        class="mt-2 btn-primary px-3 py-1 rounded text-sm"
+        class="mt-2 btn-primary"
         @click="savePatch"
       >保存变更</button>
     </div>
 
-    <div class="card p-4">
-      <h2 class="font-medium mb-2">消息 / 内部备注</h2>
+    <div class="card p-5 sm:p-6">
+      <h2 class="section-title mb-2">消息 / 内部备注</h2>
       <div
         v-for="m in ticket.messages"
         :key="m.id"
@@ -243,7 +245,7 @@ async function upload() {
       >
         <div class="text-xs muted">
           {{ m.sender_role }} · {{ m.created_at }}
-          <span v-if="m.is_internal" class="text-amber-400">（内部）</span>
+          <span v-if="m.is_internal" class="text-amber-700 dark:text-amber-400">（内部）</span>
         </div>
         <div class="whitespace-pre-wrap">{{ m.content }}</div>
       </div>
@@ -252,13 +254,13 @@ async function upload() {
         <label class="flex items-center gap-2 text-sm mt-1">
           <input v-model="isInternal" type="checkbox" /> 内部备注（用户不可见）
         </label>
-        <button type="button" class="mt-2 btn-primary px-3 py-1.5 rounded text-sm" @click="send">发送</button>
+        <button type="button" class="mt-2 btn-primary" @click="send">发送</button>
       </template>
       <p v-else class="text-sm muted mt-3">工单已关闭，无法继续回复。</p>
     </div>
 
-    <div class="card p-4">
-      <h2 class="font-medium mb-1">附件</h2>
+    <div class="card p-5 sm:p-6">
+      <h2 class="section-title mb-1">附件</h2>
       <p class="text-xs muted mb-3">限制：≤20MB；仅图片 / PDF / 日志</p>
       <ul v-if="attachments.length" class="text-sm space-y-1 mb-3">
         <li v-for="a in attachments" :key="a.id">

@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
+import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
 const toast = useToast()
@@ -20,6 +21,10 @@ const attachmentTypes = [
   { value: 'CONTRACT', label: '合同' }, { value: 'PAYMENT_SCREENSHOT', label: '付款截图' },
   { value: 'BANK_SLIP', label: '银行回单' }, { value: 'OTHER', label: '其他' },
 ]
+const payTypeLabel: Record<string, string> = {
+  COMPANY_DIRECT: '公司直付',
+  PERSONAL_ADVANCE: '个人垫付',
+}
 const invoiceFields = ['invoice_status', 'invoice_type', 'invoice_number', 'invoice_date',
   'seller_name', 'seller_tax_no', 'buyer_name', 'buyer_tax_no',
   'amount_tax_excluded', 'tax_rate', 'tax_amount', 'deductible']
@@ -104,13 +109,14 @@ async function uploadAttachment() {
 
 <template>
   <div v-if="claim" class="space-y-4">
-    <div class="card p-4">
-      <div class="flex justify-between gap-3">
+    <RouterLink to="/admin/expenses" class="link inline-block text-sm">← 返回报账管理</RouterLink>
+    <div class="card p-5 sm:p-6">
+      <div class="flex flex-wrap justify-between gap-3">
         <h1 class="page-title">{{ claim.claim_no }}</h1>
         <RouterLink v-if="['DRAFT', 'REJECTED'].includes(claim.status)"
           :to="`/admin/expenses/${claim.id}/edit`" class="btn-secondary">编辑</RouterLink>
       </div>
-      <p class="text-sm muted">{{ claim.status }} · {{ claim.category }} · {{ claim.pay_type }} ·
+      <p class="text-sm muted mt-2"><StatusBadge :status="claim.status" kind="expense" /> · {{ claim.category }} · {{ payTypeLabel[claim.pay_type] || claim.pay_type }} ·
         {{ claim.currency }} {{ claim.amount_tax_included }}</p>
       <p class="text-sm mt-2">{{ claim.description }}</p>
       <ul class="text-sm mt-2 list-disc pl-5">
@@ -125,10 +131,10 @@ async function uploadAttachment() {
       <input v-if="claim.status==='SUBMITTED'" v-model="rejectReason" class="input mt-2" placeholder="驳回原因" />
     </div>
 
-    <div class="card p-4 text-sm space-y-3">
-      <h2 class="font-medium">付款</h2>
+    <div class="card p-5 sm:p-6 text-sm space-y-3">
+      <h2 class="section-title">付款</h2>
       <p>累计已付 {{ claim.currency }} {{ claim.paid_total }} · 剩余应付 {{ claim.currency }} {{ claim.remaining_amount }}</p>
-      <p v-if="claim.payment_reconciliation_required" class="text-amber-300">历史付款记录存在异常，须先核对后用于财务验收。</p>
+      <p v-if="claim.payment_reconciliation_required" class="alert-warning">历史付款记录存在异常，须先核对后用于财务验收。</p>
       <div v-if="claim.status==='APPROVED'" class="grid grid-cols-1 md:grid-cols-3 gap-2">
         <input v-model.number="payment.amount" type="number" min="0.01" step="0.01" class="input" aria-label="付款金额" />
         <input v-model="payment.paid_at" type="datetime-local" class="input" aria-label="付款时间" />
@@ -150,8 +156,8 @@ async function uploadAttachment() {
       </table></div>
     </div>
 
-    <div class="card p-4 text-sm space-y-3">
-      <h2 class="font-medium">发票信息</h2>
+    <div class="card p-5 sm:p-6 text-sm space-y-3">
+      <h2 class="section-title">发票信息</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
         <label>状态<select v-model="invoice.invoice_status" class="input">
           <option>NONE</option><option>PENDING</option><option>RECEIVED</option><option>NOT_REQUIRED</option>
@@ -174,8 +180,8 @@ async function uploadAttachment() {
       <button class="btn-secondary" @click="saveInvoice">保存发票信息</button>
     </div>
 
-    <div class="card p-4 text-sm space-y-3">
-      <h2 class="font-medium">附件</h2>
+    <div class="card p-5 sm:p-6 text-sm space-y-3">
+      <h2 class="section-title">附件</h2>
       <p class="muted">单个文件不超过 20 MB；支持图片、PDF、.log、.txt。</p>
       <div class="flex flex-wrap gap-2">
         <select v-model="attachmentType" class="input">

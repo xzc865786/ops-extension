@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
+import StatusBadge from '@/components/StatusBadge.vue'
 
 const auth = useAuthStore()
 const items = ref<any[]>([])
@@ -36,8 +37,8 @@ const tabs = [
 
 <template>
   <div>
-    <h1 class="page-title mb-4">工单管理</h1>
-    <div class="flex flex-wrap gap-2 mb-3 text-sm">
+    <h1 class="page-title shell-page-title mb-4">工单管理</h1>
+    <div class="tabs mb-4 w-fit max-w-full">
       <button
         v-for="t in tabs"
         :key="t.id"
@@ -46,9 +47,9 @@ const tabs = [
         @click="tab = t.id; load()"
       >{{ t.label }}</button>
     </div>
-    <div class="mb-3 flex gap-2">
-      <input v-model="keyword" class="input" placeholder="搜索单号/标题" @keyup.enter="load" />
-      <button class="btn-secondary btn-sm" @click="load">搜索</button>
+    <div class="filter-bar">
+      <input v-model="keyword" class="input sm:max-w-72" placeholder="搜索单号/标题" aria-label="搜索单号或标题" @keyup.enter="load" />
+      <button class="btn-secondary" @click="load">搜索</button>
     </div>
     <div class="table-wrap"><table class="table">
       <thead class="text-left">
@@ -62,16 +63,17 @@ const tabs = [
         </tr>
       </thead>
       <tbody>
-        <tr v-for="t in items" :key="t.id" class="border-t">
+        <tr v-for="t in items" :key="t.id">
           <td class="p-2">
             <RouterLink class="link" :to="`/admin/tickets/${t.id}`">{{ t.ticket_no }}</RouterLink>
           </td>
           <td class="p-2">{{ t.title }}</td>
           <td class="p-2">{{ t.priority }}</td>
-          <td class="p-2">{{ t.status }}</td>
+          <td class="p-2"><StatusBadge :status="t.status" kind="ticket" /></td>
           <td class="p-2">{{ t.claimed_by_user_id || '-' }}</td>
           <td class="p-2">{{ t.created_at }}</td>
         </tr>
+        <tr v-if="!items.length"><td colspan="6" class="p-8 text-center muted">暂无工单</td></tr>
       </tbody>
     </table></div>
   </div>

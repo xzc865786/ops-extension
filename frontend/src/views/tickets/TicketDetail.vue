@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
+import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
 const toast = useToast()
@@ -101,26 +102,27 @@ async function upload() {
 
 <template>
   <div v-if="ticket" class="space-y-4">
+    <RouterLink to="/tickets" class="link inline-block text-sm">← 返回我的工单</RouterLink>
     <div
       v-if="successBanner"
-      class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 px-3 py-2 text-sm"
+      class="alert-success"
     >
       {{ successBanner }}
     </div>
     <div
       v-if="error"
-      class="rounded-lg border border-red-500/40 bg-red-500/15 text-red-300 px-3 py-2 text-sm"
+      class="alert-error"
     >
       {{ error }}
     </div>
 
-    <div class="card p-4">
-      <div class="flex justify-between items-start gap-3">
+    <div class="card p-5 sm:p-6">
+      <div class="flex flex-wrap justify-between items-start gap-3">
         <div>
           <h1 class="page-title">{{ ticket.title }}</h1>
           <p class="text-sm muted mt-1">
-            {{ ticket.ticket_no }} · {{ ticket.category }} · {{ ticket.priority }} ·
-            <span :class="isClosed ? 'text-red-400 font-medium' : ''">{{ ticket.status }}</span>
+            {{ ticket.ticket_no }} · {{ ticket.category }} · {{ ticket.priority }}
+            <StatusBadge :status="ticket.status" kind="ticket" />
           </p>
         </div>
         <div v-if="!isClosed" class="shrink-0">
@@ -135,9 +137,9 @@ async function upload() {
 
       <div
         v-if="showCloseConfirm"
-        class="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm space-y-2"
+        class="alert-warning mt-4 space-y-2"
       >
-        <p class="text-amber-200">确认关闭工单？关闭后不可重开。</p>
+        <p>确认关闭工单？关闭后不可重开。</p>
         <div class="flex gap-2">
           <button
             type="button"
@@ -166,8 +168,8 @@ async function upload() {
       <div v-if="ticket.ref_ticket_no" class="text-sm mt-2">引用原单：{{ ticket.ref_ticket_no }}</div>
     </div>
 
-    <div class="card p-4">
-      <h2 class="font-medium mb-2">消息</h2>
+    <div class="card p-5 sm:p-6">
+      <h2 class="section-title mb-2">消息</h2>
       <div v-for="m in ticket.messages" :key="m.id" class="border-b py-2 text-sm">
         <div class="text-xs muted">{{ m.sender_role }} · {{ m.created_at }}</div>
         <div class="whitespace-pre-wrap">{{ m.content }}</div>
@@ -175,13 +177,13 @@ async function upload() {
       <p v-if="!ticket.messages?.length" class="text-sm muted">暂无消息</p>
       <div v-if="!isClosed" class="mt-3 space-y-2">
         <textarea v-model="reply" rows="3" class="input" placeholder="回复内容" />
-        <button type="button" class="btn-primary px-3 py-1.5 rounded text-sm" @click="sendReply">发送回复</button>
+        <button type="button" class="btn-primary" @click="sendReply">发送回复</button>
       </div>
       <p v-else class="text-sm muted mt-3">工单已关闭，无法继续回复。</p>
     </div>
 
-    <div class="card p-4">
-      <h2 class="font-medium mb-1">附件</h2>
+    <div class="card p-5 sm:p-6">
+      <h2 class="section-title mb-1">附件</h2>
       <p class="text-xs muted mb-3">限制：≤20MB；仅图片 / PDF / 日志</p>
 
       <ul v-if="attachments.length" class="text-sm space-y-1 mb-3">

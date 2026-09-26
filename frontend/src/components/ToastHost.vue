@@ -12,11 +12,11 @@ const { state, dismiss } = useToast()
     <div
       v-for="t in state.items"
       :key="t.id"
-      class="pointer-events-auto rounded-lg border px-3 py-2 text-sm shadow-lg flex items-start gap-2"
+      class="pointer-events-auto flex items-start gap-2 rounded-xl border px-4 py-3 text-sm shadow-lg"
       :class="{
-        'bg-emerald-500/15 border-emerald-500/40 text-emerald-300': t.kind === 'success',
-        'bg-red-500/15 border-red-500/40 text-red-300': t.kind === 'error',
-        'bg-slate-800 border-slate-600 text-slate-200': t.kind === 'info',
+        'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-300': t.kind === 'success',
+        'border-red-200 bg-red-50 text-red-800 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300': t.kind === 'error',
+        'border-gray-200 bg-white text-gray-700 dark:border-dark-600 dark:bg-dark-800 dark:text-gray-200': t.kind === 'info',
       }"
     >
       <span class="flex-1 break-words">{{ t.message }}</span>
