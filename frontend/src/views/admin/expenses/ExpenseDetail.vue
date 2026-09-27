@@ -4,11 +4,14 @@ import { RouterLink, useRoute } from 'vue-router'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/StatusBadge.vue'
+import { downloadAttachment } from '@/utils/attachments'
+import { formatDateTime, labelFor, type LabelOption } from '@/utils/display'
 
 const route = useRoute()
 const toast = useToast()
 const claim = ref<any>(null)
 const accounts = ref<any[]>([])
+const categories = ref<LabelOption[]>([])
 const rejectReason = ref('')
 const busy = ref(false)
 const payment = reactive<any>({ amount: 0, payment_account_id: null, paid_at: '', reference_no: '', notes: '' })
@@ -42,6 +45,7 @@ async function load() {
 }
 
 onMounted(async () => {
+  void api.get('/admin/expenses/meta').then(({ data }) => { categories.value = data.categories }).catch(() => {})
   try {
     const [, accountResponse] = await Promise.all([load(), api.get('/admin/payment-accounts')])
     accounts.value = accountResponse.data
@@ -105,6 +109,14 @@ async function uploadAttachment() {
   } catch (e: any) { toast.error(message(e, '附件上传失败')) }
   finally { busy.value = false }
 }
+
+async function download(id: number, filename: string) {
+  try {
+    await downloadAttachment(id, filename, 'expense')
+  } catch (e: any) {
+    toast.error(e.message || '附件下载失败')
+  }
+}
 </script>
 
 <template>
@@ -116,7 +128,7 @@ async function uploadAttachment() {
         <RouterLink v-if="['DRAFT', 'REJECTED'].includes(claim.status)"
           :to="`/admin/expenses/${claim.id}/edit`" class="btn-secondary">编辑</RouterLink>
       </div>
-      <p class="text-sm muted mt-2"><StatusBadge :status="claim.status" kind="expense" /> · {{ claim.category }} · {{ payTypeLabel[claim.pay_type] || claim.pay_type }} ·
+      <p class="text-sm muted mt-2"><StatusBadge :status="claim.status" kind="expense" /> · {{ labelFor(categories, claim.category) }} · {{ payTypeLabel[claim.pay_type] || claim.pay_type }} ·
         {{ claim.currency }} {{ claim.amount_tax_included }}</p>
       <p class="text-sm mt-2">{{ claim.description }}</p>
       <ul class="text-sm mt-2 list-disc pl-5">
@@ -149,7 +161,7 @@ async function uploadAttachment() {
       <div v-if="claim.payments?.length" class="table-wrap"><table class="table">
         <thead><tr><th>时间</th><th>金额</th><th>账户</th><th>交易号</th><th>备注</th></tr></thead>
         <tbody><tr v-for="p in claim.payments" :key="p.id">
-          <td>{{ p.paid_at }}</td><td>{{ p.currency }} {{ p.amount }}</td>
+          <td>{{ formatDateTime(p.paid_at) }}</td><td>{{ p.currency }} {{ p.amount }}</td>
           <td>{{ accounts.find(a => a.id === p.payment_account_id)?.name || '未指定' }}</td>
           <td>{{ p.reference_no || '—' }}</td><td>{{ p.notes || '—' }}</td>
         </tr></tbody>
@@ -187,13 +199,13 @@ async function uploadAttachment() {
         <select v-model="attachmentType" class="input">
           <option v-for="type in attachmentTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
         </select>
-        <input ref="fileInput" type="file" accept="image/*,.pdf,.log,.txt" @change="chooseFile" />
+        <input ref="fileInput" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.log,.txt" @change="chooseFile" />
         <button class="btn-secondary" :disabled="busy || !selectedFile" @click="uploadAttachment">上传</button>
       </div>
       <ul v-if="claim.attachments?.length" class="space-y-1">
         <li v-for="a in claim.attachments" :key="a.id">
           {{ attachmentTypes.find(type => type.value === a.attachment_type)?.label || a.attachment_type }} ·
-          <a class="link" :href="`/ext/api/v1/attachments/${a.id}/download?source=expense`" target="_blank" rel="noopener">{{ a.file_name }}</a>
+          <button type="button" class="link" @click="download(a.id, a.file_name)">{{ a.file_name }}</button>
           · {{ a.file_size }} bytes
         </li>
       </ul>

@@ -178,6 +178,61 @@ def test_download_presign_redirect_when_public_endpoint(client, db, monkeypatch)
     monkeypatch.delenv("MINIO_PUBLIC_ENDPOINT", raising=False)
 
 
+def test_proxy_download_reports_missing_object_and_storage_failure(client, db):
+    from minio.error import S3Error
+
+    from app.db.models.ticket import Ticket, TicketAttachment
+
+    user = make_user(db, sub2api_id=42, role="user", username="dl3")
+    login_as(client, db, user)
+    ticket = Ticket(
+        ticket_no="T209901010003",
+        creator_user_id=user.id,
+        title="t",
+        description="d",
+        category="OTHER",
+        priority="P2",
+        status="OPEN",
+    )
+    db.add(ticket)
+    db.flush()
+    att = TicketAttachment(
+        ticket_id=ticket.id,
+        uploader_user_id=user.id,
+        object_key="tickets/3/x/a.txt",
+        file_name="状态机demo.txt",
+        mime_type="text/plain",
+        file_size=4,
+        sha256="abcd",
+    )
+    db.add(att)
+    db.commit()
+    db.refresh(att)
+
+    mock_storage = MagicMock()
+    mock_storage.presigned_get_public.return_value = "https://files.example.com/signed"
+    mock_storage.get_bytes.return_value = b"text"
+    url = f"/ext/api/v1/attachments/{att.id}/download?proxy=true"
+    with patch("app.attachments.router.get_storage", return_value=mock_storage):
+        success = client.get(url)
+        assert success.status_code == 200
+        assert success.content == b"text"
+        assert 'filename="demo.txt"' in success.headers["content-disposition"]
+        assert "filename*=UTF-8''%E7%8A%B6%E6%80%81%E6%9C%BAdemo.txt" in success.headers["content-disposition"]
+        mock_storage.presigned_get_public.assert_not_called()
+
+        mock_storage.get_bytes.side_effect = S3Error("NoSuchKey", "missing", None, None, None, None)
+        missing = client.get(url)
+        assert missing.status_code == 404
+        assert missing.json()["code"] == "ATTACHMENT_OBJECT_MISSING"
+
+        mock_storage.get_bytes.side_effect = RuntimeError("private storage detail")
+        unavailable = client.get(url)
+        assert unavailable.status_code == 503
+        assert unavailable.json()["code"] == "ATTACHMENT_STORAGE_UNAVAILABLE"
+        assert "private storage detail" not in unavailable.text
+
+
 def test_bootstrap_never_persists_bearer(client, db):
     """Sub2API bearer must not be written to sessions (or any business table)."""
     from app.db.models.user import Session as UserSession

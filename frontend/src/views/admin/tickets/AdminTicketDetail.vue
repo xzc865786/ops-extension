@@ -4,6 +4,8 @@ import { RouterLink, useRoute } from 'vue-router'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/StatusBadge.vue'
+import { downloadAttachment } from '@/utils/attachments'
+import { formatDateTime } from '@/utils/display'
 
 const route = useRoute()
 const toast = useToast()
@@ -159,6 +161,16 @@ async function upload() {
     busy.value = false
   }
 }
+
+async function download(id: number, filename: string) {
+  error.value = ''
+  try {
+    await downloadAttachment(id, filename)
+  } catch (e: any) {
+    error.value = e.message || '附件下载失败'
+    toast.error(error.value)
+  }
+}
 </script>
 
 <template>
@@ -188,7 +200,7 @@ async function upload() {
         <p v-if="ticket.request_id">Request ID：{{ ticket.request_id }}</p>
         <p v-if="ticket.model_name">模型：{{ ticket.model_name }}</p>
         <p v-if="ticket.api_endpoint">API 接口：{{ ticket.api_endpoint }}</p>
-        <p v-if="ticket.occurred_at">发生时间：{{ ticket.occurred_at }}</p>
+        <p v-if="ticket.occurred_at">发生时间：{{ formatDateTime(ticket.occurred_at) }}</p>
         <p v-if="ticket.error_message" class="whitespace-pre-wrap md:col-span-2">错误信息：{{ ticket.error_message }}</p>
       </div>
 
@@ -244,7 +256,7 @@ async function upload() {
         :class="m.is_internal ? 'bg-amber-500/10' : ''"
       >
         <div class="text-xs muted">
-          {{ m.sender_role }} · {{ m.created_at }}
+          {{ m.sender_role }} · {{ formatDateTime(m.created_at) }}
           <span v-if="m.is_internal" class="text-amber-700 dark:text-amber-400">（内部）</span>
         </div>
         <div class="whitespace-pre-wrap">{{ m.content }}</div>
@@ -264,7 +276,7 @@ async function upload() {
       <p class="text-xs muted mb-3">限制：≤20MB；仅图片 / PDF / 日志</p>
       <ul v-if="attachments.length" class="text-sm space-y-1 mb-3">
         <li v-for="a in attachments" :key="a.id">
-          <a class="link" :href="`/ext/api/v1/attachments/${a.id}/download`" target="_blank">{{ a.file_name }}</a>
+          <button type="button" class="link" @click="download(a.id, a.file_name)">{{ a.file_name }}</button>
           （{{ a.file_size }} bytes）
         </li>
       </ul>
@@ -277,7 +289,7 @@ async function upload() {
             ref="fileInput"
             type="file"
             class="sr-only"
-            accept="image/*,.pdf,.log,.txt,.json"
+            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.log,.txt"
             @change="onFileChange"
           />
         </label>
@@ -294,7 +306,7 @@ async function upload() {
       <h2 class="font-medium mb-2">事件时间线</h2>
       <ul class="text-sm space-y-1">
         <li v-for="e in ticket.events" :key="e.id">
-          <span class="muted">{{ e.created_at }}</span> · {{ e.event_type }}
+          <span class="muted">{{ formatDateTime(e.created_at) }}</span> · {{ e.event_type }}
         </li>
       </ul>
       <p v-if="!ticket.events?.length" class="text-sm muted">暂无事件</p>

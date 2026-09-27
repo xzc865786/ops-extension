@@ -81,7 +81,7 @@
   }
 
   .app-shell-embedded .app-main {
-    @apply p-4 sm:p-6;
+    @apply p-4 pt-14 sm:p-6;
   }
 
   .app-shell-embedded .shell-page-title {
