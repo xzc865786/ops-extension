@@ -4,6 +4,8 @@ import { RouterLink, useRoute } from 'vue-router'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/StatusBadge.vue'
+import { downloadAttachment } from '@/utils/attachments'
+import { formatDateTime, labelFor, type LabelOption } from '@/utils/display'
 
 const route = useRoute()
 const toast = useToast()
@@ -19,13 +21,17 @@ const busy = ref(false)
 
 const isClosed = computed(() => ticket.value?.status === 'CLOSED')
 const attachments = computed(() => ticket.value?.attachments ?? [])
+const categories = ref<LabelOption[]>([])
 
 async function load() {
   const { data } = await api.get(`/tickets/${route.params.id}`)
   ticket.value = data
 }
 
-onMounted(load)
+onMounted(() => {
+  void load()
+  void api.get('/tickets/meta').then(({ data }) => { categories.value = data.categories }).catch(() => {})
+})
 
 function onFileChange() {
   const f = fileInput.value?.files?.[0]
@@ -98,6 +104,16 @@ async function upload() {
     busy.value = false
   }
 }
+
+async function download(id: number, filename: string) {
+  error.value = ''
+  try {
+    await downloadAttachment(id, filename)
+  } catch (e: any) {
+    error.value = e.message || '附件下载失败'
+    toast.error(error.value)
+  }
+}
 </script>
 
 <template>
@@ -121,7 +137,7 @@ async function upload() {
         <div>
           <h1 class="page-title">{{ ticket.title }}</h1>
           <p class="text-sm muted mt-1">
-            {{ ticket.ticket_no }} · {{ ticket.category }} · {{ ticket.priority }}
+            {{ ticket.ticket_no }} · {{ labelFor(categories, ticket.category) }} · {{ ticket.priority }}
             <StatusBadge :status="ticket.status" kind="ticket" />
           </p>
         </div>
@@ -161,7 +177,7 @@ async function upload() {
         <p v-if="ticket.request_id">Request ID：{{ ticket.request_id }}</p>
         <p v-if="ticket.model_name">模型：{{ ticket.model_name }}</p>
         <p v-if="ticket.api_endpoint">API 接口：{{ ticket.api_endpoint }}</p>
-        <p v-if="ticket.occurred_at">发生时间：{{ ticket.occurred_at }}</p>
+        <p v-if="ticket.occurred_at">发生时间：{{ formatDateTime(ticket.occurred_at) }}</p>
         <p v-if="ticket.error_message" class="whitespace-pre-wrap md:col-span-2">错误信息：{{ ticket.error_message }}</p>
       </div>
       <p class="text-xs muted mt-2">标题与描述创建后不可修改，请通过回复补充信息。</p>
@@ -171,7 +187,7 @@ async function upload() {
     <div class="card p-5 sm:p-6">
       <h2 class="section-title mb-2">消息</h2>
       <div v-for="m in ticket.messages" :key="m.id" class="border-b py-2 text-sm">
-        <div class="text-xs muted">{{ m.sender_role }} · {{ m.created_at }}</div>
+        <div class="text-xs muted">{{ m.sender_role }} · {{ formatDateTime(m.created_at) }}</div>
         <div class="whitespace-pre-wrap">{{ m.content }}</div>
       </div>
       <p v-if="!ticket.messages?.length" class="text-sm muted">暂无消息</p>
@@ -188,7 +204,7 @@ async function upload() {
 
       <ul v-if="attachments.length" class="text-sm space-y-1 mb-3">
         <li v-for="a in attachments" :key="a.id">
-          <a class="link" :href="`/ext/api/v1/attachments/${a.id}/download`" target="_blank">{{ a.file_name }}</a>
+          <button type="button" class="link" @click="download(a.id, a.file_name)">{{ a.file_name }}</button>
           （{{ a.file_size }} bytes）
         </li>
       </ul>
@@ -202,7 +218,7 @@ async function upload() {
             ref="fileInput"
             type="file"
             class="sr-only"
-            accept="image/*,.pdf,.log,.txt,.json"
+            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.log,.txt"
             @change="onFileChange"
           />
         </label>

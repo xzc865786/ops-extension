@@ -1,14 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute, RouterLink, RouterView } from 'vue-router'
+import { useRoute, useRouter, RouterLink, RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ToastHost from '@/components/ToastHost.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
+const router = useRouter()
 // The bootstrap cookie persists when the page is opened in a new tab.
 // Check the frame as well so the standalone view keeps its navigation.
 const embedded = computed(() => window.self !== window.top)
+
+async function handleLogout() {
+  const request = auth.logout().then(() => true, () => false)
+  await router.replace({ path: '/auth/error', query: { reason: 'logged_out' } })
+  if (!await request) {
+    await router.replace({ path: '/auth/error', query: { reason: 'logout_failed' } })
+  }
+}
 </script>
 
 <template>
@@ -35,14 +44,14 @@ const embedded = computed(() => window.self !== window.top)
           v-if="auth.me"
           type="button"
           class="btn-ghost btn-sm"
-          @click="auth.logout()"
+          @click="handleLogout"
         >
           退出
         </button>
       </div>
     </header>
     <main class="app-main">
-      <RouterView :key="route.fullPath" />
+      <RouterView v-if="auth.me || route.path === '/auth/error'" :key="route.fullPath" />
     </main>
     <ToastHost />
   </div>

@@ -2,11 +2,13 @@
 import { onMounted, reactive, ref } from 'vue'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
+import { labelFor, type LabelOption } from '@/utils/display'
 
 const toast = useToast()
 const now = new Date()
 const q = reactive({ period: 'month', year: now.getFullYear(), month: now.getMonth() + 1, currency: '' })
 const availableCurrencies = ref<string[]>(['CNY', 'USD', 'HKD', 'EUR', 'JPY'])
+const categories = ref<LabelOption[]>([])
 const summary = ref<any>(null)
 const dimensions = reactive<Record<string, any[]>>({ month: [], category: [], supplier: [], cost_center: [] })
 const payment = ref<any>(null)
@@ -46,6 +48,7 @@ onMounted(async () => {
   try {
     const { data } = await api.get('/admin/expenses/meta')
     availableCurrencies.value = data.currencies
+    categories.value = data.categories
   } catch { /* report API still works without the selector metadata */ }
   await load()
 })
@@ -109,7 +112,7 @@ function doExport(format: string, view: string) {
       <div class="table-wrap"><table class="table text-sm">
         <thead><tr><th>币种</th><th>{{ section.key === 'month' ? '月份' : '项目' }}</th><th>笔数</th><th>金额</th><th v-if="section.key === 'month'">税额</th></tr></thead>
         <tbody><tr v-for="(row, index) in dimensions[section.key]" :key="index">
-          <td>{{ row.currency }}</td><td>{{ section.key === 'month' ? row.month : row.label }}</td>
+          <td>{{ row.currency }}</td><td>{{ section.key === 'month' ? row.month : section.key === 'category' ? labelFor(categories, row.key) : row.label }}</td>
           <td>{{ row.count }}</td><td>{{ row.amount }}</td><td v-if="section.key === 'month'">{{ row.tax_amount }}</td>
         </tr></tbody>
       </table></div>

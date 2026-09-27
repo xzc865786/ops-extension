@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import api from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/StatusBadge.vue'
+import { formatDateTime } from '@/utils/display'
 
 const auth = useAuthStore()
 const items = ref<any[]>([])
@@ -71,7 +72,7 @@ const tabs = [
           <td class="p-2">{{ t.priority }}</td>
           <td class="p-2"><StatusBadge :status="t.status" kind="ticket" /></td>
           <td class="p-2">{{ t.claimed_by_user_id || '-' }}</td>
-          <td class="p-2">{{ t.created_at }}</td>
+          <td class="p-2">{{ formatDateTime(t.created_at) }}</td>
         </tr>
         <tr v-if="!items.length"><td colspan="6" class="p-8 text-center muted">暂无工单</td></tr>
       </tbody>

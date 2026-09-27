@@ -3,9 +3,11 @@ import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '@/api/client'
 import StatusBadge from '@/components/StatusBadge.vue'
+import { labelFor, type LabelOption } from '@/utils/display'
 
 const items = ref<any[]>([])
 const status = ref('')
+const categories = ref<LabelOption[]>([])
 const payTypeLabel: Record<string, string> = {
   COMPANY_DIRECT: '公司直付',
   PERSONAL_ADVANCE: '个人垫付',
@@ -17,7 +19,10 @@ async function load() {
   })
   items.value = data.items
 }
-onMounted(load)
+onMounted(() => {
+  void load()
+  void api.get('/admin/expenses/meta').then(({ data }) => { categories.value = data.categories }).catch(() => {})
+})
 </script>
 
 <template>
@@ -47,7 +52,7 @@ onMounted(load)
         <tr v-for="e in items" :key="e.id">
           <td class="p-2"><RouterLink class="link" :to="`/admin/expenses/${e.id}`">{{ e.claim_no }}</RouterLink></td>
           <td class="p-2">{{ e.expense_date }}</td>
-          <td class="p-2">{{ e.category }}</td>
+          <td class="p-2">{{ labelFor(categories, e.category) }}</td>
           <td class="p-2">{{ e.currency }} {{ e.amount_tax_included }}</td>
           <td class="p-2">{{ payTypeLabel[e.pay_type] || e.pay_type }}</td>
           <td class="p-2"><StatusBadge :status="e.status" kind="expense" /></td>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
@@ -13,6 +13,14 @@ const sForm = reactive({ name: '', supplier_type: '' })
 const cForm = reactive({ code: '', name: '' })
 const aForm = reactive({ name: '', account_type: 'COMPANY_BANK', account_no_masked: '', owner_label: '' })
 const error = ref('')
+watch(tab, () => { error.value = '' })
+
+function required(value: string, message: string): boolean {
+  if (value.trim()) return true
+  error.value = message
+  toast.error(message)
+  return false
+}
 
 async function load() {
   const [s, c, a] = await Promise.all([
@@ -32,6 +40,8 @@ function errMsg(e: any, fallback: string) {
 
 async function addSupplier() {
   error.value = ''
+  if (!required(sForm.name, '请填写供应商名称')) return
+  sForm.name = sForm.name.trim()
   try {
     await api.post('/admin/suppliers', sForm)
     sForm.name = ''
@@ -45,6 +55,9 @@ async function addSupplier() {
 }
 async function addCenter() {
   error.value = ''
+  if (!required(cForm.code, '请填写成本中心 CODE') || !required(cForm.name, '请填写成本中心名称')) return
+  cForm.code = cForm.code.trim()
+  cForm.name = cForm.name.trim()
   try {
     await api.post('/admin/cost-centers', cForm)
     cForm.code = ''
@@ -58,6 +71,8 @@ async function addCenter() {
 }
 async function addAccount() {
   error.value = ''
+  if (!required(aForm.name, '请填写付款账户名称')) return
+  aForm.name = aForm.name.trim()
   try {
     await api.post('/admin/payment-accounts', aForm)
     aForm.name = ''

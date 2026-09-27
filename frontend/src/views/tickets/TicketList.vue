@@ -3,10 +3,12 @@ import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '@/api/client'
 import StatusBadge from '@/components/StatusBadge.vue'
+import { formatDateTime, labelFor, type LabelOption } from '@/utils/display'
 
 const items = ref<any[]>([])
 const status = ref('')
 const loading = ref(true)
+const categories = ref<LabelOption[]>([])
 
 async function load() {
   loading.value = true
@@ -15,7 +17,10 @@ async function load() {
   loading.value = false
 }
 
-onMounted(load)
+onMounted(() => {
+  void load()
+  void api.get('/tickets/meta').then(({ data }) => { categories.value = data.categories }).catch(() => {})
+})
 
 const statusLabel: Record<string, string> = {
   OPEN: '待处理',
@@ -60,10 +65,10 @@ const statusLabel: Record<string, string> = {
             <RouterLink class="link" :to="`/tickets/${t.id}`">{{ t.ticket_no }}</RouterLink>
           </td>
           <td class="p-2">{{ t.title }}</td>
-          <td class="p-2">{{ t.category }}</td>
+          <td class="p-2">{{ labelFor(categories, t.category) }}</td>
           <td class="p-2">{{ t.priority }}</td>
           <td class="p-2"><StatusBadge :status="t.status" kind="ticket" /></td>
-          <td class="p-2">{{ t.created_at }}</td>
+          <td class="p-2">{{ formatDateTime(t.created_at) }}</td>
         </tr>
         <tr v-if="!items.length"><td colspan="6" class="p-8 text-center muted">暂无工单</td></tr>
       </tbody>
