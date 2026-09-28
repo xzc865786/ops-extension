@@ -39,6 +39,27 @@ docker compose up -d --build
 
 启动后 backend 容器会执行 `alembic upgrade head` 与种子脚本。
 
+### 清空 Ops 数据库
+
+需要重新开始测试时，在 `backend` 目录运行以下命令（使用当前 `DATABASE_URL`）：
+
+```bash
+python -m scripts.rollback_all_data
+python -m scripts.rollback_all_data --execute --confirm-db huima_ops
+```
+
+第一条命令只显示各表行数；第二条命令会在一个事务中清空 `public` 下除 `alembic_version` 外的所有表，并重置自增序列。执行前请备份并核对连接的数据库名；这会删除工单、报账、主数据、用户快照、会话及数据库中的附件记录，保留表结构和迁移版本。MinIO 中的附件文件不在数据库内，不会被此脚本删除。后端容器重新启动时会再次运行 `seed_defaults`，补回默认成本中心和示例付款账户。
+
+Docker Compose 部署时，更新后端镜像后在维护窗口停止后端写入，再用一次性容器执行：
+
+```bash
+docker compose build ops-backend
+docker compose stop ops-backend
+docker compose run --rm --no-deps ops-backend python -m scripts.rollback_all_data
+docker compose run --rm --no-deps ops-backend python -m scripts.rollback_all_data --execute --confirm-db huima_ops
+docker compose up -d ops-backend
+```
+
 ## 本地开发
 
 ### Backend
