@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 56" width="500" height="112">
+  <title>汇码智能</title>
+  <defs>
+    <linearGradient id="hmHolo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c5cff"/>
+      <stop offset=".35" stop-color="#22d3ee"/>
+      <stop offset=".65" stop-color="#b8ff5c"/>
+      <stop offset="1" stop-color="#ff5ca8"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(4 4)">
+    <rect x="1.5" y="1.5" width="45" height="45" rx="14" fill="#13122b" stroke="url(#hmHolo)" stroke-width="3"/>
+    <path d="M17 15.8 Q 22.5 18 26 24 M15.8 24 H26 M17 32.2 Q 22.5 30 26 24" fill="none" stroke="#fff" stroke-opacity=".24" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="14.5" cy="14.5" r="3.4" fill="#ff5ca8"/>
+    <circle cx="12.5" cy="24" r="3.4" fill="#22d3ee"/>
+    <circle cx="14.5" cy="33.5" r="3.4" fill="#7c5cff"/>
+    <path d="M26 15.5 L34.5 24 L26 32.5" fill="none" stroke="#b8ff5c" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <!-- 文字依赖系统字体；正式物料建议在设计软件里将文字转曲 -->
+  <text x="64" y="31" font-family="HarmonyOS Sans SC, MiSans, PingFang SC, Microsoft YaHei, Noto Sans SC, sans-serif" font-size="24" font-weight="900" fill="#13122b" letter-spacing="1">汇码智能</text>
+  <text x="65" y="46" font-family="JetBrains Mono, Consolas, Menlo, monospace" font-size="8.5" font-weight="700" fill="#6d6b8f" letter-spacing="2.2">HUIMA · AI GATEWAY</text>
+</svg>

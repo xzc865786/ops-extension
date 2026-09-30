@@ -4,8 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="light" />
-<title>TYSY API · 流光全息</title>
-<meta name="description" content="一把钥匙，打开所有 AI。Claude、GPT、Gemini 一站接入。" />
+<title>汇码智能 · 一把钥匙，打开所有 AI</title>
+<meta name="description" content="汇码智能：一把钥匙，打开所有 AI。Claude、GPT、DeepSeek、GLM 一站接入。" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c5cff'/%3E%3Cstop offset='.35' stop-color='%2322d3ee'/%3E%3Cstop offset='.65' stop-color='%23b8ff5c'/%3E%3Cstop offset='1' stop-color='%23ff5ca8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='1.5' y='1.5' width='45' height='45' rx='14' fill='%2313122b' stroke='url(%23g)' stroke-width='3'/%3E%3Ccircle cx='14.5' cy='14.5' r='3.4' fill='%23ff5ca8'/%3E%3Ccircle cx='12.5' cy='24' r='3.4' fill='%2322d3ee'/%3E%3Ccircle cx='14.5' cy='33.5' r='3.4' fill='%237c5cff'/%3E%3Cpath d='M26 15.5 34.5 24 26 32.5' fill='none' stroke='%23b8ff5c' stroke-width='4.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 <style>
   @property --ang { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
   :root {
@@ -73,7 +74,12 @@
     backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%);
   }
   .logo { display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: -.01em; font-size: 17px; }
-  .logo .orb { width: 28px; height: 28px; border-radius: 50%; background: conic-gradient(from var(--ang), #7c5cff, #22d3ee, #b8ff5c, #ffb347, #ff5ca8, #7c5cff); animation: rot 4s linear infinite; box-shadow: inset 0 0 0 5px rgba(255,255,255,.75); }
+  .brand-mark { width: 34px; height: 34px; flex: none; display: block; overflow: visible; }
+  .logo .brand-mark { filter: drop-shadow(0 6px 12px rgba(124,92,255,.35)); transition: transform .5s var(--spring); }
+  .logo:hover .brand-mark { transform: rotate(-8deg) scale(1.08); }
+  .logo .wordmark { display: flex; flex-direction: column; line-height: 1.1; }
+  .logo .wordmark small { font: 700 9px/1 var(--font-mono); letter-spacing: .16em; color: var(--muted); margin-top: 4px; }
+  @media (max-width: 380px) { .logo .wordmark small { display: none; } }
   @keyframes rot { to { --ang: 360deg; } }
   .nav .links { margin-left: auto; display: flex; align-items: center; gap: 4px; }
   .nav .links a { padding: 9px 14px; border-radius: 999px; font-size: 14px; color: var(--ink-2); transition: background .2s; }
@@ -162,11 +168,12 @@
   .chip { width: 46px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, #f7d58b, #c9973b); position: relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
   .chip::before, .chip::after { content: ""; position: absolute; left: 6px; right: 6px; height: 1px; background: rgba(0,0,0,.35); }
   .chip::before { top: 11px; } .chip::after { bottom: 11px; }
-  .brandmark { font: 900 16px/1 var(--font-sans); letter-spacing: -.01em; }
+  .brandmark { display: flex; align-items: center; gap: 8px; font: 900 17px/1 var(--font-sans); letter-spacing: .02em; }
+  .brandmark .brand-mark { width: 26px; height: 26px; }
   .cardlabel { font: 700 10px/1 var(--font-mono); letter-spacing: .22em; color: var(--ink-2); margin-top: auto; }
   .cardnum { font: 700 clamp(17px, 2.4vw, 21px)/1.3 var(--font-mono); letter-spacing: .06em; margin: 8px 0 14px; white-space: nowrap; }
   .models { display: flex; gap: 6px; flex-wrap: wrap; }
-  .models span { font: 700 11px/1 var(--font-sans); padding: 6px 9px; border-radius: 999px; background: rgba(255,255,255,.7); border: 1px solid rgba(19,18,43,.08); }
+  .models span { font: 700 11px/1 var(--font-sans); padding: 5px 8px; border-radius: 999px; background: rgba(255,255,255,.7); border: 1px solid rgba(19,18,43,.08); }
   .models span i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 0; }
   .validthru { font: 700 10px/1.3 var(--font-mono); text-align: right; color: var(--ink-2); letter-spacing: .1em; }
   .validthru b { display: block; font-size: 18px; color: var(--ink); letter-spacing: 0; }
@@ -311,6 +318,7 @@
     filter: blur(80px); animation: rot 10s linear infinite;
   }
   .finale > * { position: relative; }
+  .finale .finale-mark { width: 64px; height: 64px; margin: 0 auto 26px; animation: floaty 5s ease-in-out infinite; }
   .finale h2 { font-size: clamp(38px, 7vw, 88px); margin: 0 0 18px; }
   .finale p { margin: 0 auto 36px; color: rgba(255,255,255,.8); max-width: 28em; }
   .finale .btn-big { display: inline-flex; align-items: center; gap: 12px; padding: 20px 34px; border-radius: 999px; background: #fff; color: var(--ink); font-weight: 900; font-size: 19px; box-shadow: 0 20px 50px -16px rgba(0,0,0,.6); transition: transform .4s var(--spring); }
@@ -329,13 +337,29 @@
 </style>
 </head>
 <body>
+  <!-- 汇码智能标志：三个圆点（"汇"的三点水 = 多路模型）汇入代码提示符 ›（"码"） -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="hmHolo" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#7c5cff"/><stop offset=".35" stop-color="#22d3ee"/><stop offset=".65" stop-color="#b8ff5c"/><stop offset="1" stop-color="#ff5ca8"/>
+      </linearGradient>
+      <symbol id="hmMark" viewBox="0 0 48 48">
+        <rect x="1.5" y="1.5" width="45" height="45" rx="14" fill="#13122b" stroke="url(#hmHolo)" stroke-width="3"/>
+        <path d="M17 15.8 Q 22.5 18 26 24 M15.8 24 H26 M17 32.2 Q 22.5 30 26 24" fill="none" stroke="#fff" stroke-opacity=".24" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="14.5" cy="14.5" r="3.4" fill="#ff5ca8"/>
+        <circle cx="12.5" cy="24" r="3.4" fill="#22d3ee"/>
+        <circle cx="14.5" cy="33.5" r="3.4" fill="#7c5cff"/>
+        <path d="M26 15.5 L34.5 24 L26 32.5" fill="none" stroke="#b8ff5c" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+    </defs>
+  </svg>
   <div class="blobs" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="grain" aria-hidden="true"></div>
   <div class="cursor" id="cursor" aria-hidden="true"></div>
   <canvas id="confetti" aria-hidden="true"></canvas>
 
   <nav class="nav" aria-label="主导航">
-    <a class="logo" data-go="home"><span class="orb"></span><span data-site-name>TYSY API</span></a>
+    <a class="logo" data-go="home" aria-label="汇码智能 首页"><svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><use href="#hmMark"/></svg><span class="wordmark"><span data-site-name>汇码智能</span><small>HUIMA · AI GATEWAY</small></span></a>
     <div class="links">
       <a data-go="models">模型广场</a>
       <a data-go="docs">文档</a>
@@ -348,7 +372,7 @@
     <!-- ====== HERO ====== -->
     <header class="hero">
       <div>
-        <span class="kicker"><b>NEW</b>Claude · GPT · Gemini 已接入</span>
+        <span class="kicker"><b>NEW</b>Claude · GPT · DeepSeek · GLM 已接入</span>
         <h1 aria-label="一把钥匙，打开所有 AI">
           <span class="w split">一把钥匙，</span><br />
           <span class="w split">打开所有</span>&nbsp;<span class="w squiggle"><span class="ch holo" style="animation-delay:.75s, 0s">AI</span><svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M2 12 Q 20 2 40 12 T 80 12 T 120 12 T 160 12 T 198 10" stroke="#13122b" stroke-width="5" fill="none" stroke-linecap="round"/></svg></span>
@@ -366,14 +390,15 @@
           <div class="face front">
             <div class="foil"></div><div class="glare"></div>
             <div class="content">
-              <div class="row"><div class="chip"></div><div class="brandmark" data-site-name>TYSY API</div></div>
+              <div class="row"><div class="chip"></div><div class="brandmark"><svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><use href="#hmMark"/></svg><span data-site-name>汇码智能</span></div></div>
               <div class="cardlabel">UNIVERSAL AI KEY</div>
               <div class="cardnum">sk-•••• •••• •••• 7F3A</div>
               <div class="row">
                 <div class="models">
                   <span><i style="background:#ff8a4c"></i>Claude</span>
                   <span><i style="background:#14c38e"></i>GPT</span>
-                  <span><i style="background:#4c8dff"></i>Gemini</span>
+                  <span><i style="background:#4d6bfe"></i>DeepSeek</span>
+                  <span><i style="background:#a855f7"></i>GLM</span>
                 </div>
                 <div class="validthru">VALID THRU<b>∞</b></div>
               </div>
@@ -395,7 +420,7 @@
 
     <div class="marquee" aria-hidden="true">
       <div class="mq" id="mq1">
-        <span>CLAUDE <b class="star">✺</b></span><span class="o">GPT <b class="star">✺</b></span><span class="h">GEMINI</span><span class="star">✺</span><span class="o">ONE KEY</span><span class="star">✺</span>
+        <span>CLAUDE <b class="star">✺</b></span><span class="o">GPT <b class="star">✺</b></span><span class="h">DEEPSEEK</span><span class="star">✺</span><span>GLM <b class="star">✺</b></span><span class="o">ONE KEY</span><span class="star">✺</span>
       </div>
       <div class="mq rev" id="mq2">
         <span>智能调度 ·</span><span>自动故障转移 ·</span><span>会话保持 ·</span><span>按量计费 ·</span><span>配额可控 ·</span><span>原生协议兼容 ·</span>
@@ -439,8 +464,8 @@
         <article class="toy rise">
           <div class="stage">
             <div class="orbit"><div class="sun">GW</div>
-              <div class="ring"><b style="background:#ff8a4c"></b><b class="b2" style="background:#4c8dff"></b></div>
-              <div class="ring"><b style="background:#14c38e"></b></div>
+              <div class="ring"><b style="background:#ff8a4c"></b><b class="b2" style="background:#4d6bfe"></b></div>
+              <div class="ring"><b style="background:#14c38e"></b><b class="b2" style="background:#a855f7"></b></div>
             </div>
           </div>
           <h3>智能调度</h3>
@@ -500,12 +525,13 @@
     </section>
 
     <div class="finale rise" id="finale">
+      <svg class="brand-mark finale-mark" viewBox="0 0 48 48" aria-hidden="true"><use href="#hmMark"/></svg>
       <h2>拿上钥匙，<br />去哪都行。</h2>
       <p>从今天起，调用任何模型都只需要这一把。</p>
       <a class="btn-big" data-go="start" data-authed="进入控制台"><b class="lbl">领取我的钥匙</b><span>→</span></a>
     </div>
   </main>
-  <footer>© <span id="year"></span> <span data-site-name>TYSY API</span> · 一把钥匙，打开所有 AI</footer>
+  <footer>© <span id="year"></span> <span data-site-name>汇码智能</span> · 一把钥匙，打开所有 AI</footer>
 
 <script>
 /* =========================================================
@@ -513,7 +539,9 @@
  * links 中留空的项会被自动隐藏；页面在 iframe 中时链接会跳出到顶层窗口
  * ========================================================= */
 const SITE = {
-  name: 'TYSY API',
+  name: '汇码智能',
+  // 留空时使用页面内置的 SVG 标志；填入图片地址（如 '/huima-logo.svg'）则替换成官方 logo 文件
+  logoUrl: '',
   fallbackOrigin: 'https://api.tysy.top',
   links: {
     home: '/',
@@ -540,7 +568,16 @@ const origin = /^https?:/.test(location.protocol) ? location.origin : SITE.fallb
     }
   } catch (e) { /* 无法读取存储时按未登录处理 */ }
   document.querySelectorAll('[data-site-name]').forEach(el => { el.textContent = SITE.name; });
-  document.title = SITE.name + ' · 流光全息';
+  document.title = SITE.name + ' · 一把钥匙，打开所有 AI';
+  if (SITE.logoUrl) {
+    document.querySelectorAll('svg.brand-mark').forEach(svg => {
+      const img = new Image();
+      img.src = SITE.logoUrl;
+      img.alt = '';
+      img.className = svg.getAttribute('class');
+      svg.replaceWith(img);
+    });
+  }
   document.querySelectorAll('[data-go]').forEach(a => {
     let key = a.dataset.go;
     if (key === 'start') key = auth ? (auth.admin ? 'adminDashboard' : 'dashboard') : 'login';
@@ -634,7 +671,7 @@ const confetti = (function () {
   const zone = document.getElementById('zone');
   let flipped = false;
   document.getElementById('backCode').innerHTML =
-    `<em># 你的万能钥匙</em>\n<b>base_url</b> = "${origin}"\n<b>api_key</b>  = "sk-••••7F3A"\n\n<em># 想用谁就写谁</em>\nmodel = "claude-sonnet-4-5"\n      | "gpt-5" | "gemini-2.5-pro"`;
+    `<em># 你的万能钥匙</em>\n<b>base_url</b> = "${origin}"\n<b>api_key</b>  = "sk-••••7F3A"\n\n<em># 想用谁就写谁</em>\nmodel = "claude-sonnet-4-5" | "gpt-5"\n      | "deepseek-chat" | "glm-4.6"`;
   function tilt(e) {
     const r = card.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
@@ -761,7 +798,7 @@ if (finePointer && !reduceMotion) {
     js: [
       ['k', 'import '], ['', 'OpenAI '], ['k', 'from '], ['s', '"openai"'], ['', ';\n\n'],
       ['k', 'const '], ['', 'client = '], ['k', 'new '], ['f', 'OpenAI'], ['', '({\n  baseURL: '], ['s', `"${origin}/v1"`], ['', ',\n  apiKey: process.env.API_KEY,\n});\n\n'],
-      ['k', 'const '], ['', 'res = '], ['k', 'await '], ['', 'client.chat.completions.'], ['f', 'create'], ['', '({\n  model: '], ['s', '"gpt-5"'], ['', ',\n  messages: [{ role: '], ['s', '"user"'], ['', ', content: '], ['s', '"你好"'], ['', ' }],\n});']
+      ['k', 'const '], ['', 'res = '], ['k', 'await '], ['', 'client.chat.completions.'], ['f', 'create'], ['', '({\n  model: '], ['s', '"gpt-5"'], ['', ', '], ['c', '// 换成 "deepseek-chat" 或 "glm-4.6" 同样可用'], ['', '\n  messages: [{ role: '], ['s', '"user"'], ['', ', content: '], ['s', '"你好"'], ['', ' }],\n});']
     ],
     sh: [
       ['f', 'curl '], ['s', `${origin}/v1/messages`], ['', ' \\\n  '],
