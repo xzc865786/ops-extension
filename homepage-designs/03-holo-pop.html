@@ -220,7 +220,7 @@
   .toys { margin-top: 44px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
   .toy {
     --tx: 0deg; --ty: 0deg;
-    grid-column: span 4; position: relative; padding: 26px; border-radius: 28px; min-height: 280px;
+    grid-column: span 6; position: relative; padding: 26px; border-radius: 28px; min-height: 280px;
     background: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.95);
     box-shadow: 0 20px 50px -30px rgba(60,40,140,.45);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -228,12 +228,10 @@
     transition: transform .5s var(--spring);
     display: flex; flex-direction: column;
   }
-  .toy.w7 { grid-column: span 7; } .toy.w5 { grid-column: span 5; }
   .toy h3 { margin: auto 0 6px; font-size: 22px; letter-spacing: -.01em; }
   .toy p { margin: 0; color: var(--muted); font-size: 14px; }
   .toy .stage { position: relative; flex: 0 0 auto; height: 140px; margin-bottom: 18px; border-radius: 18px; background: linear-gradient(135deg, rgba(124,92,255,.07), rgba(34,211,238,.07)); display: grid; place-items: center; overflow: hidden; }
-  @media (max-width: 960px) { .toy, .toy.w7, .toy.w5 { grid-column: span 6; } }
-  @media (max-width: 640px) { .toy, .toy.w7, .toy.w5 { grid-column: span 12; } }
+  @media (max-width: 640px) { .toy { grid-column: span 12; } }
 
   /* 故障切换玩具 */
   .route { width: 100%; height: 100%; }
@@ -247,21 +245,12 @@
   .toy.broken .route .bad { opacity: 1; }
   .toy .route .lb { opacity: .2; }
   .toy.broken .route .lb { opacity: 1; }
-  .switch { position: absolute; right: 14px; top: 14px; display: inline-flex; align-items: center; gap: 8px; font: 700 12px var(--font-sans); color: var(--ink-2); background: #fff; border: 1px solid var(--line); padding: 6px 8px 6px 12px; border-radius: 999px; cursor: pointer; }
+  .switch { position: absolute; left: 12px; bottom: 10px; display: inline-flex; align-items: center; gap: 8px; font: 700 12px var(--font-sans); color: var(--ink-2); background: #fff; border: 1px solid var(--line); padding: 6px 8px 6px 12px; border-radius: 999px; cursor: pointer; }
   .switch .knob { width: 36px; height: 20px; border-radius: 99px; background: #d9d6ee; position: relative; transition: background .3s; }
   .switch .knob::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); transition: transform .35s var(--spring); }
   .switch[aria-checked="true"] .knob { background: var(--red); }
   .switch[aria-checked="true"] .knob::after { transform: translateX(16px); }
 
-  /* 配额滑杆 */
-  .quota { width: 86%; }
-  .quota .val { font: 900 40px/1 var(--font-sans); letter-spacing: -.02em; text-align: center; }
-  .quota .val small { font-size: 15px; color: var(--muted); font-weight: 700; margin-left: 4px; }
-  .quota input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 12px; border-radius: 99px; margin-top: 16px; background: linear-gradient(90deg, var(--violet), var(--cyan) var(--p, 40%), #e3e0f5 var(--p, 40%)); outline: none; cursor: pointer; }
-  .quota input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 3px solid var(--ink); box-shadow: 0 6px 14px rgba(0,0,0,.2); transition: transform .3s var(--spring); }
-  .quota input[type=range]:active::-webkit-slider-thumb { transform: scale(1.25); }
-  .quota input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 3px solid var(--ink); }
-  .quota .hint { text-align: center; font-size: 12px; color: var(--muted); margin-top: 10px; }
 
   /* 轨道调度 */
   .orbit { position: relative; width: 140px; height: 140px; }
@@ -410,7 +399,7 @@
         <span>CLAUDE <b class="star">✺</b></span><span class="o">GPT <b class="star">✺</b></span><span class="h">DEEPSEEK</span><span class="star">✺</span><span>GLM <b class="star">✺</b></span><span class="o">ONE KEY</span><span class="star">✺</span>
       </div>
       <div class="mq rev" id="mq2">
-        <span>智能调度 ·</span><span>自动故障转移 ·</span><span>会话保持 ·</span><span>按量计费 ·</span><span>配额可控 ·</span><span>原生协议兼容 ·</span>
+        <span>智能调度 ·</span><span>自动故障转移 ·</span><span>会话保持 ·</span><span>按量计费 ·</span><span>原生协议兼容 ·</span>
       </div>
     </div>
 
@@ -422,7 +411,7 @@
         <p class="sub">下面每个格子都能碰。它们演示的，就是网关每天在后台替你做的事。</p>
       </div>
       <div class="toys">
-        <article class="toy w7 rise" id="failToy">
+        <article class="toy rise" id="failToy">
           <div class="stage">
             <button class="switch" id="breakBtn" type="button" role="switch" aria-checked="false">模拟上游故障 <span class="knob"></span></button>
             <svg class="route" viewBox="0 0 420 140" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
@@ -436,17 +425,6 @@
           </div>
           <h3>故障自动转移</h3>
           <p>打开开关，让上游 A 挂掉——请求会立刻绕到 B。你的应用只会看到一个正常的 200。</p>
-        </article>
-        <article class="toy w5 rise">
-          <div class="stage">
-            <div class="quota">
-              <div class="val"><span id="qv">¥200</span><small>/ 月上限</small></div>
-              <input type="range" id="qr" min="20" max="1000" step="10" value="200" aria-label="拖动设置月度配额" />
-              <div class="hint" id="qh">拖一拖，给团队成员设个上限</div>
-            </div>
-          </div>
-          <h3>配额，随手一拖</h3>
-          <p>按密钥、按成员设额度，超了就停，不会被一次死循环刷爆。</p>
         </article>
         <article class="toy rise">
           <div class="stage">
@@ -506,7 +484,7 @@
       </div>
       <div class="steps">
         <div class="step rise"><div class="n">01</div><h3>注册</h3><p>一个邮箱即可，进入控制台。</p></div>
-        <div class="step rise"><div class="n">02</div><h3>创建密钥</h3><p>按需设置分组与额度，拿到你的 sk-。</p></div>
+        <div class="step rise"><div class="n">02</div><h3>创建密钥</h3><p>在控制台一键生成，拿到你的 sk-。</p></div>
         <div class="step rise"><div class="n">03</div><h3>开始调用</h3><p>替换地址，所有模型即刻可用。</p></div>
       </div>
     </section>
@@ -723,21 +701,6 @@ document.querySelectorAll('.sticker').forEach(st => {
     setTimeout(() => { if (btn.getAttribute('aria-checked') === 'true') btn.click(); }, 4200);
   }, { threshold: 0.6 });
   io.observe(toy);
-})();
-
-/* ---------- 玩具：配额滑杆 ---------- */
-(function () {
-  const r = document.getElementById('qr'), v = document.getElementById('qv'), h = document.getElementById('qh');
-  const tips = [[100, '够一个人日常写写代码'], [300, '一个小团队的日常用量'], [600, '跑批量任务也不心慌'], [1001, '重度用户，放开了用']];
-  function upd() {
-    const val = +r.value;
-    v.textContent = '¥' + val;
-    r.style.setProperty('--p', ((val - r.min) / (r.max - r.min) * 100) + '%');
-    h.textContent = tips.find(t => val < t[0])[1];
-  }
-  r.addEventListener('input', upd);
-  upd();
-  h.textContent = '拖一拖，给团队成员设个上限';
 })();
 
 /* ---------- 玩具：3D 倾斜 ---------- */
