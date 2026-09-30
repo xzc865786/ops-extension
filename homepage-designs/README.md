@@ -77,20 +77,11 @@ Sub2API 的「首页内容」（`home_content`）有两种模式：
 1. **HTML 模式**：通过 `v-html` 插入，**`<script>` 不会执行**。本页大部分区块依赖脚本才会显现，直接粘贴会出现大片空白，所以**不要**直接粘贴 HTML。
 2. **URL 模式**：内容填写以 `http(s)://` 开头的地址，Sub2API 会用全屏 iframe 加载它。**请使用这种方式。**
 
-步骤：
+完整的上线步骤见 **[首页部署手册](../docs/首页部署手册.md)**，概要如下：
 
-1. 选定一个文件，放到服务器上，例如 `/var/www/tysy-home/home.html`。
-2. 在主站 Nginx 的 `server {}` 中新增：
-
-   ```nginx
-   location = /home.html {
-       root /var/www/tysy-home;
-       add_header Cache-Control "no-cache";
-   }
-   ```
-
-   确认该路径没有 `X-Frame-Options: DENY`，也没有禁止同源嵌入的 `frame-ancestors`（同源的 `SAMEORIGIN` 可以正常使用）。
-3. Sub2API 管理后台 → 系统设置 → 站点设置 → 首页内容，填入 `https://api.tysy.top/home.html` 并保存。设置后首页不再显示 Sub2API 自带的状态信息。
+1. 把 `03-holo-pop.html` 放到服务器，保存为 `/srv/huima-landing/index.html`。
+2. 在 Caddy 的 `api.tysy.top` 站点块中新增 `/landing/` 静态规则，并返回允许同域嵌入的响应头（`frame-ancestors 'self'`）。线上 Sub2API 页面自带 `X-Frame-Options: DENY`，所以新页面必须由 Caddy 单独提供，不能交给 Sub2API。
+3. 先备份当前「首页内容」，再进入 系统设置 → 通用设置 → 站点设置 → 首页内容，填入 `https://api.tysy.top/landing/` 并保存。
 
 ### 移动端
 
@@ -102,6 +93,6 @@ Sub2API 的「首页内容」（`home_content`）有两种模式：
 - iPad（768×1024）
 - 横屏手机（844×390）
 
-手机端导航只保留图形标识和「免费开始」；矮屏（横屏）时导航不吸顶。
+手机端导航保留图形标识、「使用手册」和「免费开始」；矮屏（横屏）时导航不吸顶。
 
 页面内所有按钮都带 `target="_top"`，在 iframe 中点击「登录」「进入控制台」会跳转整个窗口，而不是只在框内跳转。
