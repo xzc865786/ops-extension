@@ -1,0 +1,59 @@
+# 主页设计稿（三选一）
+
+为 `https://api.tysy.top` 首页准备的三套候选设计。每套都是**单个自包含 HTML 文件**：不引用任何 CDN 或 Google Fonts（国内访问不会卡住），直接用浏览器双击打开即可预览。
+
+| 文件 | 风格 | 关键词 | 标志性互动 |
+|------|------|--------|------------|
+| `01-neural-router.html` | **神经路由** · 深色赛博 | 霓虹、星空网格、数据流 | 首屏实时画布：请求从你的应用流经网关分发到各模型；上游随机出现 429，请求**中途改道**；点击画布可亲手发出一批请求。标题文字解码轮播，终端逐字演示三种协议。 |
+| `02-pixel-arcade.html` | **像素街机** · 复古未来 | 8-bit、CRT 扫描线、合成波落日 | 可玩小游戏 *API Runner*：空格或点按让机器人跳过 429/503；撞上后不会 Game Over，而是「切换上游」换个颜色继续跑。另有选角、问号道具箱、CONTINUE 倒计时，并提供可开关的 8-bit 音效。 |
+| `03-holo-pop.html` | **流光全息** · 明亮潮流 | 镭射卡、流体渐变、贴纸 | 3D 全息「万能钥匙卡」，随鼠标倾斜并折射光泽，点击翻面显示接入代码（附彩纸）。贴纸可以拖动；可以拨开关模拟上游故障，也可以拖滑杆设置配额。代码区可在 Claude Code、Python、Node、cURL 间切换，并支持一键复制。 |
+
+三套设计共同具备：
+
+- 手机端（390px）和桌面端均已检查，无横向滚动，也没有控制台报错。
+- 遵循系统的「减少动态效果」设置：开启后改为静态画面。
+- 画布动画在滚出视口或切到后台时暂停，节省 CPU。
+- 读取 Sub2API 的登录态（`localStorage.auth_token`）：已登录用户看到「进入控制台」，管理员跳转 `/admin/dashboard`。
+- 示例代码里的地址自动取当前域名，本地预览时回退为 `https://api.tysy.top`。
+
+## 配置
+
+每个文件 `<script>` 顶部都有一个 `SITE` 对象：
+
+```js
+const SITE = {
+  name: 'TYSY API',                 // 站点名，页面各处同步替换
+  fallbackOrigin: 'https://api.tysy.top',
+  links: {
+    login: '/login', dashboard: '/dashboard', adminDashboard: '/admin/dashboard',
+    models: '/model-plaza',
+    docs: ''                        // 填入文档地址后才会显示「文档」入口
+  }
+};
+```
+
+`links` 中留空的项，其按钮会自动隐藏。
+
+## 部署到 Sub2API 首页
+
+Sub2API 的「首页内容」（`home_content`）有两种模式：
+
+1. **HTML 模式**：通过 `v-html` 插入，**`<script>` 不会执行**，本设计的动画和互动都会失效，所以**不要**直接粘贴 HTML。
+2. **URL 模式**：内容填写以 `http(s)://` 开头的地址，Sub2API 会用全屏 iframe 加载它。**请使用这种方式。**
+
+步骤：
+
+1. 选定一个文件，放到服务器上，例如 `/var/www/tysy-home/home.html`。
+2. 在主站 Nginx 的 `server {}` 中新增：
+
+   ```nginx
+   location = /home.html {
+       root /var/www/tysy-home;
+       add_header Cache-Control "no-cache";
+   }
+   ```
+
+   确认该路径没有 `X-Frame-Options: DENY`，也没有禁止同源嵌入的 `frame-ancestors`（同源的 `SAMEORIGIN` 可以正常使用）。
+3. Sub2API 管理后台 → 系统设置 → 首页内容，填入 `https://api.tysy.top/home.html` 并保存。
+
+页面内所有按钮都带 `target="_top"`，在 iframe 中点击「登录」「进入控制台」会跳转整个窗口，而不是只在框内跳转。

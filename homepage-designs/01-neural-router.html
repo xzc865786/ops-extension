@@ -1,0 +1,984 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>TYSY API · 神经路由</title>
+<meta name="description" content="一个密钥，接通 Claude、GPT、Gemini 等主流 AI 模型。" />
+<style>
+  :root {
+    --bg: #04050d;
+    --bg-2: #080b1a;
+    --panel: rgba(14, 19, 40, 0.62);
+    --panel-solid: #0c1024;
+    --line: rgba(120, 160, 255, 0.14);
+    --line-strong: rgba(120, 180, 255, 0.32);
+    --text: #e8ecff;
+    --muted: #8b93b8;
+    --cyan: #3cf0ff;
+    --violet: #8b5cff;
+    --lime: #b6ff3c;
+    --pink: #ff4fd8;
+    --red: #ff4d6a;
+    --claude: #ff8a4c;
+    --gpt: #19e3a4;
+    --gemini: #4c8dff;
+    --more: #c47bff;
+    --font-sans: "HarmonyOS Sans SC", "MiSans", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, Menlo, monospace;
+    --radius: 18px;
+    --gutter: clamp(16px, 4vw, 48px);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--cyan); color: #000; }
+
+  /* ---------- 背景层 ---------- */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, #000 30%, transparent 75%);
+    opacity: .5;
+  }
+  .bg-glow {
+    position: fixed; inset: -20vmax; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(40vmax 30vmax at 75% 20%, rgba(139, 92, 255, .20), transparent 60%),
+      radial-gradient(35vmax 30vmax at 10% 70%, rgba(60, 240, 255, .10), transparent 60%);
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  @keyframes drift { to { transform: translate3d(-4vmax, 3vmax, 0) rotate(6deg); } }
+
+  /* ---------- 导航 ---------- */
+  .nav {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+    z-index: 50; width: min(1180px, calc(100% - 2 * 16px));
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 12px 10px 16px;
+    background: rgba(8, 11, 26, .55);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .02em; }
+  .brand svg { width: 30px; height: 30px; }
+  .brand .ring { transform-origin: 50% 50%; animation: spin 8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .nav-links { display: flex; gap: 4px; margin-left: auto; align-items: center; }
+  .nav-links a {
+    padding: 8px 14px; border-radius: 999px; color: var(--muted); font-size: 14px;
+    transition: color .2s, background .2s;
+  }
+  .nav-links a:hover { color: var(--text); background: rgba(255,255,255,.06); }
+  .nav-links a.pill {
+    color: #03040a; background: var(--cyan); font-weight: 700;
+    box-shadow: 0 0 24px rgba(60,240,255,.45);
+  }
+  .nav-links a.pill:hover { background: #fff; }
+  @media (max-width: 640px) { .nav-links a:not(.pill) { display: none; } }
+
+  /* ---------- Hero ---------- */
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; display: flex; align-items: center; z-index: 1; }
+  #router {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+    cursor: crosshair;
+  }
+  .hero-inner {
+    position: relative; z-index: 2; width: min(1180px, 100%); margin: 0 auto;
+    padding: 120px var(--gutter) 80px;
+    pointer-events: none;
+  }
+  .hero-inner > * { pointer-events: auto; }
+  .hero-copy { max-width: 560px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px 6px 10px; border-radius: 999px;
+    font: 500 12px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase;
+    color: var(--lime); background: rgba(182,255,60,.08); border: 1px solid rgba(182,255,60,.28);
+  }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px var(--lime); animation: blink 1.6s infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+  h1 {
+    margin: 22px 0 18px; font-size: clamp(40px, 7vw, 84px); line-height: 1.04; letter-spacing: -.02em; font-weight: 900;
+  }
+  h1 .line2 { display: block; }
+  .cycler {
+    display: inline-block; font-family: var(--font-mono); font-weight: 800;
+    background: linear-gradient(90deg, var(--cyan), var(--violet), var(--pink));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 22px rgba(139,92,255,.45));
+  }
+  .caret { display: inline-block; width: .08em; height: .9em; margin-left: .06em; vertical-align: -.08em; background: var(--cyan); animation: blink 1s steps(1) infinite; }
+  .lead { color: var(--muted); font-size: clamp(16px, 1.6vw, 19px); max-width: 30em; margin: 0 0 32px; }
+  .lead b { color: var(--text); font-weight: 600; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .btn {
+    position: relative; display: inline-flex; align-items: center; gap: 10px;
+    padding: 15px 26px; border-radius: 14px; font-weight: 700; font-size: 16px;
+    transition: transform .25s cubic-bezier(.2,.9,.3,1.4), box-shadow .25s, background .25s;
+    will-change: transform;
+  }
+  .btn-primary {
+    color: #03040a;
+    background: linear-gradient(120deg, var(--cyan), #9bf7ff 45%, var(--lime));
+    box-shadow: 0 10px 40px -8px rgba(60,240,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
+  }
+  .btn-primary::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.75) 50%, transparent 70%);
+    background-size: 250% 100%; background-position: 150% 0; mix-blend-mode: overlay;
+    animation: sheen 3.2s ease-in-out infinite;
+  }
+  @keyframes sheen { 60%, 100% { background-position: -60% 0; } }
+  .btn-ghost { color: var(--text); background: rgba(255,255,255,.04); border: 1px solid var(--line-strong); }
+  .btn-ghost:hover { background: rgba(255,255,255,.09); }
+  .btn svg { width: 18px; height: 18px; transition: transform .25s; }
+  .btn:hover svg { transform: translateX(4px); }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 30px; }
+  .tags span {
+    font: 500 12px/1 var(--font-mono); color: var(--muted); padding: 7px 10px; border-radius: 8px;
+    border: 1px dashed var(--line-strong);
+  }
+  .hint {
+    position: absolute; right: var(--gutter); bottom: 28px; z-index: 2;
+    font: 500 12px/1.4 var(--font-mono); color: var(--muted); text-align: right; letter-spacing: .04em;
+    pointer-events: none;
+  }
+  .hint kbd { color: var(--cyan); font: inherit; border: 1px solid var(--line-strong); padding: 1px 6px; border-radius: 5px; }
+  .legend { display: flex; gap: 14px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+  @media (max-width: 860px) {
+    .hero { align-items: flex-start; }
+    .hero-inner { padding-top: 110px; padding-bottom: 400px; }
+    .hint { left: var(--gutter); text-align: left; }
+    .legend { justify-content: flex-start; }
+  }
+
+  /* ---------- 通用 section ---------- */
+  section.block { position: relative; z-index: 1; width: min(1180px, 100%); margin: 0 auto; padding: 110px var(--gutter); }
+  .eyebrow { font: 600 12px/1 var(--font-mono); letter-spacing: .2em; color: var(--cyan); text-transform: uppercase; }
+  .eyebrow::before { content: "// "; color: var(--violet); }
+  h2 { font-size: clamp(30px, 4.4vw, 52px); line-height: 1.12; margin: 14px 0 16px; letter-spacing: -.01em; font-weight: 850; }
+  .sub { color: var(--muted); max-width: 36em; margin: 0; }
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ---------- 请求的一生 ---------- */
+  .pipeline { position: relative; margin-top: 56px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .pipeline .track {
+    position: absolute; left: 6%; right: 6%; top: 34px; height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--violet), var(--pink), var(--lime));
+    opacity: .35;
+  }
+  .pipeline .runner {
+    position: absolute; top: 28px; left: 6%; width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; box-shadow: 0 0 0 4px rgba(60,240,255,.25), 0 0 26px 6px var(--cyan);
+    animation: run 4.8s cubic-bezier(.6,0,.4,1) infinite;
+  }
+  @keyframes run {
+    0% { left: 6%; } 22% { left: 6%; }
+    30% { left: calc(6% + 88% / 3 - 7px); } 47% { left: calc(6% + 88% / 3 - 7px); }
+    55% { left: calc(6% + 88% * 2 / 3 - 7px); } 72% { left: calc(6% + 88% * 2 / 3 - 7px); }
+    80% { left: calc(94% - 14px); } 100% { left: calc(94% - 14px); }
+  }
+  .step { position: relative; text-align: center; padding: 0 6px; }
+  .step .node {
+    width: 68px; height: 68px; margin: 0 auto 18px; border-radius: 20px; display: grid; place-items: center;
+    background: var(--panel-solid); border: 1px solid var(--line-strong);
+    font: 800 20px/1 var(--font-mono); color: var(--cyan);
+    box-shadow: 0 0 0 6px var(--bg);
+    transition: transform .4s cubic-bezier(.2,.9,.3,1.5);
+  }
+  .step:hover .node { transform: translateY(-6px) rotate(-6deg); }
+  .step h3 { margin: 0 0 6px; font-size: 18px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14px; }
+  .step code { font-family: var(--font-mono); font-size: 12px; color: var(--lime); }
+  @media (max-width: 760px) {
+    .pipeline { grid-template-columns: 1fr; gap: 28px; }
+    .pipeline .track { left: 33px; right: auto; top: 10px; bottom: 10px; width: 2px; height: auto; background: linear-gradient(var(--cyan), var(--violet), var(--pink), var(--lime)); }
+    .pipeline .runner { display: none; }
+    .step { display: grid; grid-template-columns: 68px 1fr; gap: 16px; text-align: left; align-items: center; }
+    .step .node { margin: 0; }
+  }
+
+  /* ---------- 终端 ---------- */
+  .split { display: grid; grid-template-columns: 1fr 1.15fr; gap: 48px; align-items: center; }
+  @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+  .model-switch { display: flex; gap: 8px; margin-top: 28px; flex-wrap: wrap; }
+  .model-switch button {
+    font: 600 14px/1 var(--font-sans); color: var(--muted); cursor: pointer;
+    padding: 11px 16px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid var(--line);
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: all .25s cubic-bezier(.2,.9,.3,1.4);
+  }
+  .model-switch button i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+  .model-switch button:hover { transform: translateY(-2px); color: var(--text); }
+  .model-switch button[aria-pressed="true"] { color: var(--text); border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
+  .term {
+    background: linear-gradient(160deg, #0d1330, #070a18);
+    border: 1px solid var(--line-strong); border-radius: var(--radius);
+    box-shadow: 0 40px 80px -30px rgba(60,240,255,.25), 0 0 0 1px rgba(139,92,255,.15);
+    overflow: hidden; transform: perspective(1200px) rotateY(-5deg) rotateX(2deg);
+    transition: transform .6s cubic-bezier(.2,.8,.2,1);
+  }
+  .term:hover { transform: none; }
+  @media (max-width: 900px) { .term { transform: none; } }
+  .term-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); font: 12px var(--font-mono); color: var(--muted); }
+  .term-bar i { width: 11px; height: 11px; border-radius: 50%; }
+  .term-bar .t { margin-left: 10px; }
+  .term-bar .lat { margin-left: auto; color: var(--lime); }
+  .term pre {
+    margin: 0; padding: 20px; min-height: 330px; font: 13px/1.7 var(--font-mono); color: #c9d2ff;
+    white-space: pre-wrap; word-break: break-all;
+  }
+  .term .p { color: var(--lime); }
+  .term .k { color: var(--pink); }
+  .term .s { color: #ffd479; }
+  .term .c { color: #5d6790; }
+  .term .o { color: var(--text); }
+
+  /* ---------- 能力卡片 ---------- */
+  .bento { margin-top: 48px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+  .card {
+    --mx: 50%; --my: 50%;
+    position: relative; overflow: hidden; grid-column: span 2;
+    padding: 26px; border-radius: var(--radius); min-height: 230px;
+    background: var(--panel); border: 1px solid var(--line);
+    transition: transform .4s cubic-bezier(.2,.9,.3,1.3), border-color .3s;
+  }
+  .card::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s;
+    background: radial-gradient(380px circle at var(--mx) var(--my), rgba(60,240,255,.16), transparent 45%);
+  }
+  .card:hover { transform: translateY(-4px); border-color: var(--line-strong); }
+  .card:hover::before { opacity: 1; }
+  .card.wide { grid-column: span 3; }
+  .card h3 { margin: 0 0 6px; font-size: 20px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; max-width: 26em; }
+  .viz { height: 96px; margin-bottom: 18px; position: relative; }
+  @media (max-width: 900px) { .card, .card.wide { grid-column: span 3; } }
+  @media (max-width: 620px) { .bento { grid-template-columns: 1fr; } .card, .card.wide { grid-column: auto; } }
+
+  /* 卡片微动画 */
+  .v-key { display: grid; place-items: center; }
+  .v-key .orb { width: 80px; height: 80px; border-radius: 50%; border: 1px dashed var(--cyan); animation: spin 10s linear infinite; position: absolute; }
+  .v-key .orb::after { content: ""; position: absolute; top: -4px; left: 50%; width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
+  .v-key code { font: 700 13px var(--font-mono); color: var(--lime); padding: 6px 10px; border-radius: 8px; background: rgba(182,255,60,.08); border: 1px solid rgba(182,255,60,.3); z-index: 1; }
+  .v-bars { display: flex; align-items: flex-end; gap: 10px; height: 96px; }
+  .v-bars span { flex: 1; border-radius: 6px 6px 2px 2px; background: linear-gradient(var(--c), transparent); animation: bal 3.6s ease-in-out infinite; }
+  .v-bars span:nth-child(1) { --c: var(--claude); height: 70%; }
+  .v-bars span:nth-child(2) { --c: var(--gpt); height: 40%; animation-delay: -1.2s; }
+  .v-bars span:nth-child(3) { --c: var(--gemini); height: 55%; animation-delay: -2.4s; }
+  .v-bars span:nth-child(4) { --c: var(--more); height: 30%; animation-delay: -.6s; }
+  @keyframes bal { 0%,100% { height: 30%; } 33% { height: 85%; } 66% { height: 50%; } }
+  .v-fail { display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
+  .v-fail .n { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font: 700 11px var(--font-mono); border: 1px solid var(--line-strong); background: var(--panel-solid); position: relative; z-index: 1; }
+  .v-fail .src { color: var(--cyan); }
+  .v-fail .targets { display: grid; gap: 14px; }
+  .v-fail .a { animation: failA 4s infinite; }
+  .v-fail .b { color: var(--gpt); }
+  @keyframes failA { 0%,35% { color: var(--claude); border-color: var(--claude); } 40%,80% { color: var(--red); border-color: var(--red); box-shadow: 0 0 16px rgba(255,77,106,.5); } 85%,100% { color: var(--claude); border-color: var(--claude); } }
+  .v-fail svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .v-fail .pa { stroke-dasharray: 5 7; animation: dash 1s linear infinite, pathA 4s infinite; }
+  .v-fail .pb { stroke-dasharray: 5 7; animation: dash 1s linear infinite, pathB 4s infinite; }
+  @keyframes dash { to { stroke-dashoffset: -24; } }
+  @keyframes pathA { 0%,38% { opacity: 1; } 40%,82% { opacity: .08; } 85% { opacity: 1; } }
+  @keyframes pathB { 0%,38% { opacity: .15; } 40%,82% { opacity: 1; } 85%,100% { opacity: .15; } }
+  .v-chat { display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+  .v-chat span { align-self: flex-start; font-size: 12px; padding: 5px 10px; border-radius: 10px 10px 10px 2px; background: rgba(139,92,255,.18); border: 1px solid rgba(139,92,255,.35); animation: pop 4.5s infinite both; }
+  .v-chat span:nth-child(2) { align-self: flex-end; border-radius: 10px 10px 2px 10px; background: rgba(60,240,255,.12); border-color: rgba(60,240,255,.35); animation-delay: .5s; }
+  .v-chat span:nth-child(3) { animation-delay: 1s; }
+  @keyframes pop { 0% { opacity: 0; transform: scale(.6) translateY(8px); } 10%,85% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+  .v-meter { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .v-meter .num { font: 800 34px/1 var(--font-mono); color: var(--lime); letter-spacing: .02em; text-shadow: 0 0 18px rgba(182,255,60,.4); }
+  .v-meter .num small { font-size: 14px; color: var(--muted); margin-left: 6px; }
+  .v-meter .bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.07); position: relative; overflow: visible; }
+  .v-meter .bar b { position: absolute; left: 0; top: 0; bottom: 0; width: 42%; border-radius: inherit; background: linear-gradient(90deg, var(--cyan), var(--violet)); transition: width .6s; }
+  .v-meter .bar em { position: absolute; top: -6px; bottom: -6px; left: 80%; width: 2px; background: var(--pink); box-shadow: 0 0 8px var(--pink); }
+  .v-meter .bar em::after { content: "配额上限"; position: absolute; top: -18px; left: -22px; font: 500 10px/1 var(--font-sans); font-style: normal; color: var(--pink); white-space: nowrap; }
+
+  /* ---------- 终章 ---------- */
+  .final {
+    position: relative; z-index: 1; margin: 40px auto 0; width: min(1180px, calc(100% - 2 * var(--gutter)));
+    padding: clamp(48px, 8vw, 96px) clamp(20px, 5vw, 64px); border-radius: 28px; text-align: center; overflow: hidden;
+    background: radial-gradient(120% 140% at 50% 0%, rgba(139,92,255,.35), rgba(8,11,26,.9) 60%);
+    border: 1px solid var(--line-strong);
+  }
+  .final h2 { font-size: clamp(32px, 5.5vw, 64px); }
+  .final .sub { margin: 0 auto 32px; }
+  .final .cta-row { justify-content: center; }
+  .final .scan {
+    position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 4px);
+  }
+  footer { position: relative; z-index: 1; padding: 40px var(--gutter) 48px; text-align: center; color: var(--muted); font: 12px var(--font-mono); letter-spacing: .06em; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+
+  <nav class="nav" aria-label="主导航">
+    <a class="brand" data-go="home">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <defs><linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#3cf0ff"/><stop offset="1" stop-color="#8b5cff"/></linearGradient></defs>
+        <circle class="ring" cx="16" cy="16" r="13" fill="none" stroke="url(#lg)" stroke-width="2" stroke-dasharray="14 6"/>
+        <circle cx="16" cy="16" r="5" fill="url(#lg)"/>
+      </svg>
+      <span data-site-name>TYSY API</span>
+    </a>
+    <div class="nav-links">
+      <a data-go="models">模型广场</a>
+      <a data-go="docs">文档</a>
+      <a data-go="login" data-hide-authed>登录</a>
+      <a class="pill" data-go="start" data-authed="进入控制台"><span class="lbl">立即开始</span></a>
+    </div>
+  </nav>
+
+  <!-- ====== HERO：实时路由画布 ====== -->
+  <header class="hero">
+    <canvas id="router" aria-label="请求路由动画：请求经过网关分发到各个模型，遇到限流自动切换"></canvas>
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <span class="chip"><span class="dot"></span>Gateway online · 智能路由中</span>
+        <h1>一个密钥<span class="line2">接通 <span class="cycler" id="cycler">Claude</span><span class="caret"></span></span></h1>
+        <p class="lead">无需管理多个订阅账号。<b>一个 API Key</b>，统一接入 Claude、GPT、Gemini 等主流模型——上游限流时，网关会在你察觉之前<b>自动换路</b>。</p>
+        <div class="cta-row">
+          <a class="btn btn-primary magnetic" data-go="start" data-authed="进入控制台">
+            <span class="lbl">免费领取密钥</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="btn btn-ghost magnetic" href="#how">看看它怎么工作</a>
+        </div>
+        <div class="tags"><span>#订阅转API</span><span>#会话保持</span><span>#按量计费</span><span>#自动故障转移</span></div>
+      </div>
+    </div>
+    <div class="hint">
+      <div><kbd>点击</kbd> 画布任意位置，亲手发出一批请求</div>
+      <div class="legend">
+        <span><i style="background:var(--claude)"></i>Claude</span>
+        <span><i style="background:var(--gpt)"></i>GPT</span>
+        <span><i style="background:var(--gemini)"></i>Gemini</span>
+        <span><i style="background:var(--red)"></i>限流 · 自动绕行</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====== 请求的一生 ====== -->
+  <section class="block" id="how">
+    <div class="reveal">
+      <div class="eyebrow">Life of a request</div>
+      <h2>一次请求的 4 站旅程</h2>
+      <p class="sub">你只需要把 <code style="font-family:var(--font-mono);color:var(--lime)">base_url</code> 换成我们。剩下的调度、重试、切换，全部交给网关。</p>
+    </div>
+    <div class="pipeline reveal">
+      <div class="track"></div>
+      <div class="runner"></div>
+      <div class="step"><div class="node">01</div><div><h3>发出请求</h3><p>沿用官方 SDK，<code>Authorization: sk-…</code></p></div></div>
+      <div class="step"><div class="node">02</div><div><h3>鉴权与配额</h3><p>校验密钥、余额与分组配额</p></div></div>
+      <div class="step"><div class="node">03</div><div><h3>智能调度</h3><p>挑选健康上游，限流即刻切换</p></div></div>
+      <div class="step"><div class="node">04</div><div><h3>流式返回</h3><p>逐字推送，按实际用量计费</p></div></div>
+    </div>
+  </section>
+
+  <!-- ====== 终端演示 ====== -->
+  <section class="block">
+    <div class="split">
+      <div class="reveal">
+        <div class="eyebrow">Drop-in compatible</div>
+        <h2>换个地址，<br />代码一行都不用改</h2>
+        <p class="sub">兼容 Anthropic、OpenAI、Gemini 原生协议。点下面的模型，看看同一把钥匙如何切换不同的大脑。</p>
+        <div class="model-switch" role="group" aria-label="切换示例模型">
+          <button type="button" style="--c:var(--claude)" data-model="claude" aria-pressed="true"><i></i>Claude</button>
+          <button type="button" style="--c:var(--gpt)" data-model="gpt" aria-pressed="false"><i></i>GPT</button>
+          <button type="button" style="--c:var(--gemini)" data-model="gemini" aria-pressed="false"><i></i>Gemini</button>
+        </div>
+      </div>
+      <div class="term reveal" aria-live="polite">
+        <div class="term-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="t">~/playground — zsh</span><span class="lat" id="lat">● 示例</span></div>
+        <pre id="termOut"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== 能力 ====== -->
+  <section class="block">
+    <div class="reveal">
+      <div class="eyebrow">Capabilities</div>
+      <h2>藏在网关里的五件小事</h2>
+      <p class="sub">它们不显眼，但决定了你凌晨三点调接口时，会不会看到一片报错。</p>
+    </div>
+    <div class="bento">
+      <article class="card wide reveal">
+        <div class="viz v-key"><div class="orb"></div><code>sk-••••••••••••</code></div>
+        <h3>一键接入</h3><p>一个 API Key，调用所有已接入模型，不必逐家申请、逐家充值。</p>
+      </article>
+      <article class="card wide reveal">
+        <div class="viz v-bars"><span></span><span></span><span></span><span></span></div>
+        <h3>智能负载均衡</h3><p>多个上游账号实时分担流量，谁更空闲就交给谁。</p>
+      </article>
+      <article class="card reveal">
+        <div class="viz v-fail">
+          <svg viewBox="0 0 200 96" preserveAspectRatio="none" aria-hidden="true">
+            <path class="pa" d="M40 48 C100 48 110 22 160 22" stroke="#ff8a4c" stroke-width="2" fill="none"/>
+            <path class="pb" d="M40 48 C100 48 110 74 160 74" stroke="#19e3a4" stroke-width="2" fill="none"/>
+          </svg>
+          <div class="n src">KEY</div>
+          <div class="targets"><div class="n a">A</div><div class="n b">B</div></div>
+        </div>
+        <h3>故障自动转移</h3><p>上游返回 429 / 5xx？请求静默改道到健康账号。</p>
+      </article>
+      <article class="card reveal">
+        <div class="viz v-chat"><span>帮我重构这个函数</span><span>好的，先看调用关系…</span><span>继续上一轮</span></div>
+        <h3>会话保持</h3><p>同一会话粘在同一上游，长对话与缓存命中更稳。</p>
+      </article>
+      <article class="card reveal">
+        <div class="viz v-meter"><div class="num" id="meter">0<small>tokens</small></div><div class="bar"><b id="meterBar"></b><em></em></div></div>
+        <h3>按量计费 · 配额可控</h3><p>用多少付多少；给团队成员设上限，账单一目了然。</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ====== 终章 ====== -->
+  <div class="final reveal">
+    <div class="scan"></div>
+    <div class="eyebrow">Ready when you are</div>
+    <h2>下一个请求，<br />让它走更聪明的路</h2>
+    <p class="sub">注册即可获得密钥，几分钟内完成接入。</p>
+    <div class="cta-row">
+      <a class="btn btn-primary magnetic" data-go="start" data-authed="进入控制台"><span class="lbl">立即开始</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn btn-ghost magnetic" data-go="docs">阅读接入文档</a>
+    </div>
+  </div>
+  <footer>© <span id="year"></span> <span data-site-name>TYSY API</span> · ROUTING EVERY TOKEN WITH CARE</footer>
+
+<script>
+/* =========================================================
+ * 站点配置：部署前按需修改
+ * links 中留空的项会被自动隐藏；页面在 iframe 中时链接会跳出到顶层窗口
+ * ========================================================= */
+const SITE = {
+  name: 'TYSY API',
+  fallbackOrigin: 'https://api.tysy.top',
+  links: {
+    home: '/',
+    login: '/login',
+    register: '/register',
+    dashboard: '/dashboard',
+    adminDashboard: '/admin/dashboard',
+    models: '/model-plaza',
+    docs: '' // 例如 'https://docs.example.com'
+  }
+};
+
+/* ---------- 链接与登录态 ---------- */
+(function wire() {
+  let auth = null;
+  try {
+    if (localStorage.getItem('auth_token')) {
+      const u = JSON.parse(localStorage.getItem('auth_user') || 'null');
+      auth = { admin: !!(u && u.role === 'admin') };
+    }
+  } catch (e) { /* 无法读取存储时按未登录处理 */ }
+  document.querySelectorAll('[data-site-name]').forEach(el => { el.textContent = SITE.name; });
+  document.title = SITE.name + ' · 神经路由';
+  document.querySelectorAll('[data-go]').forEach(a => {
+    let key = a.dataset.go;
+    if (key === 'start') key = auth ? (auth.admin ? 'adminDashboard' : 'dashboard') : 'login';
+    if (auth && a.hasAttribute('data-hide-authed')) { a.remove(); return; }
+    const url = SITE.links[key];
+    if (!url) { a.remove(); return; }
+    a.href = url;
+    a.target = '_top';
+    const lbl = a.querySelector('.lbl');
+    if (auth && a.dataset.authed && lbl) lbl.textContent = a.dataset.authed;
+  });
+  document.getElementById('year').textContent = new Date().getFullYear();
+})();
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const origin = /^https?:/.test(location.protocol) ? location.origin : SITE.fallbackOrigin;
+
+/* ---------- 标题解码轮播 ---------- */
+(function cycler() {
+  const el = document.getElementById('cycler');
+  const words = ['Claude', 'GPT', 'Gemini', '一切'];
+  const glyphs = '01<>/{}[]#$%&*+=?';
+  let i = 0;
+  function scramble(to) {
+    const from = el.textContent;
+    const len = Math.max(from.length, to.length);
+    let frame = 0;
+    const total = 18;
+    (function step() {
+      let out = '';
+      for (let k = 0; k < len; k++) {
+        const reveal = frame / total > k / len;
+        out += reveal ? (to[k] || '') : glyphs[(Math.random() * glyphs.length) | 0];
+      }
+      el.textContent = out;
+      if (frame++ < total) requestAnimationFrame(step); else el.textContent = to;
+    })();
+  }
+  if (!reduceMotion) setInterval(() => { i = (i + 1) % words.length; scramble(words[i]); }, 2400);
+})();
+
+/* ---------- 磁吸按钮 ---------- */
+if (window.matchMedia('(pointer:fine)').matches && !reduceMotion) {
+  document.querySelectorAll('.magnetic').forEach(b => {
+    b.addEventListener('pointermove', e => {
+      const r = b.getBoundingClientRect();
+      const x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2;
+      b.style.transform = `translate(${x * 0.18}px, ${y * 0.28}px)`;
+    });
+    b.addEventListener('pointerleave', () => { b.style.transform = ''; });
+  });
+}
+
+/* ---------- 滚动显现 ---------- */
+(function reveal() {
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+})();
+
+/* ---------- 卡片聚光 ---------- */
+document.querySelectorAll('.card').forEach(c => {
+  c.addEventListener('pointermove', e => {
+    const r = c.getBoundingClientRect();
+    c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  });
+});
+
+/* ---------- 计费表 ---------- */
+(function meter() {
+  const num = document.getElementById('meter'), bar = document.getElementById('meterBar');
+  let v = 12840;
+  function tick() {
+    v += 37 + ((Math.random() * 420) | 0);
+    if (v > 98000) v = 12840;
+    num.firstChild.nodeValue = v.toLocaleString('en-US');
+    bar.style.width = Math.min(78, (v / 98000) * 78 + 6) + '%';
+  }
+  tick();
+  if (!reduceMotion) setInterval(tick, 900);
+})();
+
+/* ---------- 终端 ---------- */
+(function terminal() {
+  const out = document.getElementById('termOut');
+  const lat = document.getElementById('lat');
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const scripts = {
+    claude: {
+      cmd: [
+        ['p', '$ '], ['o', 'curl '], ['s', origin + '/v1/messages'], ['o', ' \\\n  '],
+        ['k', '-H '], ['s', '"x-api-key: $API_KEY"'], ['o', ' \\\n  '],
+        ['k', '-H '], ['s', '"anthropic-version: 2023-06-01"'], ['o', ' \\\n  '],
+        ['k', '-d '], ['s', "'{\"model\":\"claude-sonnet-4-5\",\"stream\":true,…}'"], ['o', '\n\n']
+      ],
+      reply: '你好！我是 Claude。这条请求经由网关调度到了一个健康的上游账号，你的代码只改了一个地址。'
+    },
+    gpt: {
+      cmd: [
+        ['p', '$ '], ['o', 'curl '], ['s', origin + '/v1/chat/completions'], ['o', ' \\\n  '],
+        ['k', '-H '], ['s', '"Authorization: Bearer $API_KEY"'], ['o', ' \\\n  '],
+        ['k', '-d '], ['s', "'{\"model\":\"gpt-5\",\"stream\":true,…}'"], ['o', '\n\n']
+      ],
+      reply: '嗨，我是 GPT。同一把密钥、同一个域名，只是换了一个模型名——切换就这么简单。'
+    },
+    gemini: {
+      cmd: [
+        ['p', '$ '], ['o', 'curl '], ['s', origin + '/v1beta/models/gemini-2.5-pro:streamGenerateContent'], ['o', ' \\\n  '],
+        ['k', '-H '], ['s', '"x-goog-api-key: $API_KEY"'], ['o', ' \\\n  '],
+        ['k', '-d '], ['s', "'{\"contents\":[…]}'"], ['o', '\n\n']
+      ],
+      reply: '你好，我是 Gemini。原生协议直接透传，流式输出逐字到达。'
+    }
+  };
+  let token = 0, started = false;
+  async function play(model) {
+    started = true;
+    const my = ++token;
+    const sleep = ms => new Promise(r => setTimeout(r, reduceMotion ? 0 : ms));
+    const s = scripts[model];
+    let html = '';
+    out.innerHTML = '';
+    lat.textContent = '● 请求中…';
+    for (const [cls, text] of s.cmd) {
+      for (const ch of text) {
+        if (my !== token) return;
+        html += `<span class="${cls}">${esc(ch)}</span>`;
+        out.innerHTML = html + '<span class="caret"></span>';
+        await sleep(ch === '\n' ? 60 : 12);
+      }
+    }
+    html += '<span class="c"># 200 OK · event: stream</span>\n<span class="o">';
+    await sleep(380);
+    lat.textContent = '● 流式输出 · 示例';
+    for (const ch of s.reply) {
+      if (my !== token) return;
+      html += esc(ch);
+      out.innerHTML = html + '</span><span class="caret"></span>';
+      await sleep(28 + Math.random() * 40);
+    }
+    out.innerHTML = html + '</span>\n\n<span class="c"># [DONE]  按实际 tokens 计费</span>';
+    lat.textContent = '● 完成 · 示例';
+  }
+  const btns = document.querySelectorAll('.model-switch button');
+  btns.forEach(b => b.addEventListener('click', () => {
+    btns.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    play(b.dataset.model);
+  }));
+  const io = new IntersectionObserver(es => {
+    if (es[0].isIntersecting) { if (!started) play('claude'); io.disconnect(); }
+  }, { threshold: 0.4 });
+  io.observe(out);
+})();
+
+/* =========================================================
+ * 路由画布：客户端 → 网关核心 → 模型 → 上游账号
+ * 随机上游进入限流（红色），发往它的请求会中途改道
+ * ========================================================= */
+(function router() {
+  const cvs = document.getElementById('router');
+  const ctx = cvs.getContext('2d');
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const MODELS = [
+    { name: 'Claude', color: css('--claude') },
+    { name: 'GPT', color: css('--gpt') },
+    { name: 'Gemini', color: css('--gemini') },
+    { name: '更多', color: css('--more') }
+  ];
+  const RED = css('--red'), CYAN = css('--cyan'), LIME = css('--lime');
+  let W = 0, H = 0, DPR = 1, core = { x: 0, y: 0 }, R = 0, mobile = false;
+  const mouse = { x: -9999, y: -9999, on: false };
+  const nodes = [];      // 模型节点
+  const sats = [];       // 上游账号节点
+  const packets = [];
+  const sparks = [];
+  const stars = [];
+
+  MODELS.forEach((m, i) => {
+    const n = { ...m, a: (i / MODELS.length) * Math.PI * 2 - Math.PI / 2, x: 0, y: 0, pulse: 0 };
+    nodes.push(n);
+    for (let k = 0; k < 3; k++) sats.push({ parent: n, a: (k / 3) * Math.PI * 2 + i, x: 0, y: 0, fail: 0, pulse: 0 });
+  });
+
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = cvs.clientWidth; H = cvs.clientHeight;
+    cvs.width = W * DPR; cvs.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    mobile = W < 860;
+    core.x = mobile ? W * 0.5 : W * 0.72;
+    if (mobile) {
+      const copy = document.querySelector('.hero-copy').getBoundingClientRect();
+      core.y = copy.bottom - cvs.getBoundingClientRect().top + 190;
+    } else {
+      core.y = H * 0.52;
+    }
+    R = mobile ? Math.min(W * 0.36, 170) : Math.min(W * 0.2, H * 0.3, 260);
+    stars.length = 0;
+    const count = Math.round((W * H) / 9000);
+    for (let i = 0; i < count; i++) stars.push({ x: Math.random() * W, y: Math.random() * H, z: Math.random() * 0.8 + 0.2 });
+  }
+
+  function bez(p0, p1, p2, t) {
+    const u = 1 - t;
+    return { x: u * u * p0.x + 2 * u * t * p1.x + t * t * p2.x, y: u * u * p0.y + 2 * u * t * p1.y + t * t * p2.y };
+  }
+  function ctrl(a, b, bend) {
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    const dx = b.x - a.x, dy = b.y - a.y;
+    return { x: mx - dy * bend, y: my + dx * bend };
+  }
+
+  function spawn(from, burst) {
+    const src = from || { x: -10, y: H * (0.15 + Math.random() * 0.7) };
+    packets.push({
+      stage: 0, t: 0, from: { ...src }, bend: (Math.random() - 0.5) * 0.6,
+      speed: (burst ? 0.9 : 0.55) + Math.random() * 0.35,
+      color: burst ? LIME : CYAN, trail: [], target: null, rerouted: false
+    });
+  }
+
+  function pickSat(exclude) {
+    const healthy = sats.filter(s => s !== exclude && s.fail <= 0);
+    // 偶尔故意挑中限流节点，用来演示改道
+    if (!exclude && Math.random() < 0.28) {
+      const failing = sats.filter(s => s.fail > 0);
+      if (failing.length) return failing[(Math.random() * failing.length) | 0];
+    }
+    return healthy[(Math.random() * healthy.length) | 0] || sats[0];
+  }
+
+  cvs.addEventListener('pointermove', e => {
+    const r = cvs.getBoundingClientRect();
+    mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; mouse.on = true;
+  });
+  cvs.addEventListener('pointerleave', () => { mouse.on = false; mouse.x = mouse.y = -9999; });
+  cvs.addEventListener('pointerdown', e => {
+    const r = cvs.getBoundingClientRect();
+    const p = { x: e.clientX - r.left, y: e.clientY - r.top };
+    for (let i = 0; i < 14; i++) spawn({ x: p.x + (Math.random() - 0.5) * 30, y: p.y + (Math.random() - 0.5) * 30 }, true);
+    for (let i = 0; i < 18; i++) sparks.push({ x: p.x, y: p.y, vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6, life: 1, color: LIME });
+  });
+
+  let last = performance.now(), spawnAcc = 0, failAcc = 0, running = true, time = 0;
+
+  function update(dt) {
+    time += dt;
+    // 鼠标磁吸：核心轻微偏向指针
+    const ox = mouse.on ? (mouse.x - core.x) * 0.04 : 0;
+    const oy = mouse.on ? (mouse.y - core.y) * 0.04 : 0;
+    const cx = core.x + ox, cy = core.y + oy;
+    nodes.forEach((n, i) => {
+      n.a += dt * 0.00012;
+      const wob = Math.sin(time * 0.001 + i) * 8;
+      n.x = cx + Math.cos(n.a) * (R + wob);
+      n.y = cy + Math.sin(n.a) * (R * (mobile ? 0.62 : 0.78) + wob);
+      if (mouse.on) {
+        const d = Math.hypot(mouse.x - n.x, mouse.y - n.y);
+        if (d < 140) { n.x += (mouse.x - n.x) * (1 - d / 140) * 0.25; n.y += (mouse.y - n.y) * (1 - d / 140) * 0.25; }
+      }
+      n.pulse = Math.max(0, n.pulse - dt * 0.003);
+    });
+    const sr = mobile ? 30 : 44;
+    sats.forEach(s => {
+      s.a += dt * 0.0006;
+      s.x = s.parent.x + Math.cos(s.a) * sr;
+      s.y = s.parent.y + Math.sin(s.a) * sr;
+      s.fail = Math.max(0, s.fail - dt);
+      s.pulse = Math.max(0, s.pulse - dt * 0.003);
+    });
+    core.cx = cx; core.cy = cy;
+
+    spawnAcc += dt;
+    const every = mobile ? 260 : 170;
+    while (spawnAcc > every) { spawnAcc -= every; spawn(); }
+    failAcc += dt;
+    if (failAcc > 3800) {
+      failAcc = 0;
+      const s = sats[(Math.random() * sats.length) | 0];
+      s.fail = 3200;
+    }
+
+    for (let i = packets.length - 1; i >= 0; i--) {
+      const p = packets[i];
+      p.t += dt * 0.001 * p.speed;
+      let a, b;
+      if (p.stage === 0) { a = p.from; b = { x: cx, y: cy }; }
+      else { a = p.from; b = p.target; }
+      const c = ctrl(a, b, p.bend);
+      const t = Math.min(1, p.t);
+      const pos = bez(a, c, b, t);
+      p.trail.push(pos);
+      if (p.trail.length > 14) p.trail.shift();
+      p.x = pos.x; p.y = pos.y;
+
+      // 目标限流：在半路改道
+      if (p.stage === 1 && !p.rerouted && p.target.fail > 0 && t > 0.55) {
+        p.rerouted = true;
+        sparks.push(...Array.from({ length: 10 }, () => ({ x: pos.x, y: pos.y, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4, life: 1, color: RED })));
+        sparks.push({ x: pos.x, y: pos.y - 12, vx: 0, vy: -0.4, life: 1.4, color: RED, text: '429 → 改道' });
+        p.from = { ...pos }; p.t = 0; p.target = pickSat(p.target); p.bend = (Math.random() - 0.5) * 0.9;
+        p.color = LIME;
+        continue;
+      }
+      if (t >= 1) {
+        if (p.stage === 0) {
+          p.stage = 1; p.t = 0; p.from = { x: cx, y: cy };
+          p.target = pickSat(); p.bend = (Math.random() - 0.5) * 0.5;
+          core.pulse = 1;
+        } else {
+          p.target.pulse = 1; p.target.parent.pulse = 1;
+          packets.splice(i, 1);
+        }
+      }
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i];
+      s.x += s.vx; s.y += s.vy; s.vx *= 0.94; s.vy *= 0.94;
+      s.life -= dt * 0.0016;
+      if (s.life <= 0) sparks.splice(i, 1);
+    }
+    core.pulse = Math.max(0, (core.pulse || 0) - dt * 0.004);
+  }
+
+  function glowDot(x, y, r, color, alpha) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+    g.addColorStop(0, color);
+    g.addColorStop(1, 'transparent');
+    ctx.globalAlpha = alpha * 0.35;
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r * 4, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const cx = core.cx ?? core.x, cy = core.cy ?? core.y;
+    // 星点
+    ctx.fillStyle = '#9fb3ff';
+    stars.forEach(s => {
+      s.x -= s.z * 0.15; if (s.x < 0) s.x = W;
+      ctx.globalAlpha = s.z * 0.5;
+      ctx.fillRect(s.x, s.y, s.z * 1.4, s.z * 1.4);
+    });
+    ctx.globalAlpha = 1;
+
+    // 连线
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 6]);
+    ctx.lineDashOffset = -time * 0.02;
+    nodes.forEach(n => {
+      ctx.strokeStyle = n.color; ctx.globalAlpha = 0.25 + n.pulse * 0.5;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(n.x, n.y); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    sats.forEach(s => {
+      ctx.strokeStyle = s.fail > 0 ? RED : s.parent.color; ctx.globalAlpha = 0.18;
+      ctx.beginPath(); ctx.moveTo(s.parent.x, s.parent.y); ctx.lineTo(s.x, s.y); ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+
+    // 包裹
+    ctx.globalCompositeOperation = 'lighter';
+    packets.forEach(p => {
+      for (let k = 1; k < p.trail.length; k++) {
+        const a = p.trail[k - 1], b = p.trail[k];
+        ctx.strokeStyle = p.color; ctx.globalAlpha = (k / p.trail.length) * 0.7; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+      glowDot(p.x, p.y, 2, '#ffffff', 0.95);
+    });
+    ctx.globalCompositeOperation = 'source-over';
+
+    // 上游账号
+    sats.forEach(s => {
+      const failing = s.fail > 0;
+      const col = failing ? RED : s.parent.color;
+      glowDot(s.x, s.y, 3 + s.pulse * 3, col, failing ? 0.6 + Math.sin(time * 0.02) * 0.4 : 0.8);
+      if (failing) {
+        ctx.fillStyle = RED; ctx.font = '600 10px ' + css('--font-mono');
+        ctx.textAlign = 'center'; ctx.fillText('429', s.x, s.y - 10);
+      }
+    });
+
+    // 模型节点
+    nodes.forEach(n => {
+      const r = (mobile ? 14 : 18) + n.pulse * 5;
+      ctx.fillStyle = '#0a0f24';
+      ctx.strokeStyle = n.color; ctx.lineWidth = 2;
+      ctx.shadowColor = n.color; ctx.shadowBlur = 18 + n.pulse * 20;
+      ctx.beginPath();
+      for (let k = 0; k < 6; k++) {
+        const ang = Math.PI / 6 + k * Math.PI / 3 + time * 0.0003;
+        const px = n.x + Math.cos(ang) * r, py = n.y + Math.sin(ang) * r;
+        k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = n.color;
+      ctx.font = `700 ${mobile ? 11 : 13}px ` + css('--font-sans');
+      ctx.textAlign = 'center';
+      ctx.fillText(n.name, n.x, n.y + r + (mobile ? 16 : 20));
+    });
+
+    // 核心
+    const cr = mobile ? 26 : 36;
+    const pulse = core.pulse || 0;
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr * 3.2);
+    g.addColorStop(0, 'rgba(60,240,255,.55)');
+    g.addColorStop(0.4, 'rgba(139,92,255,.25)');
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(cx, cy, cr * 3.2 + pulse * 10, 0, Math.PI * 2); ctx.fill();
+    for (let k = 0; k < 3; k++) {
+      ctx.strokeStyle = k === 1 ? css('--violet') : CYAN;
+      ctx.globalAlpha = 0.7 - k * 0.18;
+      ctx.lineWidth = 2 - k * 0.4;
+      const rr = cr + 8 + k * 12;
+      const start = time * 0.001 * (k % 2 ? -1 : 1) * (1 + k * 0.4);
+      ctx.beginPath(); ctx.arc(cx, cy, rr, start, start + Math.PI * (1.1 + k * 0.25)); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#060a1c';
+    ctx.strokeStyle = CYAN; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, cr + pulse * 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = CYAN;
+    ctx.font = `800 ${mobile ? 9 : 11}px ` + css('--font-mono');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('GATEWAY', cx, cy);
+    ctx.textBaseline = 'alphabetic';
+
+    // 火花 / 标签
+    sparks.forEach(s => {
+      if (s.text) {
+        ctx.globalAlpha = Math.min(1, s.life);
+        ctx.fillStyle = s.color; ctx.font = '700 11px ' + css('--font-mono'); ctx.textAlign = 'center';
+        ctx.fillText(s.text, s.x, s.y);
+      } else {
+        glowDot(s.x, s.y, 1.6, s.color, Math.max(0, s.life));
+      }
+    });
+    ctx.globalAlpha = 1;
+
+    // 左侧"客户端"标记
+    if (!mobile) {
+      ctx.fillStyle = 'rgba(139,147,184,.6)';
+      ctx.font = '600 11px ' + css('--font-mono'); ctx.textAlign = 'left';
+      ctx.fillText('YOUR APP  ▸▸▸', 16, H - 24);
+    }
+  }
+
+  function loop(now) {
+    const dt = Math.min(50, now - last); last = now;
+    if (running) { update(dt); draw(); }
+    requestAnimationFrame(loop);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  new IntersectionObserver(es => { running = es[0].isIntersecting && !document.hidden; }).observe(cvs);
+  document.addEventListener('visibilitychange', () => { running = !document.hidden; });
+
+  if (reduceMotion) {
+    // 静态一帧
+    for (let i = 0; i < 40; i++) spawn();
+    for (let i = 0; i < 80; i++) update(40);
+    draw();
+  } else {
+    requestAnimationFrame(loop);
+  }
+})();
+</script>
+</body>
+</html>
