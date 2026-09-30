@@ -52,11 +52,17 @@ const SITE = {
   fallbackOrigin: 'https://api.tysy.top',
   links: {
     login: '/login', dashboard: '/dashboard', adminDashboard: '/admin/dashboard',
-    models: '/model-plaza',
-    docs: ''                        // 填入文档地址后才会显示「文档」入口
-  }
+    models: '/model-plaza',         // 站点暂未开启模型广场，先预留入口
+    docs: '/docs/',                 // 使用手册：导航、首屏按钮、页脚，新标签页打开
+    faq: '/docs/#troubleshooting',  // 页脚「常见问题」
+    contact: '/docs/#contact',      // 页脚「联系客服」
+    monitor: '/monitor'             // 页脚「渠道状态」（需登录，未登录会先跳到登录页）
+  },
+  contactQQ: '569229275'            // 页脚客服 QQ，留空不显示
 };
 ```
+
+以上是 03 的配置，01、02 只有 `name` 和部分 `links`。
 
 `links` 中留空的项，其按钮会自动隐藏。
 

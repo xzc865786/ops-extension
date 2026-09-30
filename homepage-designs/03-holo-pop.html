@@ -85,7 +85,11 @@
   .nav .links a:hover { background: rgba(43,46,51,.06); }
   .nav .links a.solid { background: var(--ink); color: #fff; font-weight: 700; }
   .nav .links a.solid:hover { background: #2a2850; }
-  @media (max-width: 640px) { .nav .links a:not(.solid) { display: none; } }
+  /* 手机端保留「使用手册」：新手最需要它 */
+  @media (max-width: 640px) {
+    .nav .links a:not(.solid):not(.keep) { display: none; }
+    .nav .links a.keep { padding: 9px 10px; }
+  }
   /* 横屏手机等矮屏：导航不吸顶，避免长期占用可视高度 */
   @media (max-height: 500px) { .nav { position: relative; top: 0; } }
 
@@ -316,6 +320,12 @@
   .finale .btn-big:hover span { transform: rotate(-45deg); }
   footer { text-align: center; padding: 56px var(--gutter) 50px; color: var(--muted); font-size: 13px; }
   footer .foot-lockup { display: block; width: 200px; height: auto; aspect-ratio: 414.48 / 126; margin: 0 auto 22px; }
+  .foot-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; margin-bottom: 14px; font-size: 14px; }
+  .foot-links a { color: var(--ink-2); font-weight: 600; padding: 4px 2px; border-bottom: 1px solid transparent; transition: border-color .2s, color .2s; }
+  .foot-links a:hover { color: var(--ink); border-bottom-color: var(--cyan); }
+  .foot-links i { font-style: normal; color: #b9bec4; }
+  .foot-links .qq { margin-left: 4px; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.7); border: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+  .foot-links .qq b { font-family: var(--font-mono); user-select: all; }
   #confetti { position: fixed; inset: 0; z-index: 9998; pointer-events: none; width: 100%; height: 100%; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -341,7 +351,7 @@
     <a class="logo" data-go="home" aria-label="汇码智能 首页"><svg class="lockup" viewBox="0 0 414.48 126" role="img" aria-label="汇码智能 HUIMA INTELLIGENCE"><use href="#huimaLockup"/></svg><svg class="symbol" viewBox="0 0 200 200" aria-hidden="true"><use href="#huimaSymbol"/></svg></a>
     <div class="links">
       <a data-go="models">模型广场</a>
-      <a data-go="docs">文档</a>
+      <a class="keep" data-go="docs" data-newtab>使用手册</a>
       <a data-go="login" data-hide-authed>登录</a>
       <a class="solid" data-go="start" data-authed="进入控制台"><span class="lbl">免费开始</span></a>
     </div>
@@ -359,7 +369,7 @@
         <p class="lead">不用再为每个模型各办一张会员卡。一个 API Key <mark>通用所有模型</mark>，上游抽风时网关自动换路，账单按实际用量走。</p>
         <div class="cta">
           <a class="btn btn-main" data-go="start" data-authed="进入控制台"><span class="dot"></span><span class="lbl">领取我的钥匙</span></a>
-          <a class="btn btn-soft" href="#code">三行代码接入 →</a>
+          <a class="btn btn-soft" data-go="docs" data-newtab>📘 新手使用手册</a>
         </div>
         <div class="badges"><span>🧷 会话保持</span><span>🪙 按量计费</span></div>
       </div>
@@ -498,7 +508,17 @@
       <a class="btn-big" data-go="start" data-authed="进入控制台"><b class="lbl">领取我的钥匙</b><span>→</span></a>
     </div>
   </main>
-  <footer><svg class="foot-lockup" viewBox="0 0 414.48 126" role="img" aria-label="汇码智能 HUIMA INTELLIGENCE"><use href="#huimaLockup"/></svg>© <span id="year"></span> <span data-site-name>汇码智能</span> · AI API 平台 · 一把钥匙，打开所有 AI</footer>
+  <footer>
+    <svg class="foot-lockup" viewBox="0 0 414.48 126" role="img" aria-label="汇码智能 HUIMA INTELLIGENCE"><use href="#huimaLockup"/></svg>
+    <nav class="foot-links" aria-label="帮助与支持">
+      <a data-go="docs" data-newtab>使用手册</a><i>·</i>
+      <a data-go="faq" data-newtab>常见问题</a><i>·</i>
+      <a data-go="monitor">渠道状态</a><i>·</i>
+      <a data-go="contact" data-newtab>联系客服</a>
+      <span class="qq" id="contactQQ">QQ <b></b></span>
+    </nav>
+    <div class="copy">© <span id="year"></span> <span data-site-name>汇码智能</span> · AI API 平台 · 一把钥匙，打开所有 AI</div>
+  </footer>
 
 <script>
 /* =========================================================
@@ -514,9 +534,13 @@ const SITE = {
     register: '/register',
     dashboard: '/dashboard',
     adminDashboard: '/admin/dashboard',
-    models: '/model-plaza',
-    docs: '' // 例如 'https://docs.example.com'
-  }
+    models: '/model-plaza',       // 站点暂未开启模型广场；开启后该入口即可使用，不需要可留空隐藏
+    docs: '/docs/',               // 使用手册（新标签页打开）
+    faq: '/docs/#troubleshooting',
+    contact: '/docs/#contact',
+    monitor: '/monitor'           // 渠道状态
+  },
+  contactQQ: '569229275'          // 页脚展示的客服 QQ；留空则不显示
 };
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -541,11 +565,24 @@ const origin = /^https?:/.test(location.protocol) ? location.origin : SITE.fallb
     const url = SITE.links[key];
     if (!url) { a.remove(); return; }
     a.href = url;
-    a.target = '_top';
+    if (a.hasAttribute('data-newtab')) {
+      a.target = '_blank';
+      a.rel = 'noopener';
+    } else {
+      a.target = '_top';
+    }
     const lbl = a.querySelector('.lbl');
     if (auth && a.dataset.authed && lbl) lbl.textContent = a.dataset.authed;
   });
   document.getElementById('year').textContent = new Date().getFullYear();
+  const qq = document.getElementById('contactQQ');
+  if (SITE.contactQQ) qq.querySelector('b').textContent = SITE.contactQQ;
+  else qq.remove();
+  // 链接被隐藏后，清理多余的分隔点
+  document.querySelectorAll('.foot-links > i').forEach(dot => {
+    const prev = dot.previousElementSibling, next = dot.nextElementSibling;
+    if (!prev || prev.tagName === 'I' || !next) dot.remove();
+  });
 })();
 
 /* ---------- 标题逐字弹入 ---------- */
