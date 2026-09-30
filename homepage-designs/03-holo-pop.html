@@ -6,24 +6,24 @@
 <meta name="color-scheme" content="light" />
 <title>汇码智能 · 一把钥匙，打开所有 AI</title>
 <meta name="description" content="汇码智能：一把钥匙，打开所有 AI。Claude、GPT、DeepSeek、GLM 一站接入。" />
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c5cff'/%3E%3Cstop offset='.35' stop-color='%2322d3ee'/%3E%3Cstop offset='.65' stop-color='%23b8ff5c'/%3E%3Cstop offset='1' stop-color='%23ff5ca8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='1.5' y='1.5' width='45' height='45' rx='14' fill='%2313122b' stroke='url(%23g)' stroke-width='3'/%3E%3Ccircle cx='14.5' cy='14.5' r='3.4' fill='%23ff5ca8'/%3E%3Ccircle cx='12.5' cy='24' r='3.4' fill='%2322d3ee'/%3E%3Ccircle cx='14.5' cy='33.5' r='3.4' fill='%237c5cff'/%3E%3Cpath d='M26 15.5 34.5 24 26 32.5' fill='none' stroke='%23b8ff5c' stroke-width='4.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title desc"%3E %3Cg id="modules" fill="%232B2E33"%3E %3Cpath id="module-upper-left" d="M21 116 L21 75 C21 66 26 59 34 52 L86 19 C95 14 105 14 114 20 C122 26 125 36 121 45 C118 53 112 59 106 63 L21 116 Z"/%3E %3Cpath id="module-right" d="M126 33 L167 56 C175 61 180 69 180 79 L181 133 C181 144 176 153 166 158 C157 163 147 163 138 159 C130 155 126 147 126 137 Z"/%3E %3Cpath id="module-lower-left" d="M58 113 L150 167 L127 182 C122 185 116 187 109 187 L68 187 C59 187 51 184 44 180 L27 169 C18 164 14 155 16 145 C18 134 24 124 34 117 C42 112 50 111 58 113 Z"/%3E %3C/g%3E %3Cpath id="intelligence-core" fill="%2317CFD8" transform="translate%2890 106%29 scale%281.22%29 translate%28-90 -106%29" d="M68 104 C80 101 91 93 103 83 C99 94 98 101 99 106 C99 112 102 119 105 126 C93 116 81 109 68 104 Z"/%3E %3C/svg%3E" />
 <style>
   @property --ang { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
   :root {
     --bg: #f4f2ff;
     --paper: #ffffff;
-    --ink: #13122b;
-    --ink-2: #3b3a5c;
-    --muted: #6d6b8f;
-    --line: rgba(19, 18, 43, .08);
+    --ink: #2B2E33;
+    --ink-2: #45494f;
+    --muted: #66717B;
+    --line: rgba(43, 46, 51, .08);
     --violet: #7c5cff;
     --pink: #ff5ca8;
-    --cyan: #22d3ee;
+    --cyan: #17CFD8;
     --lime: #b8ff5c;
     --amber: #ffb347;
     --red: #ff4d6a;
     --green: #14c38e;
-    --holo: linear-gradient(110deg, #7c5cff, #22d3ee 25%, #b8ff5c 45%, #ffb347 65%, #ff5ca8 85%, #7c5cff);
+    --holo: linear-gradient(110deg, #7c5cff, #17CFD8 25%, #b8ff5c 45%, #ffb347 65%, #ff5ca8 85%, #7c5cff);
     --font-sans: "HarmonyOS Sans SC", "MiSans", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
     --font-mono: "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, Menlo, monospace;
     --gutter: clamp(16px, 4vw, 48px);
@@ -68,22 +68,21 @@
   /* ---------- 导航 ---------- */
   .nav {
     position: sticky; top: 14px; z-index: 50; margin: 14px auto 0; width: min(1160px, calc(100% - 32px));
-    display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 16px; border-radius: 999px;
+    display: flex; align-items: center; gap: 14px; padding: 13px 13px 13px 26px; border-radius: 999px;
     background: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.9);
     box-shadow: 0 10px 40px -14px rgba(60,40,140,.25);
     backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%);
   }
   .logo { display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: -.01em; font-size: 17px; }
-  .brand-mark { width: 34px; height: 34px; flex: none; display: block; overflow: visible; }
-  .logo .brand-mark { filter: drop-shadow(0 6px 12px rgba(124,92,255,.35)); transition: transform .5s var(--spring); }
-  .logo:hover .brand-mark { transform: rotate(-8deg) scale(1.08); }
-  .logo .wordmark { display: flex; flex-direction: column; line-height: 1.1; }
-  .logo .wordmark small { font: 700 9px/1 var(--font-mono); letter-spacing: .16em; color: var(--muted); margin-top: 4px; }
-  @media (max-width: 380px) { .logo .wordmark small { display: none; } }
+  /* 官方横版标识：紧凑 Header 约 180px，四周净空 ≥ 0.25H；窄屏切换为纯图形 */
+  .logo { padding: 2px 0; }
+  .logo .lockup { display: block; width: 172px; aspect-ratio: 414.48 / 126; height: auto; }
+  .logo .symbol { display: none; width: 34px; height: 34px; }
+  @media (max-width: 640px) { .logo .lockup { display: none; } .logo .symbol { display: block; } }
   @keyframes rot { to { --ang: 360deg; } }
   .nav .links { margin-left: auto; display: flex; align-items: center; gap: 4px; }
   .nav .links a { padding: 9px 14px; border-radius: 999px; font-size: 14px; color: var(--ink-2); transition: background .2s; }
-  .nav .links a:hover { background: rgba(19,18,43,.06); }
+  .nav .links a:hover { background: rgba(43,46,51,.06); }
   .nav .links a.solid { background: var(--ink); color: #fff; font-weight: 700; }
   .nav .links a.solid:hover { background: #2a2850; }
   @media (max-width: 640px) { .nav .links a:not(.solid) { display: none; } }
@@ -124,10 +123,10 @@
   }
   .btn:hover { transform: translateY(-3px) scale(1.03); }
   .btn:active { transform: scale(.97); }
-  .btn-main { color: #fff; background: var(--ink); box-shadow: 0 16px 40px -14px rgba(19,18,43,.6); isolation: isolate; }
+  .btn-main { color: #fff; background: var(--ink); box-shadow: 0 16px 40px -14px rgba(43,46,51,.6); isolation: isolate; }
   .btn-main::before {
     content: ""; position: absolute; inset: -3px; border-radius: inherit; z-index: -1;
-    background: conic-gradient(from var(--ang), #7c5cff, #22d3ee, #b8ff5c, #ffb347, #ff5ca8, #7c5cff);
+    background: conic-gradient(from var(--ang), #7c5cff, #17CFD8, #b8ff5c, #ffb347, #ff5ca8, #7c5cff);
     animation: rot 3s linear infinite;
   }
   .btn-main::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--ink); z-index: -1; }
@@ -158,7 +157,7 @@
     position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .75;
     background:
       repeating-linear-gradient(115deg, transparent 0 6px, rgba(255,255,255,.35) 7px 8px),
-      linear-gradient(115deg, #ff5ca8 0%, #ffb347 18%, #b8ff5c 34%, #22d3ee 52%, #7c5cff 70%, #ff5ca8 88%);
+      linear-gradient(115deg, #ff5ca8 0%, #ffb347 18%, #b8ff5c 34%, #17CFD8 52%, #7c5cff 70%, #ff5ca8 88%);
     background-size: 100% 100%, 300% 300%;
     background-position: 0 0, var(--mx) var(--my);
   }
@@ -168,16 +167,15 @@
   .chip { width: 46px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, #f7d58b, #c9973b); position: relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
   .chip::before, .chip::after { content: ""; position: absolute; left: 6px; right: 6px; height: 1px; background: rgba(0,0,0,.35); }
   .chip::before { top: 11px; } .chip::after { bottom: 11px; }
-  .brandmark { display: flex; align-items: center; gap: 8px; font: 900 17px/1 var(--font-sans); letter-spacing: .02em; }
-  .brandmark .brand-mark { width: 26px; height: 26px; }
+  .brandmark { display: block; width: 34px; height: 34px; }
   .cardlabel { font: 700 10px/1 var(--font-mono); letter-spacing: .22em; color: var(--ink-2); margin-top: auto; }
   .cardnum { font: 700 clamp(17px, 2.4vw, 21px)/1.3 var(--font-mono); letter-spacing: .06em; margin: 8px 0 14px; white-space: nowrap; }
   .models { display: flex; gap: 6px; flex-wrap: wrap; }
-  .models span { font: 700 11px/1 var(--font-sans); padding: 5px 8px; border-radius: 999px; background: rgba(255,255,255,.7); border: 1px solid rgba(19,18,43,.08); }
+  .models span { font: 700 11px/1 var(--font-sans); padding: 5px 8px; border-radius: 999px; background: rgba(255,255,255,.7); border: 1px solid rgba(43,46,51,.08); }
   .models span i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 0; }
   .validthru { font: 700 10px/1.3 var(--font-mono); text-align: right; color: var(--ink-2); letter-spacing: .1em; }
   .validthru b { display: block; font-size: 18px; color: var(--ink); letter-spacing: 0; }
-  .face.back { transform: rotateY(180deg); background: #16152f; color: #e9e8ff; }
+  .face.back { transform: rotateY(180deg); background: #171A1F; color: #e9e8ff; }
   .face.back .stripe { height: 46px; margin-top: 22px; background: #000; }
   .face.back pre { margin: 18px 22px 0; font: 12px/1.7 var(--font-mono); color: #c9c6ff; white-space: pre-wrap; word-break: break-all; text-align: left; }
   .face.back pre b { color: var(--lime); font-weight: 600; }
@@ -267,8 +265,8 @@
 
   /* 轨道调度 */
   .orbit { position: relative; width: 140px; height: 140px; }
-  .orbit .sun { position: absolute; inset: 50px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 8px rgba(19,18,43,.06); display: grid; place-items: center; color: var(--lime); font: 900 11px var(--font-mono); }
-  .orbit .ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px dashed rgba(19,18,43,.18); animation: spin 8s linear infinite; }
+  .orbit .sun { position: absolute; inset: 50px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 8px rgba(43,46,51,.06); display: grid; place-items: center; color: var(--lime); font: 900 11px var(--font-mono); }
+  .orbit .ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px dashed rgba(43,46,51,.18); animation: spin 8s linear infinite; }
   .orbit .ring:nth-child(3) { inset: 18px; animation-duration: 5s; animation-direction: reverse; }
   .orbit .ring b { position: absolute; top: -8px; left: calc(50% - 8px); width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,.2); }
   .orbit .ring b.b2 { top: auto; bottom: -8px; }
@@ -291,7 +289,7 @@
   @keyframes use { 0%, 100% { width: 18%; } 40% { width: 52%; } 70% { width: 31%; } }
 
   /* ---------- 代码 ---------- */
-  .code-wrap { margin-top: 40px; border-radius: 28px; background: #16152f; color: #e9e8ff; overflow: hidden; box-shadow: 0 40px 80px -40px rgba(19,18,43,.7); }
+  .code-wrap { margin-top: 40px; border-radius: 28px; background: #171A1F; color: #e9e8ff; overflow: hidden; box-shadow: 0 40px 80px -40px rgba(43,46,51,.7); }
   .tabs { position: relative; display: flex; gap: 4px; padding: 10px; background: rgba(255,255,255,.04); overflow-x: auto; scrollbar-width: none; }
   .tabs button { position: relative; z-index: 1; border: 0; background: none; color: #a9a6d6; font: 700 14px var(--font-sans); padding: 10px 16px; border-radius: 999px; cursor: pointer; white-space: nowrap; transition: color .3s; }
   .tabs button[aria-selected="true"] { color: var(--ink); }
@@ -314,18 +312,18 @@
   }
   .finale::before {
     content: ""; position: absolute; inset: -40%; opacity: .55;
-    background: conic-gradient(from var(--ang), #7c5cff, #22d3ee, #b8ff5c, #ffb347, #ff5ca8, #7c5cff);
+    background: conic-gradient(from var(--ang), #7c5cff, #17CFD8, #b8ff5c, #ffb347, #ff5ca8, #7c5cff);
     filter: blur(80px); animation: rot 10s linear infinite;
   }
   .finale > * { position: relative; }
-  .finale .finale-mark { width: 64px; height: 64px; margin: 0 auto 26px; animation: floaty 5s ease-in-out infinite; }
   .finale h2 { font-size: clamp(38px, 7vw, 88px); margin: 0 0 18px; }
   .finale p { margin: 0 auto 36px; color: rgba(255,255,255,.8); max-width: 28em; }
   .finale .btn-big { display: inline-flex; align-items: center; gap: 12px; padding: 20px 34px; border-radius: 999px; background: #fff; color: var(--ink); font-weight: 900; font-size: 19px; box-shadow: 0 20px 50px -16px rgba(0,0,0,.6); transition: transform .4s var(--spring); }
   .finale .btn-big:hover { transform: scale(1.07) rotate(-2deg); }
   .finale .btn-big span { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: var(--lime); transition: transform .4s var(--spring); }
   .finale .btn-big:hover span { transform: rotate(-45deg); }
-  footer { text-align: center; padding: 40px var(--gutter) 50px; color: var(--muted); font-size: 13px; }
+  footer { text-align: center; padding: 56px var(--gutter) 50px; color: var(--muted); font-size: 13px; }
+  footer .foot-lockup { display: block; width: 200px; height: auto; aspect-ratio: 414.48 / 126; margin: 0 auto 22px; }
   #confetti { position: fixed; inset: 0; z-index: 9998; pointer-events: none; width: 100%; height: 100%; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -337,21 +335,10 @@
 </style>
 </head>
 <body>
-  <!-- 汇码智能标志：三个圆点（"汇"的三点水 = 多路模型）汇入代码提示符 ›（"码"） -->
+  <!-- 汇码智能官方标志（brand identity v1.0，已锁定）：几何与配色原样引用，请勿加渐变、发光、阴影或旋转 -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-    <defs>
-      <linearGradient id="hmHolo" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#7c5cff"/><stop offset=".35" stop-color="#22d3ee"/><stop offset=".65" stop-color="#b8ff5c"/><stop offset="1" stop-color="#ff5ca8"/>
-      </linearGradient>
-      <symbol id="hmMark" viewBox="0 0 48 48">
-        <rect x="1.5" y="1.5" width="45" height="45" rx="14" fill="#13122b" stroke="url(#hmHolo)" stroke-width="3"/>
-        <path d="M17 15.8 Q 22.5 18 26 24 M15.8 24 H26 M17 32.2 Q 22.5 30 26 24" fill="none" stroke="#fff" stroke-opacity=".24" stroke-width="1.6" stroke-linecap="round"/>
-        <circle cx="14.5" cy="14.5" r="3.4" fill="#ff5ca8"/>
-        <circle cx="12.5" cy="24" r="3.4" fill="#22d3ee"/>
-        <circle cx="14.5" cy="33.5" r="3.4" fill="#7c5cff"/>
-        <path d="M26 15.5 L34.5 24 L26 32.5" fill="none" stroke="#b8ff5c" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
-      </symbol>
-    </defs>
+    <symbol id="huimaLockup" viewBox="0 0 414.48 126"><g transform="translate(0 4) scale(0.590000)"> <g fill="#2B2E33"> <path d="M21 116 L21 75 C21 66 26 59 34 52 L86 19 C95 14 105 14 114 20 C122 26 125 36 121 45 C118 53 112 59 106 63 L21 116 Z"/> <path d="M126 33 L167 56 C175 61 180 69 180 79 L181 133 C181 144 176 153 166 158 C157 163 147 163 138 159 C130 155 126 147 126 137 Z"/> <path d="M58 113 L150 167 L127 182 C122 185 116 187 109 187 L68 187 C59 187 51 184 44 180 L27 169 C18 164 14 155 16 145 C18 134 24 124 34 117 C42 112 50 111 58 113 Z"/> </g> <path fill="#17CFD8" d="M68 104 C80 101 91 93 103 83 C99 94 98 101 99 106 C99 112 102 119 105 126 C93 116 81 109 68 104 Z"/> </g> <g fill="#2B2E33" transform="translate(146.00 15)"> <g><path d="M5.824 14.911999999999999C9.664 17.152 14.336 20.607999999999997 16.704 22.976L19.776 19.391999999999996C17.408 17.088 12.544 13.823999999999998 8.768 11.647999999999996ZM2.688 32.576C6.5920000000000005 34.623999999999995 11.52 37.76 13.888 39.936L16.896 36.16C14.336 33.983999999999995 9.344 31.104 5.5040000000000004 29.247999999999998ZM4.032 64.64 8.128 67.84C11.712 62.08 15.808 54.528 19.008 48.064L15.36 44.928C11.84 51.903999999999996 7.232 59.903999999999996 4.032 64.64ZM59.712 13.951999999999998H22.080000000000002V65.92H60.992000000000004V61.12H27.008V18.688000000000002H59.712Z"/> <path d="M94.4 50.879999999999995V55.232H118.848V50.879999999999995ZM99.584 22.4C99.136 28.735999999999997 98.304 37.312 97.472 42.432H98.752L123.392 42.495999999999995C122.17599999999999 56.512 120.768 62.208 119.104 63.872C118.464 64.512 117.824 64.64 116.672 64.576C115.52 64.576 112.64 64.576 109.568 64.256C110.336 65.472 110.78399999999999 67.328 110.912 68.672C113.984 68.864 116.928 68.864 118.592 68.736C120.512 68.608 121.728 68.16 122.94399999999999 66.752C125.24799999999999 64.448 126.72 57.728 128.192 40.448C128.256 39.744 128.32 38.336 128.32 38.336H120.384C121.408 30.4 122.43199999999999 20.799999999999997 122.94399999999999 14.143999999999998L119.55199999999999 13.759999999999998L118.78399999999999 14.015999999999998H96.512V18.432000000000002H117.952C117.44 24.064 116.608 31.872 115.84 38.336H102.52799999999999C103.104 33.599999999999994 103.744 27.583999999999996 104.064 22.72ZM71.42399999999999 13.631999999999998V18.048000000000002H79.232C77.44 27.839999999999996 74.56 36.928 70.01599999999999 43.007999999999996C70.78399999999999 44.288 71.872 46.976 72.192 48.192C73.408 46.592 74.56 44.864000000000004 75.584 42.944V66.176H79.744V61.056H91.52V33.343999999999994H79.80799999999999C81.472 28.543999999999997 82.816 23.36 83.84 18.048000000000002H93.376V13.631999999999998ZM79.744 37.696H87.29599999999999V56.768H79.744Z"/> <path d="M175.68 19.775999999999996H188.992V33.408H175.68ZM171.2 15.424V37.76H193.664V15.424ZM153.536 56.448H183.35999999999999V62.784H153.536ZM153.536 52.672V46.656H183.35999999999999V52.672ZM148.79999999999998 42.688V69.12H153.536V66.752H183.35999999999999V68.992H188.224V42.688ZM146.688 10.048000000000002C145.28 14.847999999999999 142.72 19.647999999999996 139.51999999999998 22.912C140.608 23.424 142.464 24.576 143.35999999999999 25.28C144.768 23.68 146.112 21.695999999999998 147.392 19.455999999999996H152.832V23.232L152.704 25.536H139.51999999999998V29.503999999999998H151.87199999999999C150.464 33.408 147.072 37.632 138.88 40.832C139.968 41.664 141.376 43.135999999999996 142.016 44.16C148.736 41.152 152.576 37.504 154.752 33.792C157.952 35.968 162.752 39.424 164.672 40.96L168.0 37.696C166.144 36.416 158.84799999999998 31.936 156.224 30.528L156.54399999999998 29.503999999999998H168.512V25.536H157.31199999999998L157.376 23.232V19.455999999999996H166.84799999999998V15.552H149.376C150.016 14.079999999999998 150.59199999999998 12.479999999999997 151.10399999999998 10.943999999999996Z"/> <path d="M228.992 37.120000000000005V42.623999999999995H215.35999999999999V37.120000000000005ZM210.88 33.024V69.056H215.35999999999999V56.0H228.992V63.488C228.992 64.32 228.79999999999998 64.576 227.968 64.576C227.00799999999998 64.64 224.32 64.64 221.31199999999998 64.512C221.952 65.792 222.656 67.648 222.91199999999998 68.928C226.944 68.928 229.696 68.864 231.488 68.16C233.21599999999998 67.392 233.72799999999998 66.048 233.72799999999998 63.552V33.024ZM215.35999999999999 46.4H228.992V52.224000000000004H215.35999999999999ZM259.392 15.04C255.744 16.96 249.98399999999998 19.263999999999996 244.48 21.119999999999997V10.368000000000002H239.744V31.616C239.744 36.864000000000004 241.344 38.336 247.488 38.336C248.768 38.336 257.08799999999997 38.336 258.496 38.336C263.552 38.336 265.024 36.224000000000004 265.536 28.415999999999997C264.192 28.095999999999997 262.272 27.391999999999996 261.312 26.560000000000002C260.99199999999996 32.896 260.544 33.983999999999995 258.048 33.983999999999995C256.256 33.983999999999995 249.216 33.983999999999995 247.87199999999999 33.983999999999995C244.992 33.983999999999995 244.48 33.599999999999994 244.48 31.552V25.024C250.688 23.232 257.536 20.927999999999997 262.592 18.624000000000002ZM260.15999999999997 43.584C256.448 45.952 250.30399999999997 48.448 244.48 50.368V40.128H239.744V61.76C239.744 67.136 241.408 68.544 247.61599999999999 68.544C248.95999999999998 68.544 257.408 68.544 258.816 68.544C264.192 68.544 265.536 66.24 266.11199999999997 57.664C264.832 57.344 262.912 56.576 261.824 55.808C261.568 63.04 261.056 64.256 258.432 64.256C256.576 64.256 249.47199999999998 64.256 248.064 64.256C245.05599999999998 64.256 244.48 63.872 244.48 61.824V54.336C250.944 52.544 258.304 50.048 263.296 47.168ZM209.856 28.607999999999997C211.2 28.031999999999996 213.44 27.711999999999996 230.976 26.496000000000002C231.552 27.711999999999996 232.064 28.863999999999997 232.44799999999998 29.887999999999998L236.608 27.967999999999996C235.26399999999998 24.128 231.67999999999998 18.368000000000002 228.35199999999998 14.079999999999998L224.44799999999998 15.616C226.048 17.792 227.648 20.351999999999997 229.05599999999998 22.848L214.976 23.616C217.72799999999998 20.223999999999997 220.608 15.936 222.84799999999998 11.647999999999996L217.856 10.112000000000002C215.808 15.104 212.28799999999998 20.159999999999997 211.2 21.503999999999998C210.112 22.848 209.152 23.808 208.19199999999998 24.0C208.768 25.28 209.6 27.583999999999996 209.856 28.607999999999997Z"/></g> <g transform="translate(0 76)"><path d="M1.7666015625 4.8779296875H3.5419921875V10.2568359375H9.9931640625V4.8779296875H11.7685546875V18.0H9.9931640625V11.7509765625H3.5419921875V18.0H1.7666015625Z"/> <path d="M18.699609375 4.8779296875H20.4837890625V12.849609375Q20.4837890625 14.958984375 21.2484375 15.88623046875Q22.0130859375 16.8134765625 23.726953125 16.8134765625Q25.43203125 16.8134765625 26.1966796875 15.88623046875Q26.961328125 14.958984375 26.961328125 12.849609375V4.8779296875H28.7455078125V13.0693359375Q28.7455078125 15.6357421875 27.47548828125 16.9453125Q26.20546875 18.2548828125 23.726953125 18.2548828125Q21.2396484375 18.2548828125 19.96962890625 16.9453125Q18.699609375 15.6357421875 18.699609375 13.0693359375Z"/> <path d="M35.6765625 4.8779296875H37.451953125V18.0H35.6765625Z"/> <path d="M44.585156250000004 4.8779296875H47.230664062500004L50.579296875000004 13.8076171875L53.945507812500004 4.8779296875H56.591015625000004V18.0H54.859570312500004V6.4775390625L51.475781250000004 15.4775390625H49.691601562500004L46.307812500000004 6.4775390625V18.0H44.585156250000004Z"/> <path d="M68.101171875 6.626953125 65.69296875 13.1572265625H70.5181640625ZM67.09921875 4.8779296875H69.1119140625L74.112890625 18.0H72.2671875L71.071875 14.6337890625H65.1568359375L63.961523437500006 18.0H62.089453125000006Z"/> <path d="M88.9505859375 4.8779296875H90.7259765625V18.0H88.9505859375Z"/> <path d="M97.85917968749999 4.8779296875H100.24980468749999L106.06816406249999 15.85546875V4.8779296875H107.79082031249999V18.0H105.40019531249999L99.58183593749999 7.0224609375V18.0H97.85917968749999Z"/> <path d="M113.10468749999998 4.8779296875H124.20527343749998V6.3720703125H119.54707031249998V18.0H117.76289062499998V6.3720703125H113.10468749999998Z"/> <path d="M129.51914062499998 4.8779296875H137.81601562499998V6.3720703125H131.29453124999998V10.2568359375H137.54355468749998V11.7509765625H131.29453124999998V16.505859375H137.97421874999998V18.0H129.51914062499998Z"/> <path d="M144.49218749999997 4.8779296875H146.26757812499997V16.505859375H152.65722656249997V18.0H144.49218749999997Z"/> <path d="M158.12050781249997 4.8779296875H159.89589843749997V16.505859375H166.28554687499997V18.0H158.12050781249997Z"/> <path d="M171.74882812499996 4.8779296875H173.52421874999996V18.0H171.74882812499996Z"/> <path d="M189.60468749999995 16.1279296875V12.603515625H186.70429687499995V11.14453125H191.36249999999995V16.7783203125Q190.33417968749995 17.5078125 189.09492187499995 17.88134765625Q187.85566406249995 18.2548828125 186.44941406249995 18.2548828125Q183.37324218749995 18.2548828125 181.63740234374995 16.45751953125Q179.90156249999995 14.66015625 179.90156249999995 11.4521484375Q179.90156249999995 8.2353515625 181.63740234374995 6.43798828125Q183.37324218749995 4.640625 186.44941406249995 4.640625Q187.73261718749995 4.640625 188.88837890624995 4.95703125Q190.04414062499995 5.2734375 191.01972656249995 5.888671875V7.7783203125Q190.03535156249995 6.943359375 188.92792968749995 6.521484375Q187.82050781249995 6.099609375 186.59882812499995 6.099609375Q184.19062499999995 6.099609375 182.98212890624995 7.4443359375Q181.77363281249995 8.7890625 181.77363281249995 11.4521484375Q181.77363281249995 14.1064453125 182.98212890624995 15.451171875Q184.19062499999995 16.7958984375 186.59882812499995 16.7958984375Q187.53925781249995 16.7958984375 188.27753906249995 16.63330078125Q189.01582031249995 16.470703125 189.60468749999995 16.1279296875Z"/> <path d="M198.20566406249995 4.8779296875H206.50253906249995V6.3720703125H199.98105468749995V10.2568359375H206.23007812499995V11.7509765625H199.98105468749995V16.505859375H206.66074218749995V18.0H198.20566406249995Z"/> <path d="M213.17871093749994 4.8779296875H215.56933593749994L221.38769531249994 15.85546875V4.8779296875H223.11035156249994V18.0H220.71972656249994L214.90136718749994 7.0224609375V18.0H213.17871093749994Z"/> <path d="M240.06972656249994 5.888671875V7.7607421875Q239.17324218749994 6.92578125 238.15810546874994 6.5126953125Q237.14296874999994 6.099609375 236.00039062499994 6.099609375Q233.75039062499994 6.099609375 232.55507812499994 7.47509765625Q231.35976562499994 8.8505859375 231.35976562499994 11.4521484375Q231.35976562499994 14.044921875 232.55507812499994 15.42041015625Q233.75039062499994 16.7958984375 236.00039062499994 16.7958984375Q237.14296874999994 16.7958984375 238.15810546874994 16.3828125Q239.17324218749994 15.9697265625 240.06972656249994 15.134765625V16.9892578125Q239.13808593749994 17.6220703125 238.09658203124994 17.9384765625Q237.05507812499994 18.2548828125 235.89492187499994 18.2548828125Q232.91542968749994 18.2548828125 231.20156249999994 16.43115234375Q229.48769531249994 14.607421875 229.48769531249994 11.4521484375Q229.48769531249994 8.2880859375 231.20156249999994 6.46435546875Q232.91542968749994 4.640625 235.89492187499994 4.640625Q237.07265624999994 4.640625 238.11416015624994 4.95263671875Q239.15566406249994 5.2646484375 240.06972656249994 5.888671875Z"/> <path d="M246.41191406249993 4.8779296875H254.70878906249993V6.3720703125H248.18730468749993V10.2568359375H254.43632812499993V11.7509765625H248.18730468749993V16.505859375H254.86699218749993V18.0H246.41191406249993Z"/></g> </g></symbol>
+    <symbol id="huimaSymbol" viewBox="0 0 200 200"><g fill="#2B2E33"> <path d="M21 116 L21 75 C21 66 26 59 34 52 L86 19 C95 14 105 14 114 20 C122 26 125 36 121 45 C118 53 112 59 106 63 L21 116 Z"/> <path d="M126 33 L167 56 C175 61 180 69 180 79 L181 133 C181 144 176 153 166 158 C157 163 147 163 138 159 C130 155 126 147 126 137 Z"/> <path d="M58 113 L150 167 L127 182 C122 185 116 187 109 187 L68 187 C59 187 51 184 44 180 L27 169 C18 164 14 155 16 145 C18 134 24 124 34 117 C42 112 50 111 58 113 Z"/> </g> <path fill="#17CFD8" d="M68 104 C80 101 91 93 103 83 C99 94 98 101 99 106 C99 112 102 119 105 126 C93 116 81 109 68 104 Z"/></symbol>
   </svg>
   <div class="blobs" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="grain" aria-hidden="true"></div>
@@ -359,7 +346,7 @@
   <canvas id="confetti" aria-hidden="true"></canvas>
 
   <nav class="nav" aria-label="主导航">
-    <a class="logo" data-go="home" aria-label="汇码智能 首页"><svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><use href="#hmMark"/></svg><span class="wordmark"><span data-site-name>汇码智能</span><small>HUIMA · AI GATEWAY</small></span></a>
+    <a class="logo" data-go="home" aria-label="汇码智能 首页"><svg class="lockup" viewBox="0 0 414.48 126" role="img" aria-label="汇码智能 HUIMA INTELLIGENCE"><use href="#huimaLockup"/></svg><svg class="symbol" viewBox="0 0 200 200" aria-hidden="true"><use href="#huimaSymbol"/></svg></a>
     <div class="links">
       <a data-go="models">模型广场</a>
       <a data-go="docs">文档</a>
@@ -375,7 +362,7 @@
         <span class="kicker"><b>NEW</b>Claude · GPT · DeepSeek · GLM 已接入</span>
         <h1 aria-label="一把钥匙，打开所有 AI">
           <span class="w split">一把钥匙，</span><br />
-          <span class="w split">打开所有</span>&nbsp;<span class="w squiggle"><span class="ch holo" style="animation-delay:.75s, 0s">AI</span><svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M2 12 Q 20 2 40 12 T 80 12 T 120 12 T 160 12 T 198 10" stroke="#13122b" stroke-width="5" fill="none" stroke-linecap="round"/></svg></span>
+          <span class="w split">打开所有</span>&nbsp;<span class="w squiggle"><span class="ch holo" style="animation-delay:.75s, 0s">AI</span><svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M2 12 Q 20 2 40 12 T 80 12 T 120 12 T 160 12 T 198 10" stroke="#2B2E33" stroke-width="5" fill="none" stroke-linecap="round"/></svg></span>
         </h1>
         <p class="lead">不用再为每个模型各办一张会员卡。一个 API Key <mark>通用所有模型</mark>，上游抽风时网关自动换路，账单按实际用量走。</p>
         <div class="cta">
@@ -390,7 +377,7 @@
           <div class="face front">
             <div class="foil"></div><div class="glare"></div>
             <div class="content">
-              <div class="row"><div class="chip"></div><div class="brandmark"><svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true"><use href="#hmMark"/></svg><span data-site-name>汇码智能</span></div></div>
+              <div class="row"><div class="chip"></div><svg class="brandmark" viewBox="0 0 200 200" role="img" aria-label="汇码智能"><use href="#huimaSymbol"/></svg></div>
               <div class="cardlabel">UNIVERSAL AI KEY</div>
               <div class="cardnum">sk-•••• •••• •••• 7F3A</div>
               <div class="row">
@@ -441,7 +428,7 @@
             <svg class="route" viewBox="0 0 420 140" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
               <path class="ln la" d="M70 70 C 170 70 190 36 300 36" stroke="#7c5cff"/>
               <path class="ln lb" d="M70 70 C 170 70 190 104 300 104" stroke="#14c38e"/>
-              <circle cx="58" cy="70" r="16" fill="#13122b"/><text x="58" y="74" text-anchor="middle" style="fill:#b8ff5c;font-size:10px">KEY</text>
+              <circle cx="58" cy="70" r="16" fill="#2B2E33"/><text x="58" y="74" text-anchor="middle" style="fill:#b8ff5c;font-size:10px">KEY</text>
               <circle class="ndt na" cx="312" cy="36" r="12" fill="#7c5cff"/><text x="332" y="40">上游 A</text>
               <circle class="ndt" cx="312" cy="104" r="12" fill="#14c38e"/><text x="332" y="108">上游 B</text>
               <text class="bad" x="232" y="24">429 限流</text>
@@ -525,13 +512,12 @@
     </section>
 
     <div class="finale rise" id="finale">
-      <svg class="brand-mark finale-mark" viewBox="0 0 48 48" aria-hidden="true"><use href="#hmMark"/></svg>
       <h2>拿上钥匙，<br />去哪都行。</h2>
       <p>从今天起，调用任何模型都只需要这一把。</p>
       <a class="btn-big" data-go="start" data-authed="进入控制台"><b class="lbl">领取我的钥匙</b><span>→</span></a>
     </div>
   </main>
-  <footer>© <span id="year"></span> <span data-site-name>汇码智能</span> · 一把钥匙，打开所有 AI</footer>
+  <footer><svg class="foot-lockup" viewBox="0 0 414.48 126" role="img" aria-label="汇码智能 HUIMA INTELLIGENCE"><use href="#huimaLockup"/></svg>© <span id="year"></span> <span data-site-name>汇码智能</span> · AI API 平台 · 一把钥匙，打开所有 AI</footer>
 
 <script>
 /* =========================================================
@@ -540,8 +526,6 @@
  * ========================================================= */
 const SITE = {
   name: '汇码智能',
-  // 留空时使用页面内置的 SVG 标志；填入图片地址（如 '/huima-logo.svg'）则替换成官方 logo 文件
-  logoUrl: '',
   fallbackOrigin: 'https://api.tysy.top',
   links: {
     home: '/',
@@ -569,15 +553,6 @@ const origin = /^https?:/.test(location.protocol) ? location.origin : SITE.fallb
   } catch (e) { /* 无法读取存储时按未登录处理 */ }
   document.querySelectorAll('[data-site-name]').forEach(el => { el.textContent = SITE.name; });
   document.title = SITE.name + ' · 一把钥匙，打开所有 AI';
-  if (SITE.logoUrl) {
-    document.querySelectorAll('svg.brand-mark').forEach(svg => {
-      const img = new Image();
-      img.src = SITE.logoUrl;
-      img.alt = '';
-      img.className = svg.getAttribute('class');
-      svg.replaceWith(img);
-    });
-  }
   document.querySelectorAll('[data-go]').forEach(a => {
     let key = a.dataset.go;
     if (key === 'start') key = auth ? (auth.admin ? 'adminDashboard' : 'dashboard') : 'login';
@@ -640,7 +615,7 @@ const origin = /^https?:/.test(location.protocol) ? location.origin : SITE.fallb
 const confetti = (function () {
   const cv = document.getElementById('confetti');
   const ctx = cv.getContext('2d');
-  const colors = ['#7c5cff', '#22d3ee', '#b8ff5c', '#ffb347', '#ff5ca8', '#13122b'];
+  const colors = ['#7c5cff', '#17CFD8', '#b8ff5c', '#ffb347', '#ff5ca8', '#2B2E33'];
   let parts = [], raf = 0;
   function size() { const d = Math.min(2, devicePixelRatio || 1); cv.width = innerWidth * d; cv.height = innerHeight * d; ctx.setTransform(d, 0, 0, d, 0, 0); }
   size(); addEventListener('resize', size);

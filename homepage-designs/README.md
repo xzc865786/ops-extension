@@ -2,18 +2,29 @@
 
 为 `https://api.tysy.top`（汇码智能）首页准备的候选设计。每套都是**单个自包含 HTML 文件**：不引用任何 CDN 或 Google Fonts（国内访问不会卡住），直接用浏览器双击打开即可预览。
 
-> **已选定：`03-holo-pop.html`（流光全息）**。已换上汇码智能的名称与新 logo，模型展示为 Claude、GPT、DeepSeek、GLM。01、02 保留作参考，未同步这些改动。
+> **已选定：`03-holo-pop.html`（流光全息）**。已使用汇码智能官方品牌标识，模型展示为 Claude、GPT、DeepSeek、GLM。01、02 保留作参考，未同步这些改动。
 
-## 汇码智能 logo（`brand/`）
+## 汇码智能官方标识（`brand/`）
+
+来自 *汇码智能 Brand Identity v1.0*（状态：LOCKED，2026-09-23）。页面**原样引用**官方矢量，没有修改几何与配色；规范见 `brand/BRAND_STYLE_GUIDE.md`。
 
 | 文件 | 用途 |
 |------|------|
-| `brand/huima-mark.svg` | 图形标志（方形），可用作 favicon、头像或 Sub2API 的站点 Logo |
-| `brand/huima-logo-horizontal.svg` | 横版组合：标志 + 「汇码智能」+ `HUIMA · AI GATEWAY` |
+| `brand/huima_horizontal_light.svg` | 浅色背景横版组合；首页导航与页脚使用 |
+| `brand/huima_horizontal_dark.svg` | 深色背景反白横版 |
+| `brand/huima_symbol_color.svg` | 纯图形标识（≥24px）；手机端导航与钥匙卡使用，也可设为 Sub2API 站点 Logo |
+| `brand/huima_symbol_micro.svg`、`favicon.ico`、`favicon-32.png` | 16px 左右的小尺寸与浏览器图标 |
+| `brand/brand-tokens.css` | 品牌色与尺寸 Token |
 
-设计含义：左侧三个圆点取自「汇」字的三点水，代表多路模型；右侧 `›` 是代码提示符，代表「码」。多路模型汇入一个入口，也就是「一把钥匙」。配色沿用 03 的全息色板：深墨底加镭射渐变描边。
+页面遵循的规范：
 
-横版 SVG 中的文字依赖系统字体，用于正式物料时请在设计软件中把文字转成曲线。如果要改用你们已有的官方 logo，把图片放到站点上，再在 `03-holo-pop.html` 顶部把 `SITE.logoUrl` 填成它的地址即可，页面里所有标志位置会自动替换。
+- 桌面导航使用横版组合，宽 172px（紧凑 Header 约 180px），四周净空 ≥ 0.25H。
+- 手机导航空间不足 150px，切换为纯图形标识。
+- favicon 使用 Micro Mark。
+- 标识本身不加渐变、发光、阴影或旋转。
+- 页面主文字色改为品牌 Graphite `#2B2E33`，青色强调改为 Intelligence Teal `#17CFD8`，深色面改为 `#171A1F`。全息渐变只用于页面装饰，不用于标识本身。
+
+标识以内联 `<symbol>` 嵌入 HTML，去掉了 `id` 以便同页多次引用，其余与官方文件一致，所以页面仍是单文件，无需额外部署图片。
 
 ## 三套设计一览
 
@@ -38,7 +49,6 @@
 ```js
 const SITE = {
   name: '汇码智能',                  // 站点名，页面各处同步替换
-  logoUrl: '',                      // 仅 03：留空用内置 SVG 标志，填图片地址则替换
   fallbackOrigin: 'https://api.tysy.top',
   links: {
     login: '/login', dashboard: '/dashboard', adminDashboard: '/admin/dashboard',
