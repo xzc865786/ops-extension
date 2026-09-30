@@ -1,0 +1,44 @@
+:root {
+  --huima-graphite: #2B2E33;
+  --huima-teal: #17CFD8;
+  --huima-white: #FFFFFF;
+  --huima-neutral-light: #F5F7F8;
+  --huima-border: #E6E9ED;
+  --huima-muted: #66717B;
+  --huima-dark-surface: #171A1F;
+
+  --huima-logo-header-width: clamp(180px, 15vw, 260px);
+  --huima-logo-clearspace-ratio: 0.25;
+}
+
+.huima-header-logo {
+  width: var(--huima-logo-header-width);
+  height: auto;
+  display: block;
+}
+
+.huima-symbol {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+
+.huima-symbol--micro {
+  width: 16px;
+  height: 16px;
+}
+
+.huima-brand-accent {
+  color: var(--huima-teal);
+}
+
+/* Do not use --huima-teal as normal body copy on white. */
+.huima-body {
+  color: var(--huima-graphite);
+  background: var(--huima-white);
+}
+
+.huima-dark {
+  color: var(--huima-white);
+  background: var(--huima-dark-surface);
+}

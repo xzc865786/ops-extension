@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>TYSY API · 像素街机</title>
+<meta name="description" content="一个密钥，通关所有 AI。Claude、GPT、Gemini 一站接入。" />
+<style>
+  :root {
+    --bg: #140a26;
+    --bg-2: #1c0f35;
+    --panel: #221443;
+    --ink: #0b0616;
+    --text: #fff6e8;
+    --muted: #b7a8d6;
+    --pink: #ff3d8b;
+    --cyan: #2ef2ff;
+    --yellow: #ffe14d;
+    --lime: #7dff5a;
+    --orange: #ff9a3c;
+    --px: 4px;
+    --font-sans: "HarmonyOS Sans SC", "MiSans", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, Menlo, monospace;
+    --gutter: clamp(16px, 4vw, 40px);
+    --notch: polygon(0 var(--px), var(--px) var(--px), var(--px) 0, calc(100% - var(--px)) 0, calc(100% - var(--px)) var(--px), 100% var(--px), 100% calc(100% - var(--px)), calc(100% - var(--px)) calc(100% - var(--px)), calc(100% - var(--px)) 100%, var(--px) 100%, var(--px) calc(100% - var(--px)), 0 calc(100% - var(--px)));
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; color: var(--text); font-family: var(--font-sans); line-height: 1.65;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, #3a1670 0%, transparent 70%),
+      linear-gradient(var(--bg), var(--bg-2));
+    background-color: var(--bg);
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--yellow); color: var(--ink); }
+  canvas.pxt, .sprite { image-rendering: pixelated; image-rendering: crisp-edges; display: block; max-width: 100%; }
+
+  /* ---------- CRT 覆盖层 ---------- */
+  .crt {
+    position: fixed; inset: 0; pointer-events: none; z-index: 100;
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.45) 100%);
+    animation: flicker 6s infinite;
+  }
+  @keyframes flicker { 0%, 97%, 100% { opacity: 1; } 98% { opacity: .82; } 99% { opacity: .95; } }
+
+  /* 远景网格地平线 */
+  .horizon {
+    position: fixed; left: -50%; right: -50%; bottom: 0; height: 45vh; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,61,139,.35) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(255,61,139,.35) 2px, transparent 2px);
+    background-size: 60px 60px;
+    transform: perspective(300px) rotateX(62deg);
+    transform-origin: 50% 100%;
+    mask-image: linear-gradient(transparent, #000 70%);
+    animation: floor 2.4s linear infinite;
+    opacity: .35;
+  }
+  @keyframes floor { to { background-position: 0 60px; } }
+
+  /* ---------- 像素组件 ---------- */
+  .pxbox { clip-path: var(--notch); }
+  .pbtn {
+    --c: var(--yellow);
+    position: relative; display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 22px 18px; font: 800 16px/1 var(--font-sans); letter-spacing: .04em;
+    color: var(--ink); background: var(--c); border: 0; cursor: pointer;
+    clip-path: var(--notch);
+    box-shadow: inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.3), inset var(--px) var(--px) 0 rgba(255,255,255,.45);
+    transition: transform .08s steps(2);
+  }
+  .pbtn:hover { filter: brightness(1.08); transform: translateY(-2px); }
+  .pbtn:active { transform: translateY(3px); box-shadow: inset var(--px) var(--px) 0 rgba(0,0,0,.3); padding: 16px 22px; }
+  .pbtn.alt { --c: var(--cyan); }
+  .pbtn.ghost { --c: #3a2466; color: var(--text); }
+  .pbtn .arrow { animation: nudge .6s steps(2) infinite; }
+  @keyframes nudge { 50% { transform: translateX(4px); } }
+  .blink { animation: blinkk 1s steps(1) infinite; }
+  @keyframes blinkk { 50% { opacity: 0; } }
+
+  /* ---------- 导航 ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 60;
+    display: flex; align-items: center; gap: 12px; padding: 12px var(--gutter);
+    background: rgba(20,10,38,.88); border-bottom: 4px solid var(--ink);
+    backdrop-filter: blur(6px);
+  }
+  .nav .logo { display: flex; align-items: center; gap: 10px; }
+  .nav .links { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .nav .links a.txt { padding: 8px 10px; font-size: 14px; color: var(--muted); }
+  .nav .links a.txt:hover { color: var(--yellow); }
+  .nav .links a.txt:hover::before { content: "▶ "; }
+  .nav .pbtn { padding: 10px 14px 13px; font-size: 14px; }
+  .sound {
+    font: 700 11px/1 var(--font-mono); color: var(--muted); background: transparent; border: 2px solid #3a2466;
+    padding: 7px 8px; cursor: pointer; letter-spacing: .06em;
+  }
+  .sound[aria-pressed="true"] { color: var(--lime); border-color: var(--lime); }
+  @media (max-width: 680px) { .nav .links a.txt { display: none; } }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative; z-index: 1; width: min(1200px, 100%); margin: 0 auto;
+    padding: clamp(40px, 7vw, 90px) var(--gutter) 60px;
+    display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(28px, 4vw, 56px); align-items: center;
+  }
+  @media (max-width: 940px) { .hero { grid-template-columns: 1fr; } }
+  .p1 { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; font: 700 12px/1 var(--font-mono); color: var(--lime); letter-spacing: .14em; }
+  .p1 .coin { width: 14px; height: 14px; background: var(--yellow); box-shadow: inset -3px -3px 0 var(--orange); animation: coin 1s steps(4) infinite; }
+  @keyframes coin { 0% { transform: scaleX(1); } 25% { transform: scaleX(.5); } 50% { transform: scaleX(.12); } 75% { transform: scaleX(.5); } }
+  h1 {
+    margin: 0 0 20px; font-weight: 900; font-size: clamp(42px, 6.6vw, 78px); line-height: 1.08; letter-spacing: .01em;
+    text-shadow: 4px 4px 0 var(--pink), 8px 8px 0 var(--ink);
+  }
+  h1 .hl { color: var(--yellow); display: inline-block; animation: hop 2.4s steps(1) infinite; }
+  @keyframes hop { 0%, 80%, 100% { transform: none; } 85% { transform: translateY(-8px); } 90% { transform: translateY(-4px); } }
+  .lead { color: var(--muted); font-size: clamp(16px, 1.6vw, 18px); margin: 0 0 30px; max-width: 30em; }
+  .lead b { color: var(--text); }
+  .cta { display: flex; gap: 14px; flex-wrap: wrap; }
+  .perks { margin-top: 28px; display: flex; gap: 18px; flex-wrap: wrap; font: 700 12px/1 var(--font-mono); color: var(--muted); letter-spacing: .06em; }
+  .perks span::before { content: "♥ "; color: var(--pink); }
+
+  /* 街机屏幕 */
+  .cabinet {
+    position: relative; padding: 14px; background: #2b1650;
+    clip-path: polygon(0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px));
+    box-shadow: inset 0 0 0 4px var(--pink), inset 0 0 0 8px var(--ink);
+  }
+  .cabinet::before {
+    content: "API RUNNER"; position: absolute; top: -2px; left: 50%; transform: translate(-50%, 0);
+    font: 800 11px/1 var(--font-mono); letter-spacing: .3em; color: var(--ink); background: var(--pink); padding: 5px 10px 4px;
+  }
+  .screen { position: relative; background: #07030f; border: 4px solid var(--ink); margin-top: 10px; }
+  #game { display: block; width: 100%; aspect-ratio: 16 / 9; image-rendering: pixelated; image-rendering: crisp-edges; cursor: pointer; touch-action: manipulation; }
+  .screen::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.5)), linear-gradient(120deg, rgba(255,255,255,.06), transparent 40%);
+  }
+  .controls { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 4px 2px; font: 700 11px/1.4 var(--font-mono); color: var(--muted); letter-spacing: .06em; }
+  .controls kbd { font: inherit; color: var(--ink); background: var(--yellow); padding: 2px 6px; box-shadow: inset -2px -2px 0 rgba(0,0,0,.3); }
+  .joy { display: flex; gap: 8px; }
+  .joy i { width: 18px; height: 18px; border-radius: 50%; background: var(--pink); box-shadow: inset -3px -3px 0 rgba(0,0,0,.35); }
+  .joy i:nth-child(2) { background: var(--cyan); }
+  .joy i:nth-child(3) { background: var(--yellow); }
+
+  /* ---------- 跑马灯 ---------- */
+  .ticker-wrap { position: relative; z-index: 1; overflow: hidden; padding: 18px 0; }
+  .ticker { position: relative; overflow: hidden; background: var(--yellow); color: var(--ink); border-block: 4px solid var(--ink); transform: rotate(-1.2deg); margin: 12px -10px; }
+  .ticker .row { display: flex; width: max-content; animation: marquee 22s linear infinite; }
+  .ticker span { padding: 12px 22px; font: 900 16px/1 var(--font-sans); letter-spacing: .08em; white-space: nowrap; }
+  .ticker span::after { content: "✦"; margin-left: 44px; color: var(--pink); }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+
+  /* ---------- 通用段落 ---------- */
+  section.block { position: relative; z-index: 1; width: min(1200px, 100%); margin: 0 auto; padding: 90px var(--gutter); }
+  .head { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; margin-bottom: 44px; }
+  .head p { margin: 0; color: var(--muted); max-width: 34em; }
+  .head .zh { font-size: clamp(26px, 3.6vw, 40px); font-weight: 900; margin: 0; text-shadow: 3px 3px 0 var(--ink); line-height: 1.2; }
+  .pop { opacity: 0; transform: translateY(24px) scale(.96); }
+  .pop.in { animation: popin .5s steps(5) forwards; }
+  @keyframes popin { to { opacity: 1; transform: none; } }
+
+  /* ---------- 选角 ---------- */
+  .roster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  @media (max-width: 960px) { .roster { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 460px) { .roster { grid-template-columns: 1fr; } }
+  .fighter {
+    --c: var(--orange);
+    position: relative; text-align: left; font: inherit; color: inherit; cursor: pointer;
+    padding: 22px 18px 18px; background: var(--panel); border: 0;
+    clip-path: var(--notch);
+    box-shadow: inset 0 0 0 4px #3a2466;
+    transition: transform .12s steps(2);
+  }
+  .fighter:hover, .fighter:focus-visible { transform: translateY(-6px); box-shadow: inset 0 0 0 4px var(--c); outline: none; }
+  .fighter[aria-pressed="true"] { box-shadow: inset 0 0 0 4px var(--c), inset 0 0 0 8px var(--ink); background: color-mix(in srgb, var(--c) 16%, var(--panel)); }
+  .fighter .stage { height: 110px; display: grid; place-items: center; margin-bottom: 14px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 8px, transparent 8px 16px), #170c2e; position: relative; }
+  .fighter .stage::after { content: ""; position: absolute; left: 20%; right: 20%; bottom: 14px; height: 6px; background: rgba(0,0,0,.45); }
+  .fighter .sprite { width: 72px; height: auto; animation: bob 1s steps(2) infinite; position: relative; z-index: 1; }
+  @keyframes bob { 50% { transform: translateY(-4px); } }
+  .fighter .cursor { position: absolute; top: 8px; right: 10px; font: 800 12px/1 var(--font-mono); color: var(--ink); background: var(--c); padding: 4px 6px; opacity: 0; }
+  .fighter:hover .cursor, .fighter[aria-pressed="true"] .cursor { opacity: 1; animation: blinkk .5s steps(1) infinite; }
+  .fighter h3 { margin: 0; font: 900 20px/1.2 var(--font-sans); color: var(--c); letter-spacing: .02em; }
+  .fighter .cls { font: 700 11px/1 var(--font-mono); color: var(--muted); letter-spacing: .12em; margin: 6px 0 12px; }
+  .fighter p { margin: 0; font-size: 14px; color: var(--muted); }
+  .fighter code { display: block; margin-top: 14px; font: 12px/1.5 var(--font-mono); color: var(--c); background: var(--ink); padding: 6px 8px; overflow-wrap: anywhere; }
+  .ready { margin-top: 20px; min-height: 28px; font: 800 14px/1.4 var(--font-mono); color: var(--lime); letter-spacing: .08em; }
+
+  /* ---------- 关卡 ---------- */
+  .levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; counter-reset: lv; }
+  @media (max-width: 900px) { .levels { grid-template-columns: 1fr; } }
+  .level {
+    position: relative; padding: 26px 22px 24px; background: var(--panel);
+    clip-path: var(--notch); box-shadow: inset 0 0 0 4px #3a2466;
+  }
+  .level .lv { font: 800 12px/1 var(--font-mono); color: var(--ink); background: var(--cyan); display: inline-block; padding: 6px 8px; letter-spacing: .12em; }
+  .level h3 { margin: 14px 0 8px; font-size: 22px; font-weight: 900; }
+  .level p { margin: 0; color: var(--muted); font-size: 14px; }
+  .level pre { margin: 16px 0 0; padding: 12px; background: var(--ink); font: 12.5px/1.6 var(--font-mono); color: var(--lime); white-space: pre-wrap; word-break: break-all; }
+  .level .stars { position: absolute; top: 22px; right: 20px; display: flex; gap: 4px; }
+  .level .stars i { width: 16px; height: 16px; background: #3a2466; clip-path: polygon(50% 0, 63% 35%, 100% 38%, 72% 60%, 80% 100%, 50% 78%, 20% 100%, 28% 60%, 0 38%, 37% 35%); }
+  .level.in .stars i { animation: star .3s steps(3) forwards; }
+  .level.in .stars i:nth-child(2) { animation-delay: .25s; }
+  .level.in .stars i:nth-child(3) { animation-delay: .5s; }
+  @keyframes star { 0% { transform: scale(0); background: var(--yellow); } 60% { transform: scale(1.5); } 100% { transform: none; background: var(--yellow); } }
+  .level .clear {
+    position: absolute; right: 18px; top: 58px; font: 900 14px/1 var(--font-mono); letter-spacing: .1em;
+    color: var(--pink); border: 3px solid var(--pink); padding: 6px 8px; transform: rotate(-10deg) scale(0); opacity: 0;
+  }
+  .level.in .clear { animation: stamp .35s .8s steps(3) forwards; }
+  @keyframes stamp { 0% { transform: rotate(-10deg) scale(2.4); opacity: 0; } 100% { transform: rotate(-10deg) scale(1); opacity: .9; } }
+
+  /* ---------- 道具箱 ---------- */
+  .items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 800px) { .items { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 460px) { .items { grid-template-columns: 1fr; } }
+  .item { perspective: 800px; height: 190px; cursor: pointer; background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left; }
+  .item .in-card { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .45s steps(6); }
+  .item:hover .in-card, .item:focus-visible .in-card, .item.open .in-card { transform: rotateY(180deg); }
+  .item:focus-visible { outline: none; }
+  .item .face { position: absolute; inset: 0; backface-visibility: hidden; clip-path: var(--notch); padding: 20px; }
+  .item .front {
+    display: grid; place-items: center; background: var(--yellow);
+    box-shadow: inset -8px -8px 0 var(--orange), inset 8px 8px 0 #fff3a8;
+  }
+  .item .front b { font: 900 64px/1 var(--font-mono); color: var(--ink); text-shadow: 4px 4px 0 var(--orange); animation: bump 1.4s steps(2) infinite; }
+  .item:nth-child(2n) .front b { animation-delay: .35s; }
+  .item:nth-child(3n) .front b { animation-delay: .7s; }
+  @keyframes bump { 50% { transform: translateY(-6px); } }
+  .item .front .rivet { position: absolute; width: 8px; height: 8px; background: var(--ink); opacity: .6; }
+  .item .back { transform: rotateY(180deg); background: var(--panel); box-shadow: inset 0 0 0 4px var(--c, var(--lime)); display: flex; flex-direction: column; justify-content: center; }
+  .item .back .ic { font-size: 30px; line-height: 1; margin-bottom: 10px; }
+  .item .back h3 { margin: 0 0 6px; font-size: 20px; color: var(--c, var(--lime)); }
+  .item .back p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* ---------- CONTINUE ---------- */
+  .continue {
+    position: relative; z-index: 1; text-align: center; padding: 100px var(--gutter) 70px;
+  }
+  .continue .count { display: flex; justify-content: center; margin: 22px 0 12px; }
+  .continue p { color: var(--muted); margin: 0 0 30px; }
+  footer { position: relative; z-index: 1; text-align: center; padding: 30px var(--gutter) 50px; font: 700 12px/1.8 var(--font-mono); color: var(--muted); letter-spacing: .1em; border-top: 4px solid var(--ink); }
+  footer .hs { color: var(--yellow); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .pop { opacity: 1; transform: none; }
+    .level .stars i { background: var(--yellow); }
+    .level .clear { transform: rotate(-10deg); opacity: .9; }
+  }
+</style>
+</head>
+<body>
+  <div class="crt" aria-hidden="true"></div>
+  <div class="horizon" aria-hidden="true"></div>
+
+  <nav class="nav" aria-label="主导航">
+    <a class="logo" data-go="home" aria-label="首页">
+      <canvas class="pxt" data-text="{name}" data-scale="3" data-color="#ffe14d" data-shadow="#ff3d8b"></canvas>
+    </a>
+    <div class="links">
+      <a class="txt" data-go="models">模型广场</a>
+      <a class="txt" data-go="docs">攻略文档</a>
+      <a class="txt" data-go="login" data-hide-authed>登录</a>
+      <button class="sound" id="sound" type="button" aria-pressed="false">♪ OFF</button>
+      <a class="pbtn" data-go="start" data-authed="继续游戏"><span class="lbl">开始游戏</span></a>
+    </div>
+  </nav>
+
+  <!-- ====== HERO ====== -->
+  <header class="hero">
+    <div>
+      <div class="p1"><span class="coin"></span><span>PLAYER 1 · INSERT KEY</span><span class="blink">_</span></div>
+      <h1>一个密钥<br />通关<span class="hl">所有 AI</span></h1>
+      <p class="lead">Claude、GPT、Gemini……不用再一家家办会员卡。拿一把 <b>API Key</b>，全部模型任你挑；遇到 <b>429 限流</b>，网关自动帮你换条命。</p>
+      <div class="cta">
+        <a class="pbtn" data-go="start" data-authed="继续游戏"><span class="lbl">开始游戏</span><span class="arrow">▶</span></a>
+        <a class="pbtn ghost" href="#levels">查看通关攻略</a>
+      </div>
+      <div class="perks"><span>订阅转 API</span><span>会话保持</span><span>按量计费</span></div>
+    </div>
+
+    <div class="cabinet">
+      <div class="screen">
+        <canvas id="game" width="320" height="180" tabindex="0" aria-label="小游戏：点按或按空格让机器人跳过 429 等错误；撞上错误时网关会自动切换上游，游戏不会结束"></canvas>
+      </div>
+      <div class="controls">
+        <span><kbd>SPACE</kbd> / <kbd>点按</kbd> 跳跃 · 撞到错误不会 Game Over</span>
+        <span class="joy" aria-hidden="true"><i></i><i></i><i></i></span>
+      </div>
+    </div>
+  </header>
+
+  <div class="ticker-wrap" aria-hidden="true"><div class="ticker">
+    <div class="row" id="tickerRow">
+      <span>CLAUDE</span><span>GPT</span><span>GEMINI</span><span>一个密钥</span><span>自动切换上游</span><span>按量计费</span><span>会话保持</span><span>流式输出</span>
+    </div>
+  </div></div>
+
+  <!-- ====== 选角 ====== -->
+  <section class="block" id="select">
+    <div class="head">
+      <canvas class="pxt" data-text="SELECT YOUR MODEL" data-scale="3" data-color="#2ef2ff" data-shadow="#140a26" aria-label="选择你的模型"></canvas>
+      <h2 class="zh">选择你的出战模型</h2>
+      <p>同一把钥匙，随时换人上场。点一下角色，看看调用时只需要改哪一行。</p>
+    </div>
+    <div class="roster">
+      <button class="fighter pop" type="button" style="--c:var(--orange)" data-sprite="crab" data-model="claude-sonnet-4-5" aria-pressed="false">
+        <span class="cursor">P1</span>
+        <div class="stage"><canvas class="sprite"></canvas></div>
+        <h3>Claude</h3><div class="cls">CLASS · 智者</div>
+        <p>长文推理、代码重构的老练玩家。</p>
+      </button>
+      <button class="fighter pop" type="button" style="--c:var(--lime)" data-sprite="squid" data-model="gpt-5" aria-pressed="false">
+        <span class="cursor">P1</span>
+        <div class="stage"><canvas class="sprite"></canvas></div>
+        <h3>GPT</h3><div class="cls">CLASS · 全能</div>
+        <p>通用对话与工具调用，什么关都能打。</p>
+      </button>
+      <button class="fighter pop" type="button" style="--c:var(--cyan)" data-sprite="octo" data-model="gemini-2.5-pro" aria-pressed="false">
+        <span class="cursor">P1</span>
+        <div class="stage"><canvas class="sprite"></canvas></div>
+        <h3>Gemini</h3><div class="cls">CLASS · 视界</div>
+        <p>多模态与超长上下文，一眼看完全图。</p>
+      </button>
+      <button class="fighter pop" type="button" style="--c:var(--pink)" data-sprite="mystery" data-model="更多模型持续解锁中" aria-pressed="false">
+        <span class="cursor">P1</span>
+        <div class="stage"><canvas class="sprite"></canvas></div>
+        <h3>???</h3><div class="cls">CLASS · 隐藏角色</div>
+        <p>更多模型陆续解锁，去模型广场看看。</p>
+      </button>
+    </div>
+    <div class="ready" id="ready" aria-live="polite">&gt; 请选择角色_</div>
+  </section>
+
+  <!-- ====== 关卡 ====== -->
+  <section class="block" id="levels">
+    <div class="head">
+      <canvas class="pxt" data-text="HOW TO PLAY" data-scale="3" data-color="#7dff5a" data-shadow="#140a26" aria-label="玩法"></canvas>
+      <h2 class="zh">三关速通，五分钟上手</h2>
+    </div>
+    <div class="levels">
+      <div class="level pop">
+        <div class="stars"><i></i><i></i><i></i></div>
+        <span class="lv">LEVEL 1</span>
+        <h3>领取钥匙</h3>
+        <p>注册账号，在控制台创建一把 API Key。</p>
+        <pre>sk-••••••••••••••••</pre>
+        <span class="clear">CLEAR!</span>
+      </div>
+      <div class="level pop">
+        <div class="stars"><i></i><i></i><i></i></div>
+        <span class="lv">LEVEL 2</span>
+        <h3>替换地址</h3>
+        <p>把 SDK 的 base_url 指向这里，其他代码原封不动。</p>
+        <pre id="baseUrl">base_url = "https://…"</pre>
+        <span class="clear">CLEAR!</span>
+      </div>
+      <div class="level pop">
+        <div class="stars"><i></i><i></i><i></i></div>
+        <span class="lv">LEVEL 3</span>
+        <h3>开始通关</h3>
+        <p>像往常一样调用，按实际用量扣费，账单实时可查。</p>
+        <pre>&gt; 200 OK  ▮▮▮▮▮▮▮▮ stream</pre>
+        <span class="clear">CLEAR!</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== 道具 ====== -->
+  <section class="block">
+    <div class="head">
+      <canvas class="pxt" data-text="POWER-UPS" data-scale="3" data-color="#ffe14d" data-shadow="#140a26" aria-label="道具"></canvas>
+      <h2 class="zh">撞开问号箱，看看你有哪些道具</h2>
+    </div>
+    <div class="items" id="items">
+      <button class="item pop" type="button" style="--c:var(--lime)"><div class="in-card"><div class="face front"><b>?</b></div><div class="face back"><div class="ic">🔁</div><h3>自动切换</h3><p>上游 429 / 5xx，秒切健康账号，你的请求不中断。</p></div></div></button>
+      <button class="item pop" type="button" style="--c:var(--cyan)"><div class="in-card"><div class="face front"><b>?</b></div><div class="face back"><div class="ic">🔗</div><h3>会话保持</h3><p>同一会话粘在同一上游，长对话更稳、缓存更省。</p></div></div></button>
+      <button class="item pop" type="button" style="--c:var(--yellow)"><div class="in-card"><div class="face front"><b>?</b></div><div class="face back"><div class="ic">🪙</div><h3>按量计费</h3><p>用多少扣多少，没有用不完的月费。</p></div></div></button>
+      <button class="item pop" type="button" style="--c:var(--pink)"><div class="in-card"><div class="face front"><b>?</b></div><div class="face back"><div class="ic">🛡️</div><h3>配额护盾</h3><p>给密钥和成员设上限，预算不会被一次循环打爆。</p></div></div></button>
+      <button class="item pop" type="button" style="--c:var(--orange)"><div class="in-card"><div class="face front"><b>?</b></div><div class="face back"><div class="ic">🎮</div><h3>多模型切换</h3><p>改一个 model 字段，就能换角色上场。</p></div></div></button>
+      <button class="item pop" type="button" style="--c:var(--lime)"><div class="in-card"><div class="face front"><b>?</b></div><div class="face back"><div class="ic">⚡</div><h3>流式输出</h3><p>原生 SSE 透传，字一个个蹦出来。</p></div></div></button>
+    </div>
+  </section>
+
+  <!-- ====== CONTINUE ====== -->
+  <section class="continue">
+    <canvas class="pxt" data-text="CONTINUE?" data-scale="5" data-color="#ff3d8b" data-shadow="#0b0616" style="margin:0 auto" aria-label="继续？"></canvas>
+    <div class="count"><canvas class="pxt" id="countdown" aria-hidden="true"></canvas></div>
+    <p>在倒数结束前投币——哦不，是领一把钥匙。</p>
+    <a class="pbtn" data-go="start" data-authed="继续游戏" style="font-size:18px"><span class="lbl">INSERT KEY · 立即开始</span><span class="arrow">▶</span></a>
+  </section>
+
+  <footer>
+    © <span id="year"></span> <span data-site-name>TYSY API</span> · <span class="hs">HIGH SCORE: YOU</span><br />
+    NO QUARTERS REQUIRED · PAY PER TOKEN
+  </footer>
+
+<script>
+/* =========================================================
+ * 站点配置：部署前按需修改
+ * links 中留空的项会被自动隐藏；页面在 iframe 中时链接会跳出到顶层窗口
+ * ========================================================= */
+const SITE = {
+  name: 'TYSY API',
+  fallbackOrigin: 'https://api.tysy.top',
+  links: {
+    home: '/',
+    login: '/login',
+    register: '/register',
+    dashboard: '/dashboard',
+    adminDashboard: '/admin/dashboard',
+    models: '/model-plaza',
+    docs: '' // 例如 'https://docs.example.com'
+  }
+};
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const origin = /^https?:/.test(location.protocol) ? location.origin : SITE.fallbackOrigin;
+
+/* ---------- 链接与登录态 ---------- */
+(function wire() {
+  let auth = null;
+  try {
+    if (localStorage.getItem('auth_token')) {
+      const u = JSON.parse(localStorage.getItem('auth_user') || 'null');
+      auth = { admin: !!(u && u.role === 'admin') };
+    }
+  } catch (e) { /* 无法读取存储时按未登录处理 */ }
+  document.querySelectorAll('[data-site-name]').forEach(el => { el.textContent = SITE.name; });
+  document.title = SITE.name + ' · 像素街机';
+  document.querySelectorAll('[data-go]').forEach(a => {
+    let key = a.dataset.go;
+    if (key === 'start') key = auth ? (auth.admin ? 'adminDashboard' : 'dashboard') : 'login';
+    if (auth && a.hasAttribute('data-hide-authed')) { a.remove(); return; }
+    const url = SITE.links[key];
+    if (!url) { a.remove(); return; }
+    a.href = url;
+    a.target = '_top';
+    const lbl = a.querySelector('.lbl');
+    if (auth && a.dataset.authed && lbl) lbl.textContent = a.dataset.authed;
+  });
+  document.getElementById('year').textContent = new Date().getFullYear();
+  document.getElementById('baseUrl').textContent = `base_url = "${origin}"`;
+})();
+
+/* =========================================================
+ * 5×7 像素字体
+ * ========================================================= */
+const FONT = (() => {
+  const src = {
+    A: '01110 10001 10001 11111 10001 10001 10001', B: '11110 10001 10001 11110 10001 10001 11110',
+    C: '01110 10001 10000 10000 10000 10001 01110', D: '11100 10010 10001 10001 10001 10010 11100',
+    E: '11111 10000 10000 11110 10000 10000 11111', F: '11111 10000 10000 11110 10000 10000 10000',
+    G: '01110 10001 10000 10111 10001 10001 01111', H: '10001 10001 10001 11111 10001 10001 10001',
+    I: '01110 00100 00100 00100 00100 00100 01110', J: '00111 00010 00010 00010 00010 10010 01100',
+    K: '10001 10010 10100 11000 10100 10010 10001', L: '10000 10000 10000 10000 10000 10000 11111',
+    M: '10001 11011 10101 10101 10001 10001 10001', N: '10001 10001 11001 10101 10011 10001 10001',
+    O: '01110 10001 10001 10001 10001 10001 01110', P: '11110 10001 10001 11110 10000 10000 10000',
+    Q: '01110 10001 10001 10001 10101 10010 01101', R: '11110 10001 10001 11110 10100 10010 10001',
+    S: '01111 10000 10000 01110 00001 00001 11110', T: '11111 00100 00100 00100 00100 00100 00100',
+    U: '10001 10001 10001 10001 10001 10001 01110', V: '10001 10001 10001 10001 10001 01010 00100',
+    W: '10001 10001 10001 10101 10101 10101 01010', X: '10001 10001 01010 00100 01010 10001 10001',
+    Y: '10001 10001 10001 01010 00100 00100 00100', Z: '11111 00001 00010 00100 01000 10000 11111',
+    0: '01110 10001 10011 10101 11001 10001 01110', 1: '00100 01100 00100 00100 00100 00100 01110',
+    2: '01110 10001 00001 00010 00100 01000 11111', 3: '11111 00010 00100 00010 00001 10001 01110',
+    4: '00010 00110 01010 10010 11111 00010 00010', 5: '11111 10000 11110 00001 00001 10001 01110',
+    6: '00110 01000 10000 11110 10001 10001 01110', 7: '11111 00001 00010 00100 01000 01000 01000',
+    8: '01110 10001 10001 01110 10001 10001 01110', 9: '01110 10001 10001 01111 00001 00010 01100',
+    ' ': '00000 00000 00000 00000 00000 00000 00000', '-': '00000 00000 00000 11111 00000 00000 00000',
+    '.': '00000 00000 00000 00000 00000 01100 01100', '!': '00100 00100 00100 00100 00100 00000 00100',
+    '?': '01110 10001 00001 00010 00100 00000 00100', ':': '00000 01100 01100 00000 01100 01100 00000',
+    '>': '01000 00100 00010 00001 00010 00100 01000', '/': '00001 00010 00010 00100 01000 01000 10000',
+    '_': '00000 00000 00000 00000 00000 00000 11111', '+': '00000 00100 00100 11111 00100 00100 00000'
+  };
+  const out = {};
+  for (const k in src) out[k] = src[k].split(' ');
+  return out;
+})();
+function pxWidth(text, s) { return Math.max(0, text.length * 6 * s - s); }
+function pxDraw(ctx, text, x, y, s, color) {
+  ctx.fillStyle = color;
+  let cx = x;
+  for (const ch of String(text).toUpperCase()) {
+    const g = FONT[ch] || FONT['?'];
+    for (let r = 0; r < 7; r++) for (let c = 0; c < 5; c++) if (g[r][c] === '1') ctx.fillRect(cx + c * s, y + r * s, s, s);
+    cx += 6 * s;
+  }
+}
+function renderPxt(cv, text) {
+  const s = +cv.dataset.scale || 3;
+  const sh = cv.dataset.shadow;
+  const t = text ?? cv.dataset.text.replace('{name}', SITE.name);
+  cv.width = pxWidth(t, s) + (sh ? s : 0);
+  cv.height = 7 * s + (sh ? s : 0);
+  const c = cv.getContext('2d');
+  c.clearRect(0, 0, cv.width, cv.height);
+  if (sh) pxDraw(c, t, s, s, s, sh);
+  pxDraw(c, t, 0, 0, s, cv.dataset.color || '#fff');
+  if (!cv.getAttribute('aria-label')) cv.setAttribute('aria-label', t);
+}
+document.querySelectorAll('canvas.pxt[data-text]').forEach(cv => renderPxt(cv));
+
+/* ---------- 8-bit 音效（默认关闭） ---------- */
+let AC = null, soundOn = false;
+function blip(freq = 660, dur = 0.07, type = 'square') {
+  if (!soundOn) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+    o.type = type; o.frequency.setValueAtTime(freq, t); o.frequency.exponentialRampToValueAtTime(freq * 1.6, t + dur);
+    g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur);
+  } catch (e) { /* 浏览器不支持音频时静默 */ }
+}
+document.getElementById('sound').addEventListener('click', e => {
+  soundOn = !soundOn;
+  e.currentTarget.setAttribute('aria-pressed', String(soundOn));
+  e.currentTarget.textContent = soundOn ? '♪ ON' : '♪ OFF';
+  blip(880, 0.1);
+});
+
+/* ---------- 跑马灯内容复制一份实现无缝滚动 ---------- */
+(function () { const r = document.getElementById('tickerRow'); r.innerHTML += r.innerHTML; })();
+
+/* ---------- 显现 ---------- */
+(function () {
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: 0.2 });
+  document.querySelectorAll('.pop').forEach((el, i) => { el.style.animationDelay = (i % 4) * 0.08 + 's'; io.observe(el); });
+})();
+
+/* =========================================================
+ * 像素精灵
+ * ========================================================= */
+const SPRITES = {
+  crab: [
+    ['..a.....a..', '...a...a...', '..aaaaaaa..', '.aawaaawaa.', 'aaaaaaaaaaa', 'a.aaaaaaa.a', 'a.a.....a.a', '...aa.aa...'],
+    ['..a.....a..', 'a..a...a..a', 'a.aaaaaaa.a', 'aaawaaawaaa', 'aaaaaaaaaaa', '.aaaaaaaaa.', '..a.....a..', '.a.......a.']
+  ],
+  squid: [
+    ['...aa...', '..aaaa..', '.aaaaaa.', 'aawaawaa', 'aaaaaaaa', '..a..a..', '.a.aa.a.', 'a.a..a.a'],
+    ['...aa...', '..aaaa..', '.aaaaaa.', 'aawaawaa', 'aaaaaaaa', '.a.aa.a.', 'a......a', '.a....a.']
+  ],
+  octo: [
+    ['....aaaa....', '.aaaaaaaaaa.', 'aaaaaaaaaaaa', 'aaawwaawwaaa', 'aaaaaaaaaaaa', '...aa..aa...', '..aa.aa.aa..', 'aa........aa'],
+    ['....aaaa....', '.aaaaaaaaaa.', 'aaaaaaaaaaaa', 'aaawwaawwaaa', 'aaaaaaaaaaaa', '..aaa..aaa..', '.aa..aa..aa.', '..aa....aa..']
+  ],
+  mystery: [
+    ['.aaaaaaaa.', 'aawwwwwwaa', 'aawaaaawaa', 'aaaaaaawaa', 'aaaaawwaaa', 'aaaaawaaaa', 'aaaaaaaaaa', '.aaaawaaa.'],
+    ['.aaaaaaaa.', 'aawwwwwwaa', 'aawaaaawaa', 'aaaaaaawaa', 'aaaaawwaaa', 'aaaaawaaaa', 'aaaaaaaaaa', '.aaaawaaa.']
+  ],
+  bot: [
+    ['......a.....', '.....aaa....', '..aaaaaaaa..', '.aaaaaaaaaa.', '.aawwaawwaa.', '.aawkaawkaa.', '.aaaaaaaaaa.', '.aaakkkkaaa.', '..aaaaaaaa..', '...aaaaaa...', '...a....a...', '..aa....aa..'],
+    ['......a.....', '.....aaa....', '..aaaaaaaa..', '.aaaaaaaaaa.', '.aawwaawwaa.', '.aawkaawkaa.', '.aaaaaaaaaa.', '.aaakkkkaaa.', '..aaaaaaaa..', '...aaaaaa...', '....a..a....', '....aa.aa...'],
+    ['......a.....', '.....aaa....', '..aaaaaaaa..', '.aaaaaaaaaa.', '.aawwaawwaa.', '.aawkaawkaa.', '.aaaaaaaaaa.', '.aaakkkkaaa.', '..aaaaaaaa..', '..aaaaaaaa..', '..aa....aa..', '............']
+  ]
+};
+function drawSprite(ctx, rows, x, y, s, color) {
+  for (let r = 0; r < rows.length; r++) {
+    for (let c = 0; c < rows[r].length; c++) {
+      const ch = rows[r][c];
+      if (ch === '.') continue;
+      ctx.fillStyle = ch === 'a' ? color : ch === 'w' ? '#fff6e8' : '#0b0616';
+      ctx.fillRect(x + c * s, y + r * s, s, s);
+    }
+  }
+}
+
+/* ---------- 选角 ---------- */
+(function roster() {
+  const ready = document.getElementById('ready');
+  const fighters = document.querySelectorAll('.fighter');
+  fighters.forEach((f, idx) => {
+    const cv = f.querySelector('.sprite');
+    const frames = SPRITES[f.dataset.sprite];
+    const color = getComputedStyle(f).getPropertyValue('--c').trim() || '#fff';
+    const s = 6;
+    cv.width = frames[0][0].length * s; cv.height = frames[0].length * s;
+    const c = cv.getContext('2d');
+    let fr = 0;
+    const paint = () => { c.clearRect(0, 0, cv.width, cv.height); drawSprite(c, frames[fr], 0, 0, s, color); };
+    paint();
+    if (!reduceMotion) setInterval(() => { fr ^= 1; paint(); }, 480 + idx * 60);
+    f.addEventListener('mouseenter', () => blip(520 + idx * 110, 0.05));
+    f.addEventListener('click', () => {
+      fighters.forEach(x => x.setAttribute('aria-pressed', String(x === f)));
+      blip(990, 0.12);
+      const name = f.querySelector('h3').textContent;
+      const m = f.dataset.model;
+      ready.textContent = f.dataset.sprite === 'mystery'
+        ? '> 隐藏角色：' + m + '，去模型广场看看_'
+        : `> ${name} READY!  只需在请求里写 "model": "${m}"_`;
+    });
+  });
+})();
+
+/* ---------- 问号箱（触屏点按翻转） ---------- */
+document.querySelectorAll('.item').forEach((it, i) => {
+  it.addEventListener('click', () => { it.classList.toggle('open'); blip(1320 - i * 80, 0.09, 'triangle'); });
+  it.addEventListener('mouseenter', () => blip(1180, 0.05, 'triangle'));
+});
+
+/* ---------- CONTINUE 倒计时 ---------- */
+(function countdown() {
+  const cv = document.getElementById('countdown');
+  cv.dataset.scale = '10'; cv.dataset.color = '#ffe14d'; cv.dataset.shadow = '#ff3d8b';
+  let n = 9;
+  const paint = () => renderPxt(cv, n >= 0 ? String(n) : 'GO!');
+  paint();
+  if (reduceMotion) return;
+  setInterval(() => { n = n < 0 ? 9 : n - 1; paint(); }, 900);
+})();
+
+/* =========================================================
+ * API RUNNER 小游戏
+ * 演示模式由网关 AI 自动跳；玩家点按/空格即接管。
+ * 撞上 429/503 不会结束，而是"切换上游"，换个颜色继续跑。
+ * ========================================================= */
+(function game() {
+  const cv = document.getElementById('game');
+  const g = cv.getContext('2d');
+  const W = 320, H = 180, GROUND = 150, S = 2;
+  const MODELS = [
+    { name: 'CLAUDE', c: '#ff9a3c' },
+    { name: 'GPT', c: '#7dff5a' },
+    { name: 'GEMINI', c: '#2ef2ff' }
+  ];
+  const ERRORS = ['429', '503', '504', '429', 'ERR'];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  const bot = { x: 34, y: GROUND - 24, vy: 0, ground: true, frame: 0, inv: 0 };
+  let model = 0, score = 0, hi = 0, switches = 0, speed = 2.4, tick = 0;
+  let obstacles = [], coins = [], parts = [], nextObs = 60, nextCoin = 90;
+  let banner = 0, bannerText = '', flash = 0;
+  let mode = 'demo', idle = 0;
+  try { hi = +localStorage.getItem('arcade_hi') || 0; } catch (e) { /* 忽略 */ }
+
+  const stars = Array.from({ length: 40 }, () => ({ x: rnd(0, W), y: rnd(0, 110), t: rnd(0, 6) }));
+  const far = [], near = [];
+  for (let x = 0; x < W + 60;) { const w = rnd(14, 28) | 0; far.push({ x, w, h: rnd(28, 70) | 0 }); x += w + 4; }
+  for (let x = 0; x < W + 60;) { const w = rnd(18, 34) | 0; near.push({ x, w, h: rnd(16, 44) | 0, leds: rnd(1, 4) | 0 }); x += w + 10; }
+
+  function jump() {
+    if (bot.ground) { bot.vy = -7.2; bot.ground = false; blip(560, 0.08); }
+  }
+  function takeControl() { mode = 'player'; idle = 0; jump(); }
+
+  cv.addEventListener('pointerdown', e => { e.preventDefault(); takeControl(); });
+  window.addEventListener('keydown', e => {
+    if (e.code !== 'Space' && e.code !== 'ArrowUp') return;
+    const r = cv.getBoundingClientRect();
+    const visible = r.bottom > 0 && r.top < innerHeight;
+    if (!visible) return;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || (t.tagName === 'BUTTON' && t !== cv) || t.tagName === 'A')) return;
+    e.preventDefault();
+    takeControl();
+  });
+
+  function burst(x, y, color, n) {
+    for (let i = 0; i < n; i++) parts.push({ x, y, vx: rnd(-2.4, 2.4), vy: rnd(-3.2, -0.5), life: rnd(20, 40), c: color });
+  }
+
+  function step() {
+    tick++;
+    if (mode === 'player' && ++idle > 60 * 7) mode = 'demo';
+    speed = Math.min(4.6, speed + 0.0009);
+    score += Math.round(speed);
+
+    // 生成障碍与金币
+    if (--nextObs <= 0) {
+      const h = [16, 20, 24][(Math.random() * 3) | 0];
+      obstacles.push({ x: W + 10, w: 22, h, label: ERRORS[(Math.random() * ERRORS.length) | 0], decided: false, miss: false });
+      nextObs = (rnd(58, 110) / (speed / 2.4)) | 0;
+    }
+    if (--nextCoin <= 0) {
+      coins.push({ x: W + 10, y: rnd(84, 122) | 0, t: 0 });
+      nextCoin = rnd(50, 120) | 0;
+    }
+
+    // 演示 AI
+    if (mode === 'demo') {
+      for (const o of obstacles) {
+        const gap = o.x - (bot.x + 22);
+        if (!o.decided && gap < speed * 11 && gap > 0) {
+          o.decided = true;
+          o.miss = Math.random() < 0.14; // 偶尔故意撞上，展示自动切换
+          if (!o.miss) jump();
+        }
+      }
+    }
+
+    // 物理
+    bot.vy += 0.42; bot.y += bot.vy;
+    if (bot.y >= GROUND - 24) { bot.y = GROUND - 24; bot.vy = 0; bot.ground = true; }
+    if (tick % 6 === 0) bot.frame ^= 1;
+    if (bot.inv > 0) bot.inv--;
+
+    const hit = { x: bot.x + 4, y: bot.y + 4, w: 16, h: 20 };
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      const o = obstacles[i];
+      o.x -= speed;
+      if (o.x + o.w < -4) { obstacles.splice(i, 1); continue; }
+      const oy = GROUND - o.h;
+      if (bot.inv === 0 && hit.x < o.x + o.w && hit.x + hit.w > o.x && hit.y < oy + o.h && hit.y + hit.h > oy) {
+        // 切换上游
+        burst(o.x + o.w / 2, oy + o.h / 2, '#ff3d8b', 18);
+        obstacles.splice(i, 1);
+        const prev = MODELS[model].name;
+        model = (model + 1) % MODELS.length;
+        switches++;
+        bot.inv = 70;
+        banner = 90;
+        bannerText = o.label + '! ' + prev + ' > ' + MODELS[model].name;
+        flash = 8;
+        blip(180, 0.18, 'sawtooth');
+        setTimeout(() => blip(740, 0.1), 140);
+      }
+    }
+    for (let i = coins.length - 1; i >= 0; i--) {
+      const c = coins[i];
+      c.x -= speed; c.t++;
+      if (c.x < -10) { coins.splice(i, 1); continue; }
+      if (hit.x < c.x + 8 && hit.x + hit.w > c.x && hit.y < c.y + 8 && hit.y + hit.h > c.y) {
+        coins.splice(i, 1); score += 250; burst(c.x + 4, c.y + 4, '#ffe14d', 10); blip(1320, 0.06);
+      }
+    }
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      p.x += p.vx; p.y += p.vy; p.vy += 0.15;
+      if (--p.life <= 0) parts.splice(i, 1);
+    }
+    far.forEach(b => { b.x -= speed * 0.2; if (b.x + b.w < 0) b.x += W + 70; });
+    near.forEach(b => { b.x -= speed * 0.5; if (b.x + b.w < 0) b.x += W + 90; });
+    if (banner > 0) banner--;
+    if (flash > 0) flash--;
+    if (score > hi) { hi = score; if (tick % 120 === 0) { try { localStorage.setItem('arcade_hi', hi); } catch (e) { /* 忽略 */ } } }
+  }
+
+  const pad = (n, l) => String(n).padStart(l, '0');
+
+  function draw() {
+    // 天空
+    const grd = g.createLinearGradient(0, 0, 0, GROUND);
+    grd.addColorStop(0, '#0b0420'); grd.addColorStop(1, '#3a1263');
+    g.fillStyle = grd; g.fillRect(0, 0, W, H);
+    // 太阳
+    g.fillStyle = '#ff3d8b';
+    for (let r = 0; r < 14; r++) {
+      const y = 70 + r * 3, half = Math.sqrt(Math.max(0, 42 * 42 - (r * 3 - 22) ** 2)) | 0;
+      if (r % 3 === 2) continue;
+      g.globalAlpha = 0.55; g.fillRect(230 - half, y, half * 2, 2);
+    }
+    g.globalAlpha = 1;
+    stars.forEach(s => { g.fillStyle = (tick + s.t * 10) % 60 < 30 ? '#fff6e8' : '#6b5a9a'; g.fillRect(s.x | 0, s.y | 0, 1, 1); });
+    // 远处服务器楼
+    g.fillStyle = '#26114a';
+    far.forEach(b => g.fillRect(b.x | 0, GROUND - b.h, b.w, b.h));
+    near.forEach(b => {
+      g.fillStyle = '#1a0b33'; g.fillRect(b.x | 0, GROUND - b.h, b.w, b.h);
+      for (let k = 0; k < b.leds; k++) {
+        g.fillStyle = (tick >> 3) % (k + 2) ? '#2ef2ff' : '#7dff5a';
+        g.fillRect((b.x | 0) + 3 + k * 5, GROUND - b.h + 4, 2, 2);
+      }
+      for (let yy = GROUND - b.h + 10; yy < GROUND - 4; yy += 6) { g.fillStyle = '#2b1652'; g.fillRect((b.x | 0) + 2, yy, b.w - 4, 2); }
+    });
+    // 地面
+    g.fillStyle = '#ff3d8b'; g.fillRect(0, GROUND, W, 2);
+    g.fillStyle = '#12071f'; g.fillRect(0, GROUND + 2, W, H - GROUND);
+    g.fillStyle = '#3a1466';
+    const off = (tick * speed) % 16;
+    for (let x = -off; x < W; x += 16) g.fillRect(x | 0, GROUND + 8, 8, 2);
+    for (let x = -((tick * speed * 1.4) % 24); x < W; x += 24) g.fillRect(x | 0, GROUND + 18, 12, 2);
+
+    // 金币
+    coins.forEach(c => {
+      const w = [8, 6, 2, 6][(c.t >> 3) % 4];
+      g.fillStyle = '#ffe14d'; g.fillRect((c.x + (8 - w) / 2) | 0, c.y, w, 8);
+      g.fillStyle = '#ff9a3c'; if (w > 2) g.fillRect((c.x + (8 - w) / 2 + w - 2) | 0, c.y + 2, 2, 6);
+    });
+    // 障碍
+    obstacles.forEach(o => {
+      const oy = GROUND - o.h;
+      g.fillStyle = '#ff3d8b'; g.fillRect(o.x | 0, oy, o.w, o.h);
+      g.fillStyle = '#b3165c'; g.fillRect((o.x | 0), oy + o.h - 3, o.w, 3); g.fillRect((o.x | 0) + o.w - 3, oy, 3, o.h);
+      g.fillStyle = '#ff8cbc'; g.fillRect(o.x | 0, oy, o.w, 2);
+      pxDraw(g, o.label, (o.x + (o.w - pxWidth(o.label, 1)) / 2) | 0, oy + 4, 1, '#0b0616');
+    });
+    // 机器人
+    if (!(bot.inv > 0 && (tick >> 2) % 2)) {
+      const fr = bot.ground ? bot.frame : 2;
+      drawSprite(g, SPRITES.bot[fr], bot.x | 0, bot.y | 0, S, MODELS[model].c);
+      if (bot.ground && tick % 8 < 4) { g.fillStyle = '#6b5a9a'; g.fillRect(bot.x - 4, GROUND - 3, 3, 2); }
+    }
+    // 粒子
+    parts.forEach(p => { g.fillStyle = p.c; g.fillRect(p.x | 0, p.y | 0, 2, 2); });
+
+    // HUD
+    pxDraw(g, 'TOKENS ' + pad(score, 7), 6, 6, 1, '#fff6e8');
+    pxDraw(g, 'HI ' + pad(hi, 7), 6, 16, 1, '#b7a8d6');
+    const sw = 'SWITCH X' + switches;
+    pxDraw(g, sw, W - 6 - pxWidth(sw, 1), 6, 1, '#7dff5a');
+    const mn = 'UPSTREAM ' + MODELS[model].name;
+    pxDraw(g, mn, W - 6 - pxWidth(mn, 1), 16, 1, MODELS[model].c);
+    if (mode === 'demo') {
+      if ((tick >> 5) % 2) { const t = 'TAP / SPACE TO PLAY'; pxDraw(g, t, ((W - pxWidth(t, 1)) / 2) | 0, GROUND + 14, 1, '#ffe14d'); }
+      pxDraw(g, 'DEMO', 6, H - 10, 1, '#6b5a9a');
+    } else {
+      pxDraw(g, 'P1', 6, H - 10, 1, '#ffe14d');
+    }
+    if (banner > 0) {
+      const bw = pxWidth(bannerText, 1) + 16;
+      const bx = ((W - bw) / 2) | 0, by = 50;
+      g.fillStyle = '#0b0616'; g.fillRect(bx - 2, by - 2, bw + 4, 30);
+      g.fillStyle = (banner >> 3) % 2 ? '#ff3d8b' : '#ffe14d'; g.fillRect(bx, by, bw, 26);
+      g.fillStyle = '#0b0616'; g.fillRect(bx + 2, by + 2, bw - 4, 22);
+      pxDraw(g, bannerText, bx + 8, by + 5, 1, '#ffe14d');
+      const t2 = 'AUTO FAILOVER OK';
+      pxDraw(g, t2, ((W - pxWidth(t2, 1)) / 2) | 0, by + 15, 1, '#7dff5a');
+    }
+    if (flash > 0) { g.fillStyle = 'rgba(255,61,139,' + flash / 20 + ')'; g.fillRect(0, 0, W, H); }
+  }
+
+  let running = true, last = performance.now(), acc = 0;
+  new IntersectionObserver(es => { running = es[0].isIntersecting; }).observe(cv);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) running = false; });
+  function loop(now) {
+    const dt = Math.min(100, now - last); last = now;
+    if (running && !document.hidden) {
+      acc += dt;
+      while (acc >= 1000 / 60) { step(); acc -= 1000 / 60; }
+      draw();
+    }
+    requestAnimationFrame(loop);
+  }
+  if (reduceMotion) { for (let i = 0; i < 200; i++) step(); draw(); cv.addEventListener('pointerdown', () => { for (let i = 0; i < 30; i++) step(); draw(); }); }
+  else requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

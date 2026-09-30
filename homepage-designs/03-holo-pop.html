@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light" />
+<title>汇码智能 · 一把钥匙，打开所有 AI</title>
+<meta name="description" content="汇码智能：一把钥匙，打开所有 AI。Claude、GPT、DeepSeek、GLM 一站接入。" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title desc"%3E %3Cg id="modules" fill="%232B2E33"%3E %3Cpath id="module-upper-left" d="M21 116 L21 75 C21 66 26 59 34 52 L86 19 C95 14 105 14 114 20 C122 26 125 36 121 45 C118 53 112 59 106 63 L21 116 Z"/%3E %3Cpath id="module-right" d="M126 33 L167 56 C175 61 180 69 180 79 L181 133 C181 144 176 153 166 158 C157 163 147 163 138 159 C130 155 126 147 126 137 Z"/%3E %3Cpath id="module-lower-left" d="M58 113 L150 167 L127 182 C122 185 116 187 109 187 L68 187 C59 187 51 184 44 180 L27 169 C18 164 14 155 16 145 C18 134 24 124 34 117 C42 112 50 111 58 113 Z"/%3E %3C/g%3E %3Cpath id="intelligence-core" fill="%2317CFD8" transform="translate%2890 106%29 scale%281.22%29 translate%28-90 -106%29" d="M68 104 C80 101 91 93 103 83 C99 94 98 101 99 106 C99 112 102 119 105 126 C93 116 81 109 68 104 Z"/%3E %3C/svg%3E" />
+<style>
+  @property --ang { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+  :root {
+    --bg: #f4f2ff;
+    --paper: #ffffff;
+    --ink: #2B2E33;
+    --ink-2: #45494f;
+    --muted: #66717B;
+    --line: rgba(43, 46, 51, .08);
+    --violet: #7c5cff;
+    --pink: #ff5ca8;
+    --cyan: #17CFD8;
+    --lime: #b8ff5c;
+    --amber: #ffb347;
+    --red: #ff4d6a;
+    --green: #14c38e;
+    --holo: linear-gradient(110deg, #7c5cff, #17CFD8 25%, #b8ff5c 45%, #ffb347 65%, #ff5ca8 85%, #7c5cff);
+    --font-sans: "HarmonyOS Sans SC", "MiSans", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, Menlo, monospace;
+    --gutter: clamp(16px, 4vw, 48px);
+    --spring: cubic-bezier(.34, 1.56, .64, 1);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-sans); line-height: 1.6;
+    overflow-x: hidden; -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--ink); color: var(--lime); }
+
+  /* ---------- 背景流体 ---------- */
+  .blobs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; filter: blur(70px) saturate(130%); opacity: .75; }
+  .blobs i { position: absolute; border-radius: 50%; mix-blend-mode: multiply; }
+  .blobs i:nth-child(1) { width: 46vmax; height: 46vmax; left: -12vmax; top: -14vmax; background: #c9b8ff; animation: b1 22s ease-in-out infinite alternate; }
+  .blobs i:nth-child(2) { width: 40vmax; height: 40vmax; right: -14vmax; top: 6vmax; background: #a6f0ff; animation: b2 26s ease-in-out infinite alternate; }
+  .blobs i:nth-child(3) { width: 36vmax; height: 36vmax; left: 30vw; top: 50vh; background: #ffc2e0; animation: b3 20s ease-in-out infinite alternate; }
+  .blobs i:nth-child(4) { width: 26vmax; height: 26vmax; left: 8vw; top: 70vh; background: #e3ffb8; animation: b2 30s ease-in-out infinite alternate-reverse; }
+  @keyframes b1 { to { transform: translate(18vmax, 10vmax) scale(1.2); } }
+  @keyframes b2 { to { transform: translate(-14vmax, 16vmax) scale(.85); } }
+  @keyframes b3 { to { transform: translate(-20vmax, -12vmax) scale(1.15); } }
+  .grain {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .35; mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.9'/></svg>");
+  }
+  main, nav, footer { position: relative; z-index: 2; }
+
+  /* ---------- 自定义光标 ---------- */
+  .cursor {
+    position: fixed; left: 0; top: 0; z-index: 9999; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+    background: var(--ink); pointer-events: none; mix-blend-mode: difference; filter: invert(1);
+    transition: width .3s var(--spring), height .3s var(--spring), margin .3s var(--spring);
+    display: none; opacity: 0;
+  }
+  .cursor.on { opacity: 1; }
+  .cursor.big { width: 54px; height: 54px; margin: -27px 0 0 -27px; }
+  @media (pointer: fine) { .cursor { display: block; } }
+
+  /* ---------- 导航 ---------- */
+  .nav {
+    position: sticky; top: 14px; z-index: 50; margin: 14px auto 0; width: min(1160px, calc(100% - 32px));
+    display: flex; align-items: center; gap: 14px; padding: 13px 13px 13px 26px; border-radius: 999px;
+    background: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.9);
+    box-shadow: 0 10px 40px -14px rgba(60,40,140,.25);
+    backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: -.01em; font-size: 17px; }
+  /* 官方横版标识：紧凑 Header 约 180px，四周净空 ≥ 0.25H；窄屏切换为纯图形 */
+  .logo { padding: 2px 0; }
+  .logo .lockup { display: block; width: 172px; aspect-ratio: 414.48 / 126; height: auto; }
+  .logo .symbol { display: none; width: 34px; height: 34px; }
+  @media (max-width: 640px) { .logo .lockup { display: none; } .logo .symbol { display: block; } }
+  @keyframes rot { to { --ang: 360deg; } }
+  .nav .links { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+  .nav .links a { padding: 9px 14px; border-radius: 999px; font-size: 14px; color: var(--ink-2); transition: background .2s; }
+  .nav .links a:hover { background: rgba(43,46,51,.06); }
+  .nav .links a.solid { background: var(--ink); color: #fff; font-weight: 700; }
+  .nav .links a.solid:hover { background: #2a2850; }
+  /* 手机端保留「使用手册」：新手最需要它 */
+  @media (max-width: 640px) {
+    .nav .links a:not(.solid):not(.keep) { display: none; }
+    .nav .links a.keep { padding: 9px 10px; }
+  }
+  /* 横屏手机等矮屏：导航不吸顶，避免长期占用可视高度 */
+  @media (max-height: 500px) { .nav { position: relative; top: 0; } }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    width: min(1160px, 100%); margin: 0 auto; padding: clamp(56px, 9vw, 110px) var(--gutter) 40px;
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(30px, 5vw, 70px); align-items: center;
+  }
+  @media (max-width: 920px) { .hero { grid-template-columns: 1fr; text-align: center; } .hero .cta, .hero .badges { justify-content: center; } .hero .lead { margin-inline: auto; } }
+  .kicker {
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 6px; border-radius: 999px;
+    background: var(--paper); border: 1px solid var(--line); font-size: 13px; color: var(--ink-2);
+    box-shadow: 0 6px 20px -10px rgba(60,40,140,.3);
+  }
+  .kicker b { font: 800 11px/1 var(--font-mono); background: var(--ink); color: var(--lime); padding: 6px 8px; border-radius: 999px; letter-spacing: .06em; }
+  h1 { margin: 22px 0 20px; font-weight: 900; line-height: 1.06; letter-spacing: -.035em; font-size: clamp(44px, 6.2vw, 88px); white-space: nowrap; }
+  h1 .w { display: inline-block; }
+  h1 .ch { display: inline-block; opacity: 0; transform: translateY(.6em) rotate(8deg) scale(.7); animation: drop .9s var(--spring) forwards; }
+  @keyframes drop { to { opacity: 1; transform: none; } }
+  h1 .holo {
+    background: var(--holo); background-size: 250% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: drop .9s var(--spring) forwards, flow 6s linear infinite;
+    padding-right: .04em;
+  }
+  @keyframes flow { to { background-position: -250% 0; } }
+  h1 .squiggle { position: relative; }
+  h1 .squiggle svg { position: absolute; left: -2%; right: -2%; bottom: -.12em; width: 104%; height: .28em; overflow: visible; }
+  h1 .squiggle path { stroke-dasharray: 400; stroke-dashoffset: 400; animation: draw 1.2s 1.1s ease forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .lead { font-size: clamp(16px, 1.6vw, 19px); color: var(--ink-2); max-width: 30em; margin: 0 0 34px; }
+  .lead mark { background: linear-gradient(transparent 60%, rgba(184,255,92,.8) 60%); color: inherit; padding: 0 2px; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 16px 26px; border-radius: 999px;
+    font-weight: 800; font-size: 16px; transition: transform .35s var(--spring), box-shadow .3s;
+  }
+  .btn:hover { transform: translateY(-3px) scale(1.03); }
+  .btn:active { transform: scale(.97); }
+  .btn-main { color: #fff; background: var(--ink); box-shadow: 0 16px 40px -14px rgba(43,46,51,.6); isolation: isolate; }
+  .btn-main::before {
+    content: ""; position: absolute; inset: -3px; border-radius: inherit; z-index: -1;
+    background: conic-gradient(from var(--ang), #7c5cff, #17CFD8, #b8ff5c, #ffb347, #ff5ca8, #7c5cff);
+    animation: rot 3s linear infinite;
+  }
+  .btn-main::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--ink); z-index: -1; }
+  .btn-main .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px rgba(184,255,92,.25); }
+  .btn-soft { background: var(--paper); border: 1px solid var(--line); box-shadow: 0 10px 30px -16px rgba(60,40,140,.4); }
+  .badges { margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .badges span { font-size: 13px; color: var(--ink-2); padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,.65); border: 1px solid var(--line); }
+
+  /* ---------- 全息钥匙卡 ---------- */
+  .card-zone { position: relative; height: 440px; display: grid; place-items: center; perspective: 1100px; }
+  @media (max-width: 920px) { .card-zone { height: 400px; } }
+  .keycard {
+    --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%; --flip: 0deg;
+    position: relative; width: min(380px, 84vw); aspect-ratio: 1.586; cursor: pointer;
+    transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateY(calc(var(--ry) + var(--flip)));
+    transition: transform .6s var(--spring);
+    animation: floaty 6s ease-in-out infinite;
+    border: 0; padding: 0; background: none; font: inherit; color: inherit;
+  }
+  .keycard.dragging { transition: transform .08s linear; }
+  @keyframes floaty { 50% { translate: 0 -12px; } }
+  .face {
+    position: absolute; inset: 0; border-radius: 22px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    box-shadow: 0 40px 70px -30px rgba(60,40,140,.55), 0 0 0 1px rgba(255,255,255,.7) inset;
+  }
+  .face.front { background: linear-gradient(135deg, #f8f7ff, #dcd6ff 40%, #e9fbff 70%, #fff0f7); }
+  .face .foil {
+    position: absolute; inset: 0; mix-blend-mode: color-dodge; opacity: .75;
+    background:
+      repeating-linear-gradient(115deg, transparent 0 6px, rgba(255,255,255,.35) 7px 8px),
+      linear-gradient(115deg, #ff5ca8 0%, #ffb347 18%, #b8ff5c 34%, #17CFD8 52%, #7c5cff 70%, #ff5ca8 88%);
+    background-size: 100% 100%, 300% 300%;
+    background-position: 0 0, var(--mx) var(--my);
+  }
+  .face .glare { position: absolute; inset: 0; background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.85), transparent 45%); mix-blend-mode: overlay; }
+  .face .content { position: absolute; inset: 0; padding: 22px 24px; display: flex; flex-direction: column; color: var(--ink); text-align: left; }
+  .face .row { display: flex; justify-content: space-between; align-items: center; }
+  .chip { width: 46px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, #f7d58b, #c9973b); position: relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+  .chip::before, .chip::after { content: ""; position: absolute; left: 6px; right: 6px; height: 1px; background: rgba(0,0,0,.35); }
+  .chip::before { top: 11px; } .chip::after { bottom: 11px; }
+  .brandmark { display: block; width: 34px; height: 34px; }
+  .cardlabel { font: 700 10px/1 var(--font-mono); letter-spacing: .22em; color: var(--ink-2); margin-top: auto; }
+  .cardnum { font: 700 clamp(17px, 2.4vw, 21px)/1.3 var(--font-mono); letter-spacing: .06em; margin: 8px 0 14px; white-space: nowrap; }
+  .models { display: flex; gap: 6px; flex-wrap: wrap; }
+  .models span { font: 700 11px/1 var(--font-sans); padding: 5px 8px; border-radius: 999px; background: rgba(255,255,255,.7); border: 1px solid rgba(43,46,51,.08); }
+  .models span i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 0; }
+  .validthru { font: 700 10px/1.3 var(--font-mono); text-align: right; color: var(--ink-2); letter-spacing: .1em; }
+  .validthru b { display: block; font-size: 18px; color: var(--ink); letter-spacing: 0; }
+  .face.back { transform: rotateY(180deg); background: #171A1F; color: #e9e8ff; }
+  .face.back .stripe { height: 46px; margin-top: 22px; background: #000; }
+  .face.back pre { margin: 18px 22px 0; font: 12px/1.7 var(--font-mono); color: #c9c6ff; white-space: pre-wrap; word-break: break-all; text-align: left; }
+  .face.back pre b { color: var(--lime); font-weight: 600; }
+  .face.back pre em { color: var(--pink); font-style: normal; }
+  .face.back .foil { opacity: .25; }
+  .flip-tip { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+  /* 贴纸 */
+  .sticker {
+    position: absolute; z-index: 5; padding: 9px 14px; border-radius: 14px; font-weight: 800; font-size: 13px; white-space: nowrap;
+    background: var(--paper); box-shadow: 0 12px 26px -12px rgba(60,40,140,.45), 0 0 0 3px #fff; cursor: grab; user-select: none; touch-action: none;
+    transition: box-shadow .2s, scale .3s var(--spring);
+  }
+  .sticker:hover { scale: 1.08; }
+  .sticker.grab { cursor: grabbing; scale: 1.12; box-shadow: 0 24px 40px -14px rgba(60,40,140,.55), 0 0 0 3px #fff; }
+  .sticker.s1 { left: 0; top: 34px; rotate: -8deg; background: var(--lime); }
+  .sticker.s2 { right: 0; top: 70px; rotate: 7deg; background: #ffe0ef; }
+  .sticker.s3 { left: 6%; bottom: 44px; rotate: 5deg; background: #d8f7ff; }
+  .sticker.s4 { right: 4%; bottom: 20px; rotate: -6deg; background: var(--ink); color: #fff; }
+  @media (max-width: 520px) { .sticker { font-size: 12px; padding: 7px 11px; } .sticker.s1 { top: 6px; } .sticker.s2 { top: 30px; } }
+
+  /* ---------- 跑马灯 ---------- */
+  .marquee { overflow: hidden; padding: 30px 0; margin: 30px 0; }
+  .mq { display: flex; width: max-content; gap: 34px; font-weight: 900; font-size: clamp(36px, 6vw, 72px); letter-spacing: -.02em; line-height: 1.15; animation: mq 30s linear infinite; }
+  .mq.rev { animation-direction: reverse; font-size: clamp(22px, 3.2vw, 38px); margin-top: 8px; color: var(--ink-2); }
+  .mq span { white-space: nowrap; display: inline-flex; align-items: center; gap: 34px; }
+  .mq .o { color: transparent; -webkit-text-stroke: 2px var(--ink); }
+  .mq .h { background: var(--holo); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mq .star { font-size: .6em; color: var(--pink); }
+  @keyframes mq { to { transform: translateX(-50%); } }
+
+  /* ---------- 段落 ---------- */
+  section.block { width: min(1160px, 100%); margin: 0 auto; padding: 80px var(--gutter); }
+  .tag { display: inline-block; font: 800 12px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; padding: 7px 11px; border-radius: 999px; background: var(--ink); color: var(--lime); }
+  h2 { font-size: clamp(32px, 4.8vw, 58px); line-height: 1.08; margin: 16px 0 14px; letter-spacing: -.03em; font-weight: 900; }
+  h2 .holo { background: var(--holo); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: flow 8s linear infinite; }
+  .sub { margin: 0; color: var(--muted); max-width: 34em; font-size: 17px; }
+  .rise { opacity: 0; transform: translateY(40px) scale(.97); transition: opacity .7s ease, transform .9s var(--spring); }
+  .rise.in { opacity: 1; transform: none; }
+
+  /* ---------- 玩具格子 ---------- */
+  .toys { margin-top: 44px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
+  .toy {
+    --tx: 0deg; --ty: 0deg;
+    grid-column: span 6; position: relative; padding: 26px; border-radius: 28px; min-height: 280px;
+    background: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.95);
+    box-shadow: 0 20px 50px -30px rgba(60,40,140,.45);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    transform: perspective(900px) rotateX(var(--tx)) rotateY(var(--ty));
+    transition: transform .5s var(--spring);
+    display: flex; flex-direction: column;
+  }
+  .toy h3 { margin: auto 0 6px; font-size: 22px; letter-spacing: -.01em; }
+  .toy p { margin: 0; color: var(--muted); font-size: 14px; }
+  .toy .stage { position: relative; flex: 0 0 auto; height: 140px; margin-bottom: 18px; border-radius: 18px; background: linear-gradient(135deg, rgba(124,92,255,.07), rgba(34,211,238,.07)); display: grid; place-items: center; overflow: hidden; }
+  @media (max-width: 640px) { .toy { grid-column: span 12; } }
+
+  /* 故障切换玩具 */
+  .route { width: 100%; height: 100%; }
+  .route .ln { fill: none; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 2 10; animation: dash .8s linear infinite; transition: opacity .4s, stroke .4s; }
+  @keyframes dash { to { stroke-dashoffset: -24; } }
+  .route .ndt { transition: fill .4s; }
+  .route text { font: 700 12px var(--font-sans); fill: var(--ink); }
+  .route .bad { opacity: 0; transition: opacity .3s; font: 800 12px var(--font-mono); fill: var(--red); }
+  .toy.broken .route .la { stroke: var(--red); opacity: .25; }
+  .toy.broken .route .na { fill: var(--red); }
+  .toy.broken .route .bad { opacity: 1; }
+  .toy .route .lb { opacity: .2; }
+  .toy.broken .route .lb { opacity: 1; }
+  .switch { position: absolute; left: 12px; bottom: 10px; display: inline-flex; align-items: center; gap: 8px; font: 700 12px var(--font-sans); color: var(--ink-2); background: #fff; border: 1px solid var(--line); padding: 6px 8px 6px 12px; border-radius: 999px; cursor: pointer; }
+  @media (pointer: coarse) { .switch { padding: 10px 10px 10px 14px; } }
+  .switch .knob { width: 36px; height: 20px; border-radius: 99px; background: #d9d6ee; position: relative; transition: background .3s; }
+  .switch .knob::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); transition: transform .35s var(--spring); }
+  .switch[aria-checked="true"] .knob { background: var(--red); }
+  .switch[aria-checked="true"] .knob::after { transform: translateX(16px); }
+
+
+  /* 轨道调度 */
+  .orbit { position: relative; width: 140px; height: 140px; }
+  .orbit .sun { position: absolute; inset: 50px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 8px rgba(43,46,51,.06); display: grid; place-items: center; color: var(--lime); font: 900 11px var(--font-mono); }
+  .orbit .ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px dashed rgba(43,46,51,.18); animation: spin 8s linear infinite; }
+  .orbit .ring:nth-child(3) { inset: 18px; animation-duration: 5s; animation-direction: reverse; }
+  .orbit .ring b { position: absolute; top: -8px; left: calc(50% - 8px); width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,.2); }
+  .orbit .ring b.b2 { top: auto; bottom: -8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 会话气泡 */
+  .bubbles { width: 86%; display: flex; flex-direction: column; gap: 8px; }
+  .bubbles span { max-width: 80%; font-size: 13px; padding: 8px 12px; border-radius: 16px 16px 16px 4px; background: #fff; box-shadow: 0 4px 12px -6px rgba(60,40,140,.35); animation: bub 5s var(--spring) infinite both; }
+  .bubbles span:nth-child(2) { align-self: flex-end; border-radius: 16px 16px 4px 16px; background: var(--ink); color: #fff; animation-delay: .6s; }
+  .bubbles span:nth-child(3) { animation-delay: 1.2s; }
+  @keyframes bub { 0% { opacity: 0; transform: translateY(14px) scale(.7); } 12%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+
+  /* 计费对比 */
+  .compare { width: 86%; display: grid; gap: 14px; }
+  .compare .r { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; color: var(--ink-2); }
+  .compare .bar { height: 18px; border-radius: 99px; background: #ece9fb; overflow: hidden; }
+  .compare .bar i { display: block; height: 100%; border-radius: inherit; }
+  .compare .fixed i { width: 100%; background: repeating-linear-gradient(45deg, #c9c4e6 0 8px, #d9d5f0 8px 16px); }
+  .compare .usage i { background: var(--holo); background-size: 300% 100%; animation: use 4s ease-in-out infinite; }
+  @keyframes use { 0%, 100% { width: 18%; } 40% { width: 52%; } 70% { width: 31%; } }
+
+  /* ---------- 代码 ---------- */
+  .connect { margin-top: 40px; border-radius: 28px; background: #171A1F; color: #e9eaee; overflow: hidden; box-shadow: 0 40px 80px -40px rgba(43,46,51,.7); }
+  .tabs { position: relative; display: flex; gap: 4px; padding: 10px; background: rgba(255,255,255,.04); overflow-x: auto; scrollbar-width: none; }
+  .tabs button { position: relative; z-index: 1; border: 0; background: none; color: #a9a6d6; font: 700 14px var(--font-sans); padding: 10px 16px; border-radius: 999px; cursor: pointer; white-space: nowrap; transition: color .3s; }
+  .tabs button[aria-selected="true"] { color: var(--ink); }
+  .tabs .jelly { position: absolute; top: 10px; height: calc(100% - 20px); border-radius: 999px; background: var(--lime); transition: left .5s var(--spring), top .5s var(--spring), width .5s var(--spring); }
+  @media (max-width: 640px) {
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .tabs button { padding: 11px 8px; }
+  }
+  .panel { display: grid; grid-template-columns: 1.5fr 1fr; gap: 28px; padding: 24px 28px 30px; }
+  .panel.swap { animation: panelIn .45s var(--spring); }
+  @keyframes panelIn { from { opacity: 0; transform: translateY(10px); } }
+  @media (max-width: 860px) { .panel { grid-template-columns: 1fr; gap: 20px; padding: 20px 16px 22px; } }
+  .panel .intro { margin: 0 0 16px; color: #b9bcc6; font-size: 15px; }
+  .fields { display: grid; gap: 8px; margin: 0; }
+  .fields .row { display: grid; grid-template-columns: 108px 1fr; gap: 12px; align-items: center; padding: 11px 14px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); }
+  .fields dt { color: #8d93a0; font-size: 13px; font-weight: 700; }
+  .fields dd { margin: 0; min-width: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; color: #fff; }
+  .fields dd code { font: 600 13.5px/1.5 var(--font-mono); color: var(--lime); word-break: break-all; }
+  .fields .cp { flex: none; border: 0; cursor: pointer; font: 700 12px var(--font-sans); padding: 6px 11px; border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; transition: background .2s, color .2s; }
+  .fields .cp:hover { background: var(--lime); color: var(--ink); }
+  @media (pointer: coarse) { .fields .cp { padding: 11px 16px; } }
+  @media (max-width: 520px) { .fields .row { grid-template-columns: 1fr; gap: 4px; } }
+  .panel pre { margin: 12px 0 0; padding: 16px 18px; border-radius: 14px; background: rgba(0,0,0,.35); font: 13px/1.75 var(--font-mono); color: #d6d8e0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .panel pre .s { color: var(--lime); } .panel pre .k { color: var(--pink); } .panel pre .c { color: #7b8190; }
+  .side { display: flex; flex-direction: column; gap: 14px; }
+  .tip { padding: 16px 18px; border-radius: 18px; background: rgba(255,92,168,.1); border: 1px solid rgba(255,92,168,.3); color: #ffd3e6; font-size: 14px; }
+  .tip::before { content: "注意 · "; font-weight: 800; color: #fff; }
+  .doc-links { display: flex; flex-direction: column; gap: 10px; }
+  .doc-links a { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 16px; background: #fff; color: var(--ink); font-weight: 800; font-size: 15px; transition: transform .35s var(--spring); }
+  .doc-links a:first-child { background: var(--lime); }
+  .doc-links a:hover { transform: translateX(4px); }
+  .doc-links a small { font-weight: 600; font-size: 12px; color: var(--ink-2); }
+
+  /* ---------- 步骤 ---------- */
+  .steps { list-style: none; padding: 0; margin: 44px 0 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .step a {
+    display: flex; flex-direction: column; height: 100%; padding: 22px 20px 20px; border-radius: 24px;
+    background: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.95);
+    box-shadow: 0 16px 40px -28px rgba(60,40,140,.45);
+    transition: transform .4s var(--spring), box-shadow .3s;
+  }
+  .step a[href]:hover { transform: translateY(-6px) rotate(-1deg); box-shadow: 0 24px 50px -26px rgba(60,40,140,.55); }
+  .step .n { font: 900 56px/1 var(--font-sans); letter-spacing: -.05em; background: var(--holo); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: flow 8s linear infinite; }
+  .step h3 { margin: 12px 0 6px; font-size: 19px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14px; flex: 1; }
+  .step .more { margin-top: 14px; font-size: 13px; font-weight: 800; color: var(--ink); }
+  .step .more::after { content: " ↗"; display: inline-block; transition: transform .3s var(--spring); }
+  .step a:hover .more::after { transform: translate(2px, -2px); }
+  @media (max-width: 1020px) { .steps { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 640px) {
+    .steps { grid-template-columns: 1fr; gap: 10px; }
+    .step a { display: grid; grid-template-columns: 52px 1fr; column-gap: 14px; padding: 16px 18px; }
+    .step .n { font-size: 40px; grid-row: span 3; }
+    .step h3 { margin: 2px 0 4px; }
+    .step .more { margin-top: 8px; }
+  }
+
+  /* ---------- 终章 ---------- */
+  .finale {
+    width: min(1160px, calc(100% - 2 * var(--gutter))); margin: 40px auto 0; border-radius: 40px; overflow: hidden; position: relative;
+    padding: clamp(56px, 9vw, 110px) clamp(20px, 5vw, 60px); text-align: center; color: #fff; background: var(--ink);
+  }
+  .finale::before {
+    content: ""; position: absolute; inset: -40%; opacity: .55;
+    background: conic-gradient(from var(--ang), #7c5cff, #17CFD8, #b8ff5c, #ffb347, #ff5ca8, #7c5cff);
+    filter: blur(80px); animation: rot 10s linear infinite;
+  }
+  .finale > * { position: relative; }
+  .finale h2 { font-size: clamp(38px, 7vw, 88px); margin: 0 0 18px; }
+  .finale p { margin: 0 auto 36px; color: rgba(255,255,255,.8); max-width: 28em; }
+  .finale .btn-big { display: inline-flex; align-items: center; gap: 12px; padding: 20px 34px; border-radius: 999px; background: #fff; color: var(--ink); font-weight: 900; font-size: 19px; box-shadow: 0 20px 50px -16px rgba(0,0,0,.6); transition: transform .4s var(--spring); }
+  .finale .btn-big:hover { transform: scale(1.07) rotate(-2deg); }
+  .finale .btn-big span { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: var(--lime); transition: transform .4s var(--spring); }
+  .finale .btn-big:hover span { transform: rotate(-45deg); }
+  footer { text-align: center; padding: 56px var(--gutter) 50px; color: var(--muted); font-size: 13px; }
+  footer .foot-lockup { display: block; width: 200px; height: auto; aspect-ratio: 414.48 / 126; margin: 0 auto 22px; }
+  .foot-links { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; margin-bottom: 14px; font-size: 14px; }
+  .foot-links a { color: var(--ink-2); font-weight: 600; padding: 4px 2px; border-bottom: 1px solid transparent; transition: border-color .2s, color .2s; }
+  .foot-links a:hover { color: var(--ink); border-bottom-color: var(--cyan); }
+  .foot-links i { font-style: normal; color: #b9bec4; }
+  @media (pointer: coarse) { .foot-links a { padding: 10px 4px; } }
+  .foot-links .qq { margin-left: 4px; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.7); border: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+  .foot-links .qq b { font-family: var(--font-mono); user-select: all; }
+  #confetti { position: fixed; inset: 0; z-index: 9998; pointer-events: none; width: 100%; height: 100%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    h1 .ch { opacity: 1; transform: none; }
+    .rise { opacity: 1; transform: none; }
+    h1 .squiggle path { stroke-dashoffset: 0; }
+  }
+</style>
+</head>
+<body>
+  <!-- 汇码智能官方标志（brand identity v1.0，已锁定）：几何与配色原样引用，请勿加渐变、发光、阴影或旋转 -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="huimaLockup" viewBox="0 0 414.48 126"><g transform="translate(0 4) scale(0.590000)"> <g fill="#2B2E33"> <path d="M21 116 L21 75 C21 66 26 59 34 52 L86 19 C95 14 105 14 114 20 C122 26 125 36 121 45 C118 53 112 59 106 63 L21 116 Z"/> <path d="M126 33 L167 56 C175 61 180 69 180 79 L181 133 C181 144 176 153 166 158 C157 163 147 163 138 159 C130 155 126 147 126 137 Z"/> <path d="M58 113 L150 167 L127 182 C122 185 116 187 109 187 L68 187 C59 187 51 184 44 180 L27 169 C18 164 14 155 16 145 C18 134 24 124 34 117 C42 112 50 111 58 113 Z"/> </g> <path fill="#17CFD8" d="M68 104 C80 101 91 93 103 83 C99 94 98 101 99 106 C99 112 102 119 105 126 C93 116 81 109 68 104 Z"/> </g> <g fill="#2B2E33" transform="translate(146.00 15)"> <g><path d="M5.824 14.911999999999999C9.664 17.152 14.336 20.607999999999997 16.704 22.976L19.776 19.391999999999996C17.408 17.088 12.544 13.823999999999998 8.768 11.647999999999996ZM2.688 32.576C6.5920000000000005 34.623999999999995 11.52 37.76 13.888 39.936L16.896 36.16C14.336 33.983999999999995 9.344 31.104 5.5040000000000004 29.247999999999998ZM4.032 64.64 8.128 67.84C11.712 62.08 15.808 54.528 19.008 48.064L15.36 44.928C11.84 51.903999999999996 7.232 59.903999999999996 4.032 64.64ZM59.712 13.951999999999998H22.080000000000002V65.92H60.992000000000004V61.12H27.008V18.688000000000002H59.712Z"/> <path d="M94.4 50.879999999999995V55.232H118.848V50.879999999999995ZM99.584 22.4C99.136 28.735999999999997 98.304 37.312 97.472 42.432H98.752L123.392 42.495999999999995C122.17599999999999 56.512 120.768 62.208 119.104 63.872C118.464 64.512 117.824 64.64 116.672 64.576C115.52 64.576 112.64 64.576 109.568 64.256C110.336 65.472 110.78399999999999 67.328 110.912 68.672C113.984 68.864 116.928 68.864 118.592 68.736C120.512 68.608 121.728 68.16 122.94399999999999 66.752C125.24799999999999 64.448 126.72 57.728 128.192 40.448C128.256 39.744 128.32 38.336 128.32 38.336H120.384C121.408 30.4 122.43199999999999 20.799999999999997 122.94399999999999 14.143999999999998L119.55199999999999 13.759999999999998L118.78399999999999 14.015999999999998H96.512V18.432000000000002H117.952C117.44 24.064 116.608 31.872 115.84 38.336H102.52799999999999C103.104 33.599999999999994 103.744 27.583999999999996 104.064 22.72ZM71.42399999999999 13.631999999999998V18.048000000000002H79.232C77.44 27.839999999999996 74.56 36.928 70.01599999999999 43.007999999999996C70.78399999999999 44.288 71.872 46.976 72.192 48.192C73.408 46.592 74.56 44.864000000000004 75.584 42.944V66.176H79.744V61.056H91.52V33.343999999999994H79.80799999999999C81.472 28.543999999999997 82.816 23.36 83.84 18.048000000000002H93.376V13.631999999999998ZM79.744 37.696H87.29599999999999V56.768H79.744Z"/> <path d="M175.68 19.775999999999996H188.992V33.408H175.68ZM171.2 15.424V37.76H193.664V15.424ZM153.536 56.448H183.35999999999999V62.784H153.536ZM153.536 52.672V46.656H183.35999999999999V52.672ZM148.79999999999998 42.688V69.12H153.536V66.752H183.35999999999999V68.992H188.224V42.688ZM146.688 10.048000000000002C145.28 14.847999999999999 142.72 19.647999999999996 139.51999999999998 22.912C140.608 23.424 142.464 24.576 143.35999999999999 25.28C144.768 23.68 146.112 21.695999999999998 147.392 19.455999999999996H152.832V23.232L152.704 25.536H139.51999999999998V29.503999999999998H151.87199999999999C150.464 33.408 147.072 37.632 138.88 40.832C139.968 41.664 141.376 43.135999999999996 142.016 44.16C148.736 41.152 152.576 37.504 154.752 33.792C157.952 35.968 162.752 39.424 164.672 40.96L168.0 37.696C166.144 36.416 158.84799999999998 31.936 156.224 30.528L156.54399999999998 29.503999999999998H168.512V25.536H157.31199999999998L157.376 23.232V19.455999999999996H166.84799999999998V15.552H149.376C150.016 14.079999999999998 150.59199999999998 12.479999999999997 151.10399999999998 10.943999999999996Z"/> <path d="M228.992 37.120000000000005V42.623999999999995H215.35999999999999V37.120000000000005ZM210.88 33.024V69.056H215.35999999999999V56.0H228.992V63.488C228.992 64.32 228.79999999999998 64.576 227.968 64.576C227.00799999999998 64.64 224.32 64.64 221.31199999999998 64.512C221.952 65.792 222.656 67.648 222.91199999999998 68.928C226.944 68.928 229.696 68.864 231.488 68.16C233.21599999999998 67.392 233.72799999999998 66.048 233.72799999999998 63.552V33.024ZM215.35999999999999 46.4H228.992V52.224000000000004H215.35999999999999ZM259.392 15.04C255.744 16.96 249.98399999999998 19.263999999999996 244.48 21.119999999999997V10.368000000000002H239.744V31.616C239.744 36.864000000000004 241.344 38.336 247.488 38.336C248.768 38.336 257.08799999999997 38.336 258.496 38.336C263.552 38.336 265.024 36.224000000000004 265.536 28.415999999999997C264.192 28.095999999999997 262.272 27.391999999999996 261.312 26.560000000000002C260.99199999999996 32.896 260.544 33.983999999999995 258.048 33.983999999999995C256.256 33.983999999999995 249.216 33.983999999999995 247.87199999999999 33.983999999999995C244.992 33.983999999999995 244.48 33.599999999999994 244.48 31.552V25.024C250.688 23.232 257.536 20.927999999999997 262.592 18.624000000000002ZM260.15999999999997 43.584C256.448 45.952 250.30399999999997 48.448 244.48 50.368V40.128H239.744V61.76C239.744 67.136 241.408 68.544 247.61599999999999 68.544C248.95999999999998 68.544 257.408 68.544 258.816 68.544C264.192 68.544 265.536 66.24 266.11199999999997 57.664C264.832 57.344 262.912 56.576 261.824 55.808C261.568 63.04 261.056 64.256 258.432 64.256C256.576 64.256 249.47199999999998 64.256 248.064 64.256C245.05599999999998 64.256 244.48 63.872 244.48 61.824V54.336C250.944 52.544 258.304 50.048 263.296 47.168ZM209.856 28.607999999999997C211.2 28.031999999999996 213.44 27.711999999999996 230.976 26.496000000000002C231.552 27.711999999999996 232.064 28.863999999999997 232.44799999999998 29.887999999999998L236.608 27.967999999999996C235.26399999999998 24.128 231.67999999999998 18.368000000000002 228.35199999999998 14.079999999999998L224.44799999999998 15.616C226.048 17.792 227.648 20.351999999999997 229.05599999999998 22.848L214.976 23.616C217.72799999999998 20.223999999999997 220.608 15.936 222.84799999999998 11.647999999999996L217.856 10.112000000000002C215.808 15.104 212.28799999999998 20.159999999999997 211.2 21.503999999999998C210.112 22.848 209.152 23.808 208.19199999999998 24.0C208.768 25.28 209.6 27.583999999999996 209.856 28.607999999999997Z"/></g> <g transform="translate(0 76)"><path d="M1.7666015625 4.8779296875H3.5419921875V10.2568359375H9.9931640625V4.8779296875H11.7685546875V18.0H9.9931640625V11.7509765625H3.5419921875V18.0H1.7666015625Z"/> <path d="M18.699609375 4.8779296875H20.4837890625V12.849609375Q20.4837890625 14.958984375 21.2484375 15.88623046875Q22.0130859375 16.8134765625 23.726953125 16.8134765625Q25.43203125 16.8134765625 26.1966796875 15.88623046875Q26.961328125 14.958984375 26.961328125 12.849609375V4.8779296875H28.7455078125V13.0693359375Q28.7455078125 15.6357421875 27.47548828125 16.9453125Q26.20546875 18.2548828125 23.726953125 18.2548828125Q21.2396484375 18.2548828125 19.96962890625 16.9453125Q18.699609375 15.6357421875 18.699609375 13.0693359375Z"/> <path d="M35.6765625 4.8779296875H37.451953125V18.0H35.6765625Z"/> <path d="M44.585156250000004 4.8779296875H47.230664062500004L50.579296875000004 13.8076171875L53.945507812500004 4.8779296875H56.591015625000004V18.0H54.859570312500004V6.4775390625L51.475781250000004 15.4775390625H49.691601562500004L46.307812500000004 6.4775390625V18.0H44.585156250000004Z"/> <path d="M68.101171875 6.626953125 65.69296875 13.1572265625H70.5181640625ZM67.09921875 4.8779296875H69.1119140625L74.112890625 18.0H72.2671875L71.071875 14.6337890625H65.1568359375L63.961523437500006 18.0H62.089453125000006Z"/> <path d="M88.9505859375 4.8779296875H90.7259765625V18.0H88.9505859375Z"/> <path d="M97.85917968749999 4.8779296875H100.24980468749999L106.06816406249999 15.85546875V4.8779296875H107.79082031249999V18.0H105.40019531249999L99.58183593749999 7.0224609375V18.0H97.85917968749999Z"/> <path d="M113.10468749999998 4.8779296875H124.20527343749998V6.3720703125H119.54707031249998V18.0H117.76289062499998V6.3720703125H113.10468749999998Z"/> <path d="M129.51914062499998 4.8779296875H137.81601562499998V6.3720703125H131.29453124999998V10.2568359375H137.54355468749998V11.7509765625H131.29453124999998V16.505859375H137.97421874999998V18.0H129.51914062499998Z"/> <path d="M144.49218749999997 4.8779296875H146.26757812499997V16.505859375H152.65722656249997V18.0H144.49218749999997Z"/> <path d="M158.12050781249997 4.8779296875H159.89589843749997V16.505859375H166.28554687499997V18.0H158.12050781249997Z"/> <path d="M171.74882812499996 4.8779296875H173.52421874999996V18.0H171.74882812499996Z"/> <path d="M189.60468749999995 16.1279296875V12.603515625H186.70429687499995V11.14453125H191.36249999999995V16.7783203125Q190.33417968749995 17.5078125 189.09492187499995 17.88134765625Q187.85566406249995 18.2548828125 186.44941406249995 18.2548828125Q183.37324218749995 18.2548828125 181.63740234374995 16.45751953125Q179.90156249999995 14.66015625 179.90156249999995 11.4521484375Q179.90156249999995 8.2353515625 181.63740234374995 6.43798828125Q183.37324218749995 4.640625 186.44941406249995 4.640625Q187.73261718749995 4.640625 188.88837890624995 4.95703125Q190.04414062499995 5.2734375 191.01972656249995 5.888671875V7.7783203125Q190.03535156249995 6.943359375 188.92792968749995 6.521484375Q187.82050781249995 6.099609375 186.59882812499995 6.099609375Q184.19062499999995 6.099609375 182.98212890624995 7.4443359375Q181.77363281249995 8.7890625 181.77363281249995 11.4521484375Q181.77363281249995 14.1064453125 182.98212890624995 15.451171875Q184.19062499999995 16.7958984375 186.59882812499995 16.7958984375Q187.53925781249995 16.7958984375 188.27753906249995 16.63330078125Q189.01582031249995 16.470703125 189.60468749999995 16.1279296875Z"/> <path d="M198.20566406249995 4.8779296875H206.50253906249995V6.3720703125H199.98105468749995V10.2568359375H206.23007812499995V11.7509765625H199.98105468749995V16.505859375H206.66074218749995V18.0H198.20566406249995Z"/> <path d="M213.17871093749994 4.8779296875H215.56933593749994L221.38769531249994 15.85546875V4.8779296875H223.11035156249994V18.0H220.71972656249994L214.90136718749994 7.0224609375V18.0H213.17871093749994Z"/> <path d="M240.06972656249994 5.888671875V7.7607421875Q239.17324218749994 6.92578125 238.15810546874994 6.5126953125Q237.14296874999994 6.099609375 236.00039062499994 6.099609375Q233.75039062499994 6.099609375 232.55507812499994 7.47509765625Q231.35976562499994 8.8505859375 231.35976562499994 11.4521484375Q231.35976562499994 14.044921875 232.55507812499994 15.42041015625Q233.75039062499994 16.7958984375 236.00039062499994 16.7958984375Q237.14296874999994 16.7958984375 238.15810546874994 16.3828125Q239.17324218749994 15.9697265625 240.06972656249994 15.134765625V16.9892578125Q239.13808593749994 17.6220703125 238.09658203124994 17.9384765625Q237.05507812499994 18.2548828125 235.89492187499994 18.2548828125Q232.91542968749994 18.2548828125 231.20156249999994 16.43115234375Q229.48769531249994 14.607421875 229.48769531249994 11.4521484375Q229.48769531249994 8.2880859375 231.20156249999994 6.46435546875Q232.91542968749994 4.640625 235.89492187499994 4.640625Q237.07265624999994 4.640625 238.11416015624994 4.95263671875Q239.15566406249994 5.2646484375 240.06972656249994 5.888671875Z"/> <path d="M246.41191406249993 4.8779296875H254.70878906249993V6.3720703125H248.18730468749993V10.2568359375H254.43632812499993V11.7509765625H248.18730468749993V16.505859375H254.86699218749993V18.0H246.41191406249993Z"/></g> </g></symbol>
+    <symbol id="huimaSymbol" viewBox="0 0 200 200"><g fill="#2B2E33"> <path d="M21 116 L21 75 C21 66 26 59 34 52 L86 19 C95 14 105 14 114 20 C122 26 125 36 121 45 C118 53 112 59 106 63 L21 116 Z"/> <path d="M126 33 L167 56 C175 61 180 69 180 79 L181 133 C181 144 176 153 166 158 C157 163 147 163 138 159 C130 155 126 147 126 137 Z"/> <path d="M58 113 L150 167 L127 182 C122 185 116 187 109 187 L68 187 C59 187 51 184 44 180 L27 169 C18 164 14 155 16 145 C18 134 24 124 34 117 C42 112 50 111 58 113 Z"/> </g> <path fill="#17CFD8" d="M68 104 C80 101 91 93 103 83 C99 94 98 101 99 106 C99 112 102 119 105 126 C93 116 81 109 68 104 Z"/></symbol>
+  </svg>
+  <div class="blobs" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <nav class="nav" aria-label="主导航">
+    <a class="logo" data-go="home" aria-label="汇码智能 首页"><svg class="lockup" viewBox="0 0 414.48 126" role="img" aria-label="汇码智能 HUIMA INTELLIGENCE"><use href="#huimaLockup"/></svg><svg class="symbol" viewBox="0 0 200 200" aria-hidden="true"><use href="#huimaSymbol"/></svg></a>
+    <div class="links">
+      <a data-go="models">模型广场</a>
+      <a class="keep" data-go="docs" data-newtab>使用手册</a>
+      <a data-go="login" data-hide-authed>登录</a>
+      <a class="solid" data-go="start" data-authed="进入控制台"><span class="lbl">免费开始</span></a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- ====== HERO ====== -->
+    <header class="hero">
+      <div>
+        <span class="kicker"><b>NEW</b>Claude · GPT · DeepSeek · GLM 已接入</span>
+        <h1 aria-label="一把钥匙，打开所有 AI">
+          <span class="w split">一把钥匙，</span><br />
+          <span class="w split">打开所有</span>&nbsp;<span class="w squiggle"><span class="ch holo" style="animation-delay:.75s, 0s">AI</span><svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M2 12 Q 20 2 40 12 T 80 12 T 120 12 T 160 12 T 198 10" stroke="#2B2E33" stroke-width="5" fill="none" stroke-linecap="round"/></svg></span>
+        </h1>
+        <p class="lead">不用再为每个模型各办一张会员卡。一个 API Key <mark>通用所有模型</mark>，上游抽风时网关自动换路，账单按实际用量走。</p>
+        <div class="cta">
+          <a class="btn btn-main" data-go="start" data-authed="进入控制台"><span class="dot"></span><span class="lbl">领取我的钥匙</span></a>
+          <a class="btn btn-soft" data-go="docs" data-newtab>📘 新手使用手册</a>
+        </div>
+        <div class="badges"><span>🧷 会话保持</span><span>🪙 按量计费</span></div>
+      </div>
+
+      <div class="card-zone" id="zone">
+        <button class="keycard" id="keycard" type="button" aria-label="全息钥匙卡，点击翻面查看接入示例">
+          <div class="face front">
+            <div class="foil"></div><div class="glare"></div>
+            <div class="content">
+              <div class="row"><div class="chip"></div><svg class="brandmark" viewBox="0 0 200 200" role="img" aria-label="汇码智能"><use href="#huimaSymbol"/></svg></div>
+              <div class="cardlabel">UNIVERSAL AI KEY</div>
+              <div class="cardnum">sk-•••• •••• •••• 7F3A</div>
+              <div class="row">
+                <div class="models">
+                  <span><i style="background:#ff8a4c"></i>Claude</span>
+                  <span><i style="background:#14c38e"></i>GPT</span>
+                  <span><i style="background:#4d6bfe"></i>DeepSeek</span>
+                  <span><i style="background:#a855f7"></i>GLM</span>
+                </div>
+                <div class="validthru">VALID THRU<b>∞</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="face back">
+            <div class="foil"></div>
+            <div class="stripe"></div>
+            <pre id="backCode"></pre>
+          </div>
+        </button>
+        <div class="sticker s1">429? 自动换路 ✓</div>
+        <div class="sticker s2">🪙 用多少付多少</div>
+        <div class="sticker s3">⚡ 流式输出</div>
+        <div class="sticker s4">∞ 会话保持</div>
+        <div class="flip-tip">移动鼠标倾斜卡片 · 点击翻面 · 贴纸可以拖</div>
+      </div>
+    </header>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="mq" id="mq1">
+        <span>CLAUDE <b class="star">✺</b></span><span class="o">GPT <b class="star">✺</b></span><span class="h">DEEPSEEK</span><span class="star">✺</span><span>GLM <b class="star">✺</b></span><span class="o">ONE KEY</span><span class="star">✺</span>
+      </div>
+      <div class="mq rev" id="mq2">
+        <span>智能调度 ·</span><span>自动故障转移 ·</span><span>会话保持 ·</span><span>按量计费 ·</span><span>原生协议兼容 ·</span>
+      </div>
+    </div>
+
+    <!-- ====== 玩具格子 ====== -->
+    <section class="block">
+      <div class="rise">
+        <span class="tag">Play with it</span>
+        <h2>别光看，<span class="holo">动手玩玩</span></h2>
+        <p class="sub">下面每个格子都能碰。它们演示的，就是网关每天在后台替你做的事。</p>
+      </div>
+      <div class="toys">
+        <article class="toy rise" id="failToy">
+          <div class="stage">
+            <button class="switch" id="breakBtn" type="button" role="switch" aria-checked="false">模拟上游故障 <span class="knob"></span></button>
+            <svg class="route" viewBox="0 0 420 140" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <path class="ln la" d="M70 70 C 170 70 190 36 300 36" stroke="#7c5cff"/>
+              <path class="ln lb" d="M70 70 C 170 70 190 104 300 104" stroke="#14c38e"/>
+              <circle cx="58" cy="70" r="16" fill="#2B2E33"/><text x="58" y="74" text-anchor="middle" style="fill:#b8ff5c;font-size:10px">KEY</text>
+              <circle class="ndt na" cx="312" cy="36" r="12" fill="#7c5cff"/><text x="332" y="40">上游 A</text>
+              <circle class="ndt" cx="312" cy="104" r="12" fill="#14c38e"/><text x="332" y="108">上游 B</text>
+              <text class="bad" x="232" y="24">429 限流</text>
+            </svg>
+          </div>
+          <h3>故障自动转移</h3>
+          <p>打开开关，让上游 A 挂掉——请求会立刻绕到 B。你的应用只会看到一个正常的 200。</p>
+        </article>
+        <article class="toy rise">
+          <div class="stage">
+            <div class="orbit"><div class="sun">GW</div>
+              <div class="ring"><b style="background:#ff8a4c"></b><b class="b2" style="background:#4d6bfe"></b></div>
+              <div class="ring"><b style="background:#14c38e"></b><b class="b2" style="background:#a855f7"></b></div>
+            </div>
+          </div>
+          <h3>智能调度</h3>
+          <p>多个上游账号轮转分流，谁空闲交给谁。</p>
+        </article>
+        <article class="toy rise">
+          <div class="stage">
+            <div class="bubbles"><span>接着刚才的方案写</span><span>好的，继续第 3 步…</span><span>记得用同一个风格</span></div>
+          </div>
+          <h3>会话保持</h3>
+          <p>同一会话粘在同一上游，长对话不断片。</p>
+        </article>
+        <article class="toy rise">
+          <div class="stage">
+            <div class="compare">
+              <div class="r fixed"><span>固定月费</span><div class="bar"><i></i></div></div>
+              <div class="r usage"><span>按量计费</span><div class="bar"><i></i></div></div>
+            </div>
+          </div>
+          <h3>用多少付多少</h3>
+          <p>没有用不完的订阅，账单明细实时可查。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ====== 上手五步：与使用手册「新手指南」一一对应 ====== -->
+    <section class="block" id="start">
+      <div class="rise">
+        <span class="tag">5 steps</span>
+        <h2>五步，发出<span class="holo">第一条消息</span></h2>
+        <p class="sub">和使用手册的新手指南一一对应。不需要懂编程，每一步都有图文说明。</p>
+      </div>
+      <ol class="steps">
+        <li class="step rise"><a data-doc="#account"><span class="n">01</span><h3>注册登录</h3><p>用邮箱注册，填入验证码后进入控制台。</p><span class="more">图文步骤</span></a></li>
+        <li class="step rise"><a data-doc="#balance"><span class="n">02</span><h3>确认额度</h3><p>在仪表盘查看余额。注册成功不代表已有额度，充值先联系客服。</p><span class="more">图文步骤</span></a></li>
+        <li class="step rise"><a data-doc="#api-key"><span class="n">03</span><h3>创建密钥</h3><p>在「API 密钥」里创建，用复制按钮拿到完整密钥。</p><span class="more">图文步骤</span></a></li>
+        <li class="step rise"><a data-doc="#connect"><span class="n">04</span><h3>连接软件</h3><p>把地址和密钥填进你的工具，各工具的填法见下方。</p><span class="more">图文步骤</span></a></li>
+        <li class="step rise"><a data-doc="#first-test"><span class="n">05</span><h3>发条短消息</h3><p>发送「请只回复：连接成功」，再到使用记录核对。</p><span class="more">图文步骤</span></a></li>
+      </ol>
+    </section>
+
+    <!-- ====== 连接软件：按工具展示填写内容，内容与使用手册保持一致 ====== -->
+    <section class="block" id="tools">
+      <div class="rise">
+        <span class="tag">Step 04 · 连接软件</span>
+        <h2>选好你的工具，<br /><span class="holo">照着填</span>就行</h2>
+        <p class="sub">下面是每个工具要填的内容。不同工具的地址<b>各不相同</b>，不要互相照抄。</p>
+      </div>
+      <div class="connect rise">
+        <div class="tabs" role="tablist" id="tabs" aria-label="选择工具">
+          <span class="jelly" id="jelly"></span>
+          <button role="tab" aria-selected="true" data-tool="codex">Codex</button>
+          <button role="tab" aria-selected="false" data-tool="claude">Claude Code</button>
+          <button role="tab" aria-selected="false" data-tool="workbuddy">WorkBuddy</button>
+          <button role="tab" aria-selected="false" data-tool="dev">开发者 API</button>
+        </div>
+        <div class="panel" id="panel" role="tabpanel" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <div class="finale rise" id="finale">
+      <h2>拿上钥匙，<br />去哪都行。</h2>
+      <p>从今天起，调用任何模型都只需要这一把。</p>
+      <a class="btn-big" data-go="start" data-authed="进入控制台"><b class="lbl">领取我的钥匙</b><span>→</span></a>
+    </div>
+  </main>
+  <footer>
+    <svg class="foot-lockup" viewBox="0 0 414.48 126" role="img" aria-label="汇码智能 HUIMA INTELLIGENCE"><use href="#huimaLockup"/></svg>
+    <nav class="foot-links" aria-label="帮助与支持">
+      <a data-go="docs" data-newtab>使用手册</a><i>·</i>
+      <a data-go="faq" data-newtab>常见问题</a><i>·</i>
+      <a data-go="monitor">渠道状态</a><i>·</i>
+      <a data-go="contact" data-newtab>联系客服</a>
+      <span class="qq" id="contactQQ">QQ <b></b></span>
+    </nav>
+    <div class="copy">© <span id="year"></span> <span data-site-name>汇码智能</span> · AI API 平台 · 一把钥匙，打开所有 AI</div>
+  </footer>
+
+<script>
+/* =========================================================
+ * 站点配置：部署前按需修改
+ * links 中留空的项会被自动隐藏；页面在 iframe 中时链接会跳出到顶层窗口
+ * ========================================================= */
+const SITE = {
+  name: '汇码智能',
+  fallbackOrigin: 'https://api.tysy.top',
+  links: {
+    home: '/',
+    login: '/login',
+    register: '/register',
+    dashboard: '/dashboard',
+    adminDashboard: '/admin/dashboard',
+    models: '/model-plaza',       // 站点暂未开启模型广场；开启后该入口即可使用，不需要可留空隐藏
+    docs: '/docs/',               // 使用手册（新标签页打开）
+    faq: '/docs/#troubleshooting',
+    contact: '/docs/#contact',
+    monitor: '/monitor'           // 渠道状态
+  },
+  contactQQ: '569229275'          // 页脚展示的客服 QQ；留空则不显示
+};
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const finePointer = window.matchMedia('(pointer: fine)').matches;
+const origin = /^https?:/.test(location.protocol) ? location.origin : SITE.fallbackOrigin;
+
+/* 使用手册内的页面或章节地址，如 docUrl('codex.html')、docUrl('#account') */
+function docUrl(path) {
+  return SITE.links.docs ? SITE.links.docs + path : '';
+}
+
+/* ---------- 链接与登录态 ---------- */
+(function wire() {
+  let auth = null;
+  try {
+    if (localStorage.getItem('auth_token')) {
+      const u = JSON.parse(localStorage.getItem('auth_user') || 'null');
+      auth = { admin: !!(u && u.role === 'admin') };
+    }
+  } catch (e) { /* 无法读取存储时按未登录处理 */ }
+  document.querySelectorAll('[data-site-name]').forEach(el => { el.textContent = SITE.name; });
+  document.title = SITE.name + ' · 一把钥匙，打开所有 AI';
+  document.querySelectorAll('[data-go]').forEach(a => {
+    let key = a.dataset.go;
+    if (key === 'start') key = auth ? (auth.admin ? 'adminDashboard' : 'dashboard') : 'login';
+    if (auth && a.hasAttribute('data-hide-authed')) { a.remove(); return; }
+    const url = SITE.links[key];
+    if (!url) { a.remove(); return; }
+    a.href = url;
+    if (a.hasAttribute('data-newtab')) {
+      a.target = '_blank';
+      a.rel = 'noopener';
+    } else {
+      a.target = '_top';
+    }
+    const lbl = a.querySelector('.lbl');
+    if (auth && a.dataset.authed && lbl) lbl.textContent = a.dataset.authed;
+  });
+  // 指向使用手册具体章节的链接（相对 SITE.links.docs）；未配置手册时保留内容、去掉跳转
+  document.querySelectorAll('[data-doc]').forEach(a => {
+    const url = docUrl(a.dataset.doc);
+    if (!url) {
+      a.removeAttribute('href');
+      a.querySelector('.more')?.remove();
+      return;
+    }
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+  });
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const qq = document.getElementById('contactQQ');
+  if (SITE.contactQQ) qq.querySelector('b').textContent = SITE.contactQQ;
+  else qq.remove();
+  // 链接被隐藏后，清理多余的分隔点
+  document.querySelectorAll('.foot-links > i').forEach(dot => {
+    const prev = dot.previousElementSibling, next = dot.nextElementSibling;
+    if (!prev || prev.tagName === 'I' || !next) dot.remove();
+  });
+})();
+
+/* ---------- 标题逐字弹入 ---------- */
+(function splitTitle() {
+  let d = 0.05;
+  document.querySelectorAll('h1 .split').forEach(w => {
+    const text = w.textContent;
+    w.textContent = '';
+    for (const ch of text) {
+      const s = document.createElement('span');
+      s.className = 'ch';
+      s.textContent = ch;
+      s.style.animationDelay = d.toFixed(2) + 's';
+      s.setAttribute('aria-hidden', 'true');
+      d += 0.06;
+      w.appendChild(s);
+    }
+  });
+})();
+
+/* ---------- 跑马灯无缝 ---------- */
+['mq1', 'mq2'].forEach(id => { const el = document.getElementById(id); el.innerHTML += el.innerHTML; });
+
+/* ---------- 显现 ---------- */
+(function () {
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { threshold: 0.15 });
+  document.querySelectorAll('.rise').forEach((el, i) => { el.style.transitionDelay = (i % 3) * 0.08 + 's'; io.observe(el); });
+})();
+
+/* ---------- 光标 ---------- */
+(function cursor() {
+  if (!finePointer || reduceMotion) return;
+  const c = document.getElementById('cursor');
+  let x = innerWidth / 2, y = innerHeight / 2, tx = x, ty = y;
+  addEventListener('pointermove', e => { tx = e.clientX; ty = e.clientY; c.classList.add('on'); });
+  document.addEventListener('pointerleave', () => c.classList.remove('on'));
+  document.addEventListener('pointerover', e => { c.classList.toggle('big', !!e.target.closest('a, button, .sticker, input')); });
+  (function loop() {
+    x += (tx - x) * 0.2; y += (ty - y) * 0.2;
+    c.style.transform = `translate(${x}px, ${y}px)`;
+    requestAnimationFrame(loop);
+  })();
+})();
+
+/* ---------- 彩纸 ---------- */
+const confetti = (function () {
+  const cv = document.getElementById('confetti');
+  const ctx = cv.getContext('2d');
+  const colors = ['#7c5cff', '#17CFD8', '#b8ff5c', '#ffb347', '#ff5ca8', '#2B2E33'];
+  let parts = [], raf = 0;
+  function size() { const d = Math.min(2, devicePixelRatio || 1); cv.width = innerWidth * d; cv.height = innerHeight * d; ctx.setTransform(d, 0, 0, d, 0, 0); }
+  size(); addEventListener('resize', size);
+  function frame() {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    parts = parts.filter(p => p.life > 0 && p.y < innerHeight + 40);
+    parts.forEach(p => {
+      p.vy += 0.25; p.vx *= 0.985; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life--;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.scale(1, Math.cos(p.r * 2));
+      ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    raf = parts.length ? requestAnimationFrame(frame) : 0;
+  }
+  return function burst(x, y, n = 60) {
+    if (reduceMotion) return;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, v = 4 + Math.random() * 8;
+      parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 6, r: Math.random() * 6, vr: (Math.random() - .5) * .4, w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, c: colors[(Math.random() * colors.length) | 0], life: 140 });
+    }
+    if (!raf) raf = requestAnimationFrame(frame);
+  };
+})();
+
+/* ---------- 全息卡：倾斜 + 翻面 ---------- */
+(function keycard() {
+  const card = document.getElementById('keycard');
+  const zone = document.getElementById('zone');
+  let flipped = false;
+  document.getElementById('backCode').innerHTML =
+    `<em># 你的万能钥匙</em>\n<b>base_url</b> = "${origin}"\n<b>api_key</b>  = "sk-••••7F3A"\n\n<em># 想用谁就写谁</em>\nmodel = "claude-sonnet-4-5" | "gpt-5"\n      | "deepseek-chat" | "glm-4.6"`;
+  function tilt(e) {
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    const cx = Math.max(-0.4, Math.min(1.4, px)), cy = Math.max(-0.4, Math.min(1.4, py));
+    card.style.setProperty('--ry', ((cx - 0.5) * 26).toFixed(2) + 'deg');
+    card.style.setProperty('--rx', ((0.5 - cy) * 22).toFixed(2) + 'deg');
+    card.style.setProperty('--mx', (cx * 100).toFixed(1) + '%');
+    card.style.setProperty('--my', (cy * 100).toFixed(1) + '%');
+  }
+  if (!reduceMotion) {
+    zone.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') { card.classList.add('dragging'); tilt(e); } });
+    zone.addEventListener('pointerleave', () => {
+      card.classList.remove('dragging');
+      ['--rx', '--ry'].forEach(p => card.style.setProperty(p, '0deg'));
+    });
+    // 触屏：手指在卡上滑动时倾斜
+    card.addEventListener('touchmove', e => { const t = e.touches[0]; tilt({ clientX: t.clientX, clientY: t.clientY }); }, { passive: true });
+    // 空闲时让光泽自己流动
+    let t0 = 0;
+    (function idle(ts) {
+      if (!card.classList.contains('dragging')) {
+        t0 = ts / 1000;
+        card.style.setProperty('--mx', (50 + Math.sin(t0 * 0.8) * 40).toFixed(1) + '%');
+        card.style.setProperty('--my', (50 + Math.cos(t0 * 0.6) * 40).toFixed(1) + '%');
+      }
+      requestAnimationFrame(idle);
+    })(0);
+  }
+  card.addEventListener('click', e => {
+    flipped = !flipped;
+    card.style.setProperty('--flip', flipped ? '180deg' : '0deg');
+    const r = card.getBoundingClientRect();
+    if (flipped) confetti(r.left + r.width / 2, r.top + r.height / 2, 50);
+  });
+})();
+
+/* ---------- 可拖拽贴纸 ---------- */
+document.querySelectorAll('.sticker').forEach(st => {
+  let sx = 0, sy = 0, ox = 0, oy = 0, drag = false;
+  st.addEventListener('pointerdown', e => {
+    drag = true; st.classList.add('grab'); st.setPointerCapture(e.pointerId);
+    sx = e.clientX; sy = e.clientY;
+    ox = +(st.dataset.x || 0); oy = +(st.dataset.y || 0);
+  });
+  st.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const x = ox + e.clientX - sx, y = oy + e.clientY - sy;
+    st.dataset.cx = x; st.dataset.cy = y;
+    st.style.transform = `translate(${x}px, ${y}px)`;
+  });
+  const end = () => {
+    if (!drag) return;
+    drag = false; st.classList.remove('grab');
+    st.dataset.x = st.dataset.cx || st.dataset.x || 0; st.dataset.y = st.dataset.cy || st.dataset.y || 0;
+  };
+  st.addEventListener('pointerup', end);
+  st.addEventListener('pointercancel', end);
+});
+
+/* ---------- 玩具：故障开关 ---------- */
+(function () {
+  const btn = document.getElementById('breakBtn'), toy = document.getElementById('failToy');
+  btn.addEventListener('click', () => {
+    const on = btn.getAttribute('aria-checked') !== 'true';
+    btn.setAttribute('aria-checked', String(on));
+    toy.classList.toggle('broken', on);
+  });
+  // 首次看到时自动演示一次
+  const io = new IntersectionObserver(es => {
+    if (!es[0].isIntersecting) return;
+    io.disconnect();
+    if (reduceMotion) return;
+    setTimeout(() => { if (btn.getAttribute('aria-checked') === 'false') btn.click(); }, 1400);
+    setTimeout(() => { if (btn.getAttribute('aria-checked') === 'true') btn.click(); }, 4200);
+  }, { threshold: 0.6 });
+  io.observe(toy);
+})();
+
+/* ---------- 玩具：3D 倾斜 ---------- */
+if (finePointer && !reduceMotion) {
+  document.querySelectorAll('.toy').forEach(t => {
+    t.addEventListener('pointermove', e => {
+      const r = t.getBoundingClientRect();
+      t.style.setProperty('--ty', (((e.clientX - r.left) / r.width - 0.5) * 8).toFixed(2) + 'deg');
+      t.style.setProperty('--tx', ((0.5 - (e.clientY - r.top) / r.height) * 8).toFixed(2) + 'deg');
+    });
+    t.addEventListener('pointerleave', () => { t.style.setProperty('--tx', '0deg'); t.style.setProperty('--ty', '0deg'); });
+  });
+}
+
+/* =========================================================
+ * 连接软件：各工具的填写内容，与使用手册（/docs/）保持一致
+ * 字段 [名称, 内容, 是否为可复制的地址]；links 为手册内页面
+ * ========================================================= */
+(function tools() {
+  const MODEL = '当前分组支持的完整模型 ID（控制台密钥旁「使用密钥」可查）';
+  const KEY = '粘贴你在汇码创建的完整密钥';
+  const TOOLS = {
+    codex: {
+      intro: '能读项目、帮你写代码的 AI 助手，有终端版和桌面版。',
+      fields: [['接口类型', 'OpenAI · Responses'], ['接口地址', origin + '/v1', true], ['API Key', KEY], ['模型', MODEL]],
+      tip: 'Windows 原生 Codex 可以用一键配置脚本，不必手动填写；Mac 用户请用 CC Switch 的 Codex 面板。',
+      links: [['Codex 完整教程', '安装 · 接入 · 切换', 'codex.html'], ['一键生成配置脚本', '仅 Windows', 'setup.html']]
+    },
+    claude: {
+      intro: '在终端里对话、读写文件的 AI 编程工具。推荐用 CC Switch 的图形界面填写，不用改配置文件。',
+      fields: [['填写位置', 'CC Switch → Claude 面板 → ＋ → 自定义'], ['协议', 'Anthropic'], ['API 端点', origin, true], ['鉴权字段', 'ANTHROPIC_AUTH_TOKEN（保持默认）'], ['API Key', KEY], ['模型', MODEL]],
+      tip: 'API 端点后面不要加 /v1 或 /v1/messages；密钥分组需要支持 Claude。',
+      links: [['Claude Code 完整教程', '安装 · 连接 · 首次对话', 'claude-code.html'], ['CC Switch 教程', '管理和切换 Key', 'cc-switch.html'], ['一键导入 CC Switch', '已装好 CC Switch 时', 'setup.html#ccswitch']]
+    },
+    workbuddy: {
+      intro: '有聊天窗口的桌面 AI 办公助手，全程在设置界面里填写，不需要写代码。',
+      fields: [['填写位置', '设置 → 模型 → 自定义模型 → 添加模型'], ['提供商', '自定义 / Custom'], ['接口地址', origin + '/v1/chat/completions', true], ['API Key', KEY], ['模型名称', MODEL]],
+      tip: '这里要填完整请求地址，和 Codex 的 /v1 不一样，不要照搬。',
+      links: [['WorkBuddy 完整教程', '下载 · 填三项 · 开始用', 'workbuddy.html']]
+    },
+    dev: {
+      intro: '自己写代码调用？同时兼容 Anthropic 与 OpenAI 两种协议，沿用官方 SDK 即可。',
+      fields: [['Anthropic 协议', origin, true], ['OpenAI 兼容', origin + '/v1', true], ['API Key', 'Authorization: Bearer 你的密钥']],
+      code: [
+        ['c', '# 发一条短消息测试连接\n'],
+        ['', 'curl '], ['s', origin + '/v1/messages'], ['', ' \\\n  '],
+        ['k', '-H '], ['s', '"Authorization: Bearer $API_KEY"'], ['', ' \\\n  '],
+        ['k', '-H '], ['s', '"anthropic-version: 2023-06-01"'], ['', ' \\\n  '],
+        ['k', '-H '], ['s', '"content-type: application/json"'], ['', ' \\\n  '],
+        ['k', '-d '], ['s', `'{"model":"你的模型ID","max_tokens":64,"messages":[{"role":"user","content":"请只回复：连接成功"}]}'`]
+      ],
+      tip: 'Base URL 不要写成 /v1/v1，也不要填登录页或控制台地址。',
+      links: [['接口地址怎么填', '要不要加 /v1', '#connect']]
+    }
+  };
+
+  const panel = document.getElementById('panel');
+  const jelly = document.getElementById('jelly');
+  const tabs = [...document.querySelectorAll('#tabs [role=tab]')];
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  let current = 'codex';
+
+  function render(id) {
+    const t = TOOLS[id];
+    const rows = t.fields.map(([k, v, copy]) => `<div class="row"><dt>${esc(k)}</dt><dd>${copy
+      ? `<code>${esc(v)}</code><button class="cp" type="button" data-copy="${esc(v)}">复制</button>`
+      : esc(v)}</dd></div>`).join('');
+    const code = t.code ? `<pre>${t.code.map(([c, s]) => c ? `<span class="${c}">${esc(s)}</span>` : esc(s)).join('')}</pre>` : '';
+    const links = t.links.map(([title, note, path]) => {
+      const url = docUrl(path);
+      return url ? `<a href="${esc(url)}" target="_blank" rel="noopener"><span>${esc(title)}<br /><small>${esc(note)}</small></span><span aria-hidden="true">↗</span></a>` : '';
+    }).join('');
+    panel.innerHTML = `<div><p class="intro">${esc(t.intro)}</p><dl class="fields">${rows}</dl>${code}</div>
+      <div class="side"><div class="tip">${esc(t.tip)}</div>${links ? `<div class="doc-links">${links}</div>` : ''}</div>`;
+  }
+
+  // 高亮块跟随选中的标签（手机端标签为两行，需同时跟随上下位置）
+  function moveJelly() {
+    const btn = tabs.find(b => b.dataset.tool === current);
+    jelly.style.left = btn.offsetLeft + 'px';
+    jelly.style.top = btn.offsetTop + 'px';
+    jelly.style.width = btn.offsetWidth + 'px';
+    jelly.style.height = btn.offsetHeight + 'px';
+  }
+
+  function show(id, animate) {
+    current = id;
+    render(id);
+    if (animate) { panel.classList.remove('swap'); void panel.offsetWidth; panel.classList.add('swap'); }
+    tabs.forEach(b => b.setAttribute('aria-selected', String(b.dataset.tool === id)));
+    moveJelly();
+  }
+
+  tabs.forEach(b => b.addEventListener('click', () => show(b.dataset.tool, true)));
+  addEventListener('resize', moveJelly);
+  show('codex', false);
+
+  panel.addEventListener('click', async e => {
+    const btn = e.target.closest('.cp');
+    if (!btn) return;
+    try { await navigator.clipboard.writeText(btn.dataset.copy); btn.textContent = '已复制 ✓'; }
+    catch (err) { btn.textContent = '请手动复制'; }
+    const r = btn.getBoundingClientRect();
+    confetti(r.left + r.width / 2, r.top + r.height / 2, 24);
+    setTimeout(() => { btn.textContent = '复制'; }, 1600);
+  });
+})();
+
+/* ---------- 终章：悬停撒彩纸 ---------- */
+(function () {
+  const btn = document.querySelector('.finale .btn-big');
+  if (!btn) return;
+  let lastT = 0;
+  btn.addEventListener('pointerenter', () => {
+    const now = Date.now();
+    if (now - lastT < 2500) return;
+    lastT = now;
+    const r = btn.getBoundingClientRect();
+    confetti(r.left + r.width / 2, r.top, 70);
+  });
+})();
+</script>
+</body>
+</html>
