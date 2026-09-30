@@ -86,6 +86,8 @@
   .nav .links a.solid { background: var(--ink); color: #fff; font-weight: 700; }
   .nav .links a.solid:hover { background: #2a2850; }
   @media (max-width: 640px) { .nav .links a:not(.solid) { display: none; } }
+  /* 横屏手机等矮屏：导航不吸顶，避免长期占用可视高度 */
+  @media (max-height: 500px) { .nav { position: relative; top: 0; } }
 
   /* ---------- Hero ---------- */
   .hero {
@@ -246,6 +248,7 @@
   .toy .route .lb { opacity: .2; }
   .toy.broken .route .lb { opacity: 1; }
   .switch { position: absolute; left: 12px; bottom: 10px; display: inline-flex; align-items: center; gap: 8px; font: 700 12px var(--font-sans); color: var(--ink-2); background: #fff; border: 1px solid var(--line); padding: 6px 8px 6px 12px; border-radius: 999px; cursor: pointer; }
+  @media (pointer: coarse) { .switch { padding: 10px 10px 10px 14px; } }
   .switch .knob { width: 36px; height: 20px; border-radius: 99px; background: #d9d6ee; position: relative; transition: background .3s; }
   .switch .knob::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); transition: transform .35s var(--spring); }
   .switch[aria-checked="true"] .knob { background: var(--red); }

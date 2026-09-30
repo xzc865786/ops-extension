@@ -66,7 +66,7 @@ const SITE = {
 
 Sub2API 的「首页内容」（`home_content`）有两种模式：
 
-1. **HTML 模式**：通过 `v-html` 插入，**`<script>` 不会执行**，本设计的动画和互动都会失效，所以**不要**直接粘贴 HTML。
+1. **HTML 模式**：通过 `v-html` 插入，**`<script>` 不会执行**。本页大部分区块依赖脚本才会显现，直接粘贴会出现大片空白，所以**不要**直接粘贴 HTML。
 2. **URL 模式**：内容填写以 `http(s)://` 开头的地址，Sub2API 会用全屏 iframe 加载它。**请使用这种方式。**
 
 步骤：
@@ -82,6 +82,18 @@ Sub2API 的「首页内容」（`home_content`）有两种模式：
    ```
 
    确认该路径没有 `X-Frame-Options: DENY`，也没有禁止同源嵌入的 `frame-ancestors`（同源的 `SAMEORIGIN` 可以正常使用）。
-3. Sub2API 管理后台 → 系统设置 → 首页内容，填入 `https://api.tysy.top/home.html` 并保存。
+3. Sub2API 管理后台 → 系统设置 → 站点设置 → 首页内容，填入 `https://api.tysy.top/home.html` 并保存。设置后首页不再显示 Sub2API 自带的状态信息。
+
+### 移动端
+
+`03-holo-pop.html` 已在 Sub2API 全屏 iframe 的模拟环境中测试，均无横向滚动、无脚本错误，触控交互正常。测试设备：
+
+- iPhone SE（375×667）
+- Android（360×740）
+- iPhone 14（390×844）
+- iPad（768×1024）
+- 横屏手机（844×390）
+
+手机端导航只保留图形标识和「免费开始」；矮屏（横屏）时导航不吸顶。
 
 页面内所有按钮都带 `target="_top"`，在 iframe 中点击「登录」「进入控制台」会跳转整个窗口，而不是只在框内跳转。
