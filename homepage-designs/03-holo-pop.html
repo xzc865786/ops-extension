@@ -306,7 +306,7 @@
   .fields dd code { font: 600 13.5px/1.5 var(--font-mono); color: var(--lime); word-break: break-all; }
   .fields .cp { flex: none; border: 0; cursor: pointer; font: 700 12px var(--font-sans); padding: 6px 11px; border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; transition: background .2s, color .2s; }
   .fields .cp:hover { background: var(--lime); color: var(--ink); }
-  @media (pointer: coarse) { .fields .cp { padding: 9px 13px; } }
+  @media (pointer: coarse) { .fields .cp { padding: 11px 16px; } }
   @media (max-width: 520px) { .fields .row { grid-template-columns: 1fr; gap: 4px; } }
   .panel pre { margin: 12px 0 0; padding: 16px 18px; border-radius: 14px; background: rgba(0,0,0,.35); font: 13px/1.75 var(--font-mono); color: #d6d8e0; white-space: pre-wrap; overflow-wrap: anywhere; }
   .panel pre .s { color: var(--lime); } .panel pre .k { color: var(--pink); } .panel pre .c { color: #7b8190; }
@@ -366,6 +366,7 @@
   .foot-links a { color: var(--ink-2); font-weight: 600; padding: 4px 2px; border-bottom: 1px solid transparent; transition: border-color .2s, color .2s; }
   .foot-links a:hover { color: var(--ink); border-bottom-color: var(--cyan); }
   .foot-links i { font-style: normal; color: #b9bec4; }
+  @media (pointer: coarse) { .foot-links a { padding: 10px 4px; } }
   .foot-links .qq { margin-left: 4px; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.7); border: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
   .foot-links .qq b { font-family: var(--font-mono); user-select: all; }
   #confetti { position: fixed; inset: 0; z-index: 9998; pointer-events: none; width: 100%; height: 100%; }
