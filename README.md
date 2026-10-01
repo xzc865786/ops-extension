@@ -9,7 +9,7 @@
 | Auth Bridge | Bootstrap 用 Sub2API `GET /api/v1/auth/me`（字段 `data.id`）签发 HttpOnly Session（`Path=/ext`） |
 | 工单 | 用户建单（固定 P2）/回复/关单/附件；管理员认领·释放·接管·内部备注·改状态/分类/优先级 |
 | 报账 | 仅 admin；供应商/成本中心/付款账户；公司直付 vs 个人垫付；允许申请人=审批人；分次付款、完整发票信息和附件 |
-| 报表 | 按币种分别展示月/年、分类/供应商/成本中心、付款和发票统计；明细与汇总 CSV/Excel |
+| 报表 | 按费用发生日期区间筛选（本月/上月/本季度/上季度/本年/上年/近 12 个月快捷选项或自选区间）；按币种分别展示月度、分类/供应商/成本中心、付款和发票统计；明细与汇总 CSV/Excel |
 
 ## 站点首页
 
@@ -154,7 +154,8 @@ V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留�
 - `POST /ext/api/v1/admin/expenses/{id}/payments` 示例：`{"amount":"30.00","reference_no":"bank-ref"}`。省略 `currency` 时继承单据币种。旧请求的 `mark_paid=true` 不能使不足额付款变为已付，不足额时返回 `PAYMENT_INCOMPLETE`。
 - `GET /ext/api/v1/admin/expenses/{id}` 增加 `payments`、`attachments`、`paid_total`、`remaining_amount`、`payment_reconciliation_required`；报账列表响应保持原结构。附件下载示例：`/ext/api/v1/attachments/{id}/download?source=expense`（仅管理员）。
 - 费用支出只计 `APPROVED` 和 `PAID`；`SUBMITTED`、`REJECTED` 分别列示。已付取实际付款流水，未付取审批单剩余金额。均按费用日期归期，按币种分别汇总，不进行汇率换算或跨币种相加。历史异常付款不计入付款统计，并在页面显示待核对单号。
-- **报表 API 响应结构已调整**：`GET /ext/api/v1/admin/reports/summary?period=year&year=2026` 返回 `{"period":"year","year":2026,"currencies":[{"currency":"CNY","count":1,"total_amount":100.0,"tax_amount":6.0,"by_status":{"APPROVED":{"count":1,"amount":100.0}}}]}`（另含 `month/start/end`）；付款、发票接口也使用 `currencies` 数组。分类、供应商、成本中心及新增 `by-month` 返回每行含 `currency` 的数组。以上接口支持可选 `currency` 筛选，前后端须配套部署。
+- **报表按日期区间查询**：所有报表与导出接口使用 `start_date` / `end_date`（`YYYY-MM-DD`，按费用发生日期筛选，首尾均包含，最长 3 年），例如 `GET /ext/api/v1/admin/reports/summary?start_date=2026-09-01&end_date=2026-09-30`。旧参数 `period=month|year&year=&month=` 仍兼容，但按月查询缺少 `month` 时改为返回 400（此前会静默按 1 月统计）。区间非法时返回 400 `INVALID_REPORT_RANGE`。导出文件名带区间，如 `expense-report-2026-09-01_2026-09-30.xlsx`。
+- **报表 API 响应结构已调整**：`summary` 返回 `{"start":"2026-09-01","end":"2026-09-30","currencies":[{"currency":"CNY","count":1,"total_amount":100.0,"tax_amount":6.0,"by_status":{"APPROVED":{"count":1,"amount":100.0}}}]}`（不再返回 `period/year/month`）；付款、发票接口也使用 `currencies` 数组。分类、供应商、成本中心及新增 `by-month` 返回每行含 `currency` 的数组。以上接口支持可选 `currency` 筛选，前后端须配套部署。
 - `GET /ext/api/v1/admin/reports/export` 支持 `format=csv|xlsx` 与 `view=detail|summary|month|category|supplier|cost_center|payment|invoice|all`。CSV 每次选一种视图；Excel 使用 `view=all` 可一次导出全部工作表。省略 `view` 继续导出明细；空结果保留表头。明细导出含 `payment_reconciliation_required`，历史付款异常须先核对。
 
 ## 历史付款核对与发布

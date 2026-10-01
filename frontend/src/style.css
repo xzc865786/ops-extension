@@ -296,4 +296,79 @@
   .file-picker-name {
     @apply max-w-56 truncate pr-2 text-xs text-gray-500 dark:text-dark-400;
   }
+
+  .date-range-picker {
+    @apply relative w-full sm:w-72;
+  }
+
+  .date-range-tag {
+    @apply pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700;
+    @apply dark:bg-primary-900/30 dark:text-primary-300;
+  }
+
+  .date-range-presets {
+    @apply flex flex-wrap gap-1 md:flex-col md:flex-nowrap;
+  }
+
+  .date-range-preset {
+    @apply whitespace-nowrap rounded-lg px-3 py-1.5 text-left text-sm text-gray-700 transition-colors hover:bg-gray-100;
+    @apply dark:text-gray-200 dark:hover:bg-dark-700;
+  }
+
+  .date-range-preset-active {
+    @apply bg-primary-50 font-medium text-primary-700 hover:bg-primary-50 dark:bg-primary-900/30 dark:text-primary-300;
+  }
 }
+
+/* @vuepic/vue-datepicker mapped onto the app palette. Scoped under the wrapper so it outranks
+   the library stylesheet regardless of chunk load order. */
+.date-range-picker .dp--theme-light {
+  --dp-font-family: inherit;
+  --dp-font-size: 0.875rem;
+  --dp-border-radius: 0.75rem;
+  --dp-cell-border-radius: 0.5rem;
+  --dp-input-padding: 0.625rem 4.5rem 0.625rem 0.75rem;
+  --dp-menu-padding: 8px 10px;
+  --dp-background-color: #fff;
+  --dp-text-color: #111827;
+  --dp-hover-color: #f3f4f6;
+  --dp-hover-text-color: #111827;
+  --dp-primary-color: #0d9488;
+  --dp-primary-disabled-color: #99f6e4;
+  --dp-secondary-color: #9ca3af;
+  --dp-border-color: #e5e7eb;
+  --dp-menu-border-color: #e5e7eb;
+  --dp-border-color-hover: #d1d5db;
+  --dp-border-color-focus: #14b8a6;
+  --dp-highlight-color: rgb(20 184 166 / 0.1);
+  --dp-range-between-dates-background-color: #f0fdfa;
+  --dp-range-between-dates-text-color: #0f766e;
+  --dp-range-between-border-color: #f0fdfa;
+}
+
+.dark .date-range-picker .dp--theme-light {
+  --dp-background-color: #1e293b;
+  --dp-text-color: #f3f4f6;
+  --dp-hover-color: #334155;
+  --dp-hover-text-color: #fff;
+  --dp-primary-color: #14b8a6;
+  --dp-primary-disabled-color: #115e59;
+  --dp-secondary-color: #64748b;
+  --dp-border-color: #475569;
+  --dp-menu-border-color: #334155;
+  --dp-border-color-hover: #64748b;
+  --dp-icon-color: #94a3b8;
+  --dp-disabled-color: #0f172a;
+  --dp-range-between-dates-background-color: rgb(19 78 74 / 0.4);
+  --dp-range-between-dates-text-color: #5eead4;
+  --dp-range-between-border-color: transparent;
+}
+
+.date-range-picker .dp--menu {
+  box-shadow: 0 10px 30px -10px rgb(15 23 42 / 0.25);
+}
+
+.date-range-picker .dp--input-focus {
+  box-shadow: 0 0 0 3px rgb(20 184 166 / 0.3);
+}
+
