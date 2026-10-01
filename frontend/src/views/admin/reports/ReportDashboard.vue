@@ -1,12 +1,33 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import api from '@/api/client'
+import DateRangePicker from '@/components/DateRangePicker.vue'
 import { useToast } from '@/composables/useToast'
+import { RANGE_PRESETS, isDateRange, presetFor, type DateRange } from '@/utils/dateRange'
 import { labelFor, type LabelOption } from '@/utils/display'
 
+const RANGE_STORAGE_KEY = 'ops-ext:report-range'
+
+// A remembered preset is re-resolved against today, so "上月" stays relative across visits.
+function initialRange(): DateRange {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RANGE_STORAGE_KEY) || 'null')
+    const preset = RANGE_PRESETS.find(p => p.key === saved?.preset)
+    if (preset) return preset.range()
+    if (isDateRange(saved?.range)) return saved.range
+  } catch { /* storage unavailable or corrupt: fall back to the default */ }
+  return RANGE_PRESETS[0].range()
+}
+
+function rememberRange(range: DateRange) {
+  const preset = presetFor(range)
+  try {
+    localStorage.setItem(RANGE_STORAGE_KEY, JSON.stringify(preset ? { preset: preset.key } : { range }))
+  } catch { /* remembering is a convenience only */ }
+}
+
 const toast = useToast()
-const now = new Date()
-const q = reactive({ period: 'month', year: now.getFullYear(), month: now.getMonth() + 1, currency: '' })
+const q = reactive({ range: initialRange(), currency: '' })
 const availableCurrencies = ref<string[]>(['CNY', 'USD', 'HKD', 'EUR', 'JPY'])
 const categories = ref<LabelOption[]>([])
 const summary = ref<any>(null)
@@ -21,17 +42,21 @@ const viewOptions = [
 ]
 
 function params() {
-  return {
-    period: q.period, year: q.year, month: q.period === 'month' ? q.month : undefined,
-    currency: q.currency || undefined,
-  }
+  return { start_date: q.range[0], end_date: q.range[1], currency: q.currency || undefined }
 }
 
+const loading = ref(false)
+let loadSeq = 0
+
 async function load() {
+  // Only the latest request may write results, so a slow earlier query can't overwrite a newer range.
+  const seq = ++loadSeq
+  loading.value = true
   try {
     const names = ['summary', 'by-month', 'by-category', 'by-supplier', 'by-cost-center',
       'payment-status', 'invoice-tax']
     const responses = await Promise.all(names.map(name => api.get(`/admin/reports/${name}`, { params: params() })))
+    if (seq !== loadSeq) return
     summary.value = responses[0].data
     dimensions.month = responses[1].data
     dimensions.category = responses[2].data
@@ -40,9 +65,14 @@ async function load() {
     payment.value = responses[5].data
     invoice.value = responses[6].data
   } catch (e: any) {
-    toast.error(e.response?.data?.detail?.detail || e.response?.data?.detail || '报表加载失败')
+    if (seq === loadSeq) toast.error(e.response?.data?.detail?.detail || e.response?.data?.detail || '报表加载失败')
+  } finally {
+    if (seq === loadSeq) loading.value = false
   }
 }
+
+watch(() => q.range, rememberRange)
+watch(() => [q.range, q.currency], load)
 
 onMounted(async () => {
   try {
@@ -55,8 +85,7 @@ onMounted(async () => {
 
 function exportUrl(format: string, view: string) {
   const sp = new URLSearchParams({
-    format, view, period: q.period, year: String(q.year),
-    ...(q.period === 'month' ? { month: String(q.month) } : {}),
+    format, view, start_date: q.range[0], end_date: q.range[1],
     ...(q.currency ? { currency: q.currency } : {}),
   })
   return `/ext/api/v1/admin/reports/export?${sp}`
@@ -77,14 +106,12 @@ function doExport(format: string, view: string) {
     <div class="page-toolbar">
       <h1 class="page-title shell-page-title">费用报表</h1>
       <div class="page-toolbar-actions">
-        <select v-model="q.period" class="input"><option value="month">按月</option><option value="year">按年</option></select>
-        <input v-model.number="q.year" type="number" class="input w-24" aria-label="年份" />
-        <input v-if="q.period==='month'" v-model.number="q.month" type="number" min="1" max="12" class="input w-16" aria-label="月份" />
+        <DateRangePicker v-model="q.range" aria-label="费用发生日期区间" />
         <select v-model="q.currency" class="input" aria-label="币种">
           <option value="">全部币种（分别显示）</option>
           <option v-for="currency in availableCurrencies" :key="currency" :value="currency">{{ currency }}</option>
         </select>
-        <button class="btn-primary" @click="load">查询</button>
+        <button class="btn-secondary" :disabled="loading" @click="load">{{ loading ? '加载中…' : '刷新' }}</button>
       </div>
     </div>
     <div class="filter-bar">

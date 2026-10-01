@@ -37,16 +37,31 @@ EXPORT_HEADERS = {
 }
 
 
-def _period_range(period: str, year: int, month: int | None) -> tuple[date, date]:
+MAX_RANGE_DAYS = 366 * 3
+
+
+def resolve_range(start_date: date | None, end_date: date | None, period: str | None,
+                  year: int | None, month: int | None) -> tuple[date, date]:
+    """Inclusive expense_date range; legacy period/year/month is still accepted."""
+    if start_date or end_date:
+        if not (start_date and end_date):
+            raise ValueError("start_date 和 end_date 须同时提供")
+        if start_date > end_date:
+            raise ValueError("开始日期不能晚于结束日期")
+        if (end_date - start_date).days >= MAX_RANGE_DAYS:
+            raise ValueError("日期区间不能超过 3 年")
+        return start_date, end_date
+    if year is None:
+        raise ValueError("请提供 start_date/end_date")
     if period == "year":
         return date(year, 1, 1), date(year, 12, 31)
-    selected = month or 1
-    return date(year, selected, 1), date(year, selected, monthrange(year, selected)[1])
+    if month is None:
+        raise ValueError("按月查询须提供 month")
+    return date(year, month, 1), date(year, month, monthrange(year, month)[1])
 
 
-def _rows(db: Session, *, period: str, year: int, month: int | None = None,
+def _rows(db: Session, *, start: date, end: date,
           category=None, supplier_id=None, cost_center_id=None, currency=None):
-    start, end = _period_range(period, year, month)
     q = select(ExpenseClaim).options(selectinload(ExpenseClaim.payments)).where(
         ExpenseClaim.expense_date >= start,
         ExpenseClaim.expense_date <= end,
@@ -78,8 +93,8 @@ def _anomalous(claim: ExpenseClaim) -> bool:
     )
 
 
-def summary(db: Session, *, period: str, year: int, month: int | None = None, **filters) -> dict:
-    rows = _rows(db, period=period, year=year, month=month, **filters)
+def summary(db: Session, *, start: date, end: date, **filters) -> dict:
+    rows = _rows(db, start=start, end=end, **filters)
     groups: dict[str, dict] = {}
     for claim in rows:
         group = groups.setdefault(claim.currency, {
@@ -105,16 +120,13 @@ def summary(db: Session, *, period: str, year: int, month: int | None = None, **
                 for status, value in group["by_status"].items()
             },
         })
-    start, end = _period_range(period, year, month)
-    return {"period": period, "year": year, "month": month,
-            "start": start.isoformat(), "end": end.isoformat(), "currencies": currencies}
+    return {"start": start.isoformat(), "end": end.isoformat(), "currencies": currencies}
 
 
-def by_dimension(db: Session, dim: str, *, period: str, year: int,
-                 month: int | None = None, **filters) -> list[dict]:
+def by_dimension(db: Session, dim: str, *, start: date, end: date, **filters) -> list[dict]:
     if dim not in {"category", "supplier", "cost_center"}:
         raise ValueError(dim)
-    claims = [r for r in _rows(db, period=period, year=year, month=month, **filters)
+    claims = [r for r in _rows(db, start=start, end=end, **filters)
               if r.status in SPENDING]
     attr = {"category": "category", "supplier": "supplier_id",
             "cost_center": "cost_center_id"}[dim]
@@ -142,9 +154,9 @@ def by_dimension(db: Session, dim: str, *, period: str, year: int,
     return sorted(result, key=lambda r: (r["currency"], -r["amount"], str(r["key"])))
 
 
-def by_month(db: Session, *, period: str, year: int, month: int | None = None, **filters) -> list[dict]:
+def by_month(db: Session, *, start: date, end: date, **filters) -> list[dict]:
     groups: dict[tuple[str, str], dict] = {}
-    for claim in _rows(db, period=period, year=year, month=month, **filters):
+    for claim in _rows(db, start=start, end=end, **filters):
         if claim.status not in SPENDING:
             continue
         key = (claim.expense_date.strftime("%Y-%m"), claim.currency)
@@ -157,10 +169,9 @@ def by_month(db: Session, *, period: str, year: int, month: int | None = None, *
             for _, r in sorted(groups.items())]
 
 
-def payment_status(db: Session, *, period: str, year: int,
-                   month: int | None = None, **filters) -> dict:
+def payment_status(db: Session, *, start: date, end: date, **filters) -> dict:
     groups: dict[str, dict] = {}
-    for claim in _rows(db, period=period, year=year, month=month, **filters):
+    for claim in _rows(db, start=start, end=end, **filters):
         group = groups.setdefault(claim.currency, {
             "currency": claim.currency, "paid_amount": Decimal("0"),
             "unpaid_approved_amount": Decimal("0"), "rejected_count": 0,
@@ -186,10 +197,9 @@ def payment_status(db: Session, *, period: str, year: int,
     ]}
 
 
-def invoice_tax(db: Session, *, period: str, year: int,
-                month: int | None = None, **filters) -> dict:
+def invoice_tax(db: Session, *, start: date, end: date, **filters) -> dict:
     groups: dict[str, dict] = {}
-    for claim in _rows(db, period=period, year=year, month=month, **filters):
+    for claim in _rows(db, start=start, end=end, **filters):
         if claim.status not in SPENDING:
             continue
         group = groups.setdefault(claim.currency, {
@@ -213,8 +223,7 @@ def invoice_tax(db: Session, *, period: str, year: int,
     ]}
 
 
-def export_rows(db: Session, *, period: str, year: int,
-                month: int | None = None, **filters) -> list[dict]:
+def export_rows(db: Session, *, start: date, end: date, **filters) -> list[dict]:
     return [{
         "claim_no": r.claim_no, "expense_date": r.expense_date.isoformat(),
         "category": r.category, "status": r.status, "currency": r.currency,
@@ -224,12 +233,11 @@ def export_rows(db: Session, *, period: str, year: int,
         "payment_reconciliation_required": _anomalous(r) if r.status in SPENDING else False,
         "pay_type": r.pay_type, "invoice_status": r.invoice_status,
         "supplier_id": r.supplier_id, "cost_center_id": r.cost_center_id,
-    } for r in _rows(db, period=period, year=year, month=month, **filters)]
+    } for r in _rows(db, start=start, end=end, **filters)]
 
 
-def export_sheets(db: Session, *, period: str, year: int,
-                  month: int | None = None, **filters) -> dict[str, list[dict]]:
-    overview = summary(db, period=period, year=year, month=month, **filters)
+def export_sheets(db: Session, *, start: date, end: date, **filters) -> dict[str, list[dict]]:
+    overview = summary(db, start=start, end=end, **filters)
     summary_rows = []
     for group in overview["currencies"]:
         submitted = group["by_status"].get(ExpenseStatus.SUBMITTED.value, {})
@@ -243,17 +251,17 @@ def export_sheets(db: Session, *, period: str, year: int,
             "rejected_count": rejected.get("count", 0),
             "rejected_amount": rejected.get("amount", 0),
         })
-    payments = payment_status(db, period=period, year=year, month=month, **filters)
+    payments = payment_status(db, start=start, end=end, **filters)
     return {
-        "detail": export_rows(db, period=period, year=year, month=month, **filters),
+        "detail": export_rows(db, start=start, end=end, **filters),
         "summary": summary_rows,
-        "month": by_month(db, period=period, year=year, month=month, **filters),
-        "category": by_dimension(db, "category", period=period, year=year, month=month, **filters),
-        "supplier": by_dimension(db, "supplier", period=period, year=year, month=month, **filters),
-        "cost_center": by_dimension(db, "cost_center", period=period, year=year, month=month, **filters),
+        "month": by_month(db, start=start, end=end, **filters),
+        "category": by_dimension(db, "category", start=start, end=end, **filters),
+        "supplier": by_dimension(db, "supplier", start=start, end=end, **filters),
+        "cost_center": by_dimension(db, "cost_center", start=start, end=end, **filters),
         "payment": [{k: value for k, value in row.items() if k != "anomalies"}
                     for row in payments["currencies"]],
-        "invoice": invoice_tax(db, period=period, year=year, month=month, **filters)["currencies"],
+        "invoice": invoice_tax(db, start=start, end=end, **filters)["currencies"],
     }
 
 
