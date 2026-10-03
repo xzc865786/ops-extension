@@ -247,6 +247,12 @@
       search.setAttribute('aria-controls', 'main-content');
       search.addEventListener('compositionstart', () => window.clearTimeout(searchTimer));
       search.addEventListener('input', event => {
+        // Only the reader typing filters the page. Browser autofill writes into unfocused fields
+        // (for example a saved login email) and must never hide every section.
+        if (document.activeElement !== search) {
+          if (!currentQuery) search.value = '';
+          return;
+        }
         if (event.isComposing) return;
         window.clearTimeout(searchTimer);
         searchTimer = window.setTimeout(() => applySearch(search.value), 140);
@@ -265,7 +271,8 @@
           searchStatus.scrollIntoView({ block: 'nearest', behavior: 'auto' });
         }
       });
-      if (search.value) applySearch(search.value);
+      // Drop any value the browser restored on back/forward navigation; searches are never persisted.
+      search.value = '';
     }
 
     // A shared live region announces copies without changing the page position.

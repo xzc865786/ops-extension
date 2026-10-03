@@ -32,6 +32,10 @@
 .tool-config summary { padding:9px 0; font-size:13px; }
 .tool-config .tool-status { margin:8px 0 0; font-size:13px; color:var(--muted); }
 .tool-config .tool-status.error { color:#8a2d25; }
+/* Keys use a masked text field, not type=password: password managers would otherwise
+   treat the page as a login form and autofill the account email into the search box. */
+.secret-field { -webkit-text-security: disc; font-family: Consolas, "Cascadia Code", monospace; }
+.secret-field::placeholder { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; }
 .role-models { margin:12px 0 0; background:white; }
 .setup-panel > .role-models { margin-top:16px; }
 .role-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px; margin:0 0 16px; }

@@ -1,6 +1,7 @@
 import {newestMatch, parseAvailableModels, validateApiKey} from './ccswitch-setup-core.js';
 import {fillRoleSelects, readRoleSelects, resetRoleSelects} from './claude-roles.js';
 import {TOOLS, buildConfigCmd, buildRollbackCmd} from './quick-config-core.js';
+import {download, downloadUrl, guardClick} from './ui.js';
 
 const byId = id => document.getElementById(id);
 const toolNames = Object.keys(TOOLS);
@@ -24,17 +25,6 @@ function status(id, message, error = false) {
   const element = byId(id);
   element.textContent = message;
   element.classList.toggle('error', error);
-}
-
-function download(text, name) {
-  const url = URL.createObjectURL(new Blob([text], {type: 'application/octet-stream'}));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = name;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
 function checked(boxes) {
@@ -73,11 +63,11 @@ installBoxes.forEach(box => box.addEventListener('change', () => {
   syncToolBlocks();
 }));
 
-byId('download-install').addEventListener('click', async () => {
+guardClick(byId('download-install'), async () => {
   const tools = checked(installBoxes);
   if (!tools.length) {
     status('install-status', '请至少勾选一个要安装的软件。', true);
-    return;
+    return false;
   }
   try {
     const response = await fetch('assets/downloads/huima-install.cmd', {cache: 'no-store'});
@@ -89,7 +79,7 @@ byId('download-install').addEventListener('click', async () => {
     status('install-status', '安装脚本已开始下载。在浏览器的下载列表里找到 huima-install.cmd，双击运行。');
   } catch {
     status('install-status', '生成失败，已改为下载通用版：运行后按窗口提示输入编号选择软件。', true);
-    window.location.href = 'assets/downloads/huima-install.cmd';
+    downloadUrl('assets/downloads/huima-install.cmd', 'huima-install.cmd');
   }
 });
 
@@ -197,7 +187,7 @@ loadButton.addEventListener('click', async () => {
   }
 });
 
-byId('download-config').addEventListener('click', () => {
+guardClick(byId('download-config'), () => {
   try {
     const tools = checked(configBoxes);
     if (!tools.length) throw new Error('请至少勾选一个要配置的软件。');
@@ -216,6 +206,7 @@ byId('download-config').addEventListener('click', () => {
     status('config-status', '配置脚本已开始下载，页面上的 Key 已清空。在下载列表里双击 huima-config.cmd 运行。');
   } catch (error) {
     status('config-status', error.message, true);
+    return false;
   }
 });
 
@@ -226,7 +217,7 @@ byId('clear-config').addEventListener('click', () => {
   status('config-status', '页面上的 Key 已清空。已经下载的脚本不会被删除。');
 });
 
-byId('download-rollback').addEventListener('click', () => {
+guardClick(byId('download-rollback'), () => {
   download(buildRollbackCmd(), 'huima-restore.cmd');
   status('rollback-status', '恢复脚本已开始下载。双击运行，按提示输入 Y 即可。');
 });

@@ -1,5 +1,6 @@
 import {buildImportUrl, getTargetDetails, parseAvailableModels, validateApiKey, validateImportInput} from './ccswitch-setup-core.js';
 import {fillRoleSelects, readRoleSelects, resetRoleSelects} from './claude-roles.js';
+import {download, guardClick} from './ui.js';
 import {buildRollbackCmd} from './codex-setup-core.js';
 
 const byId = id => document.getElementById(id);
@@ -95,7 +96,7 @@ loadButton.addEventListener('click', async () => {
   }
 });
 
-byId('import-open').addEventListener('click', () => {
+guardClick(byId('import-open'), () => {
   try {
     if (!modelSelect.value) throw new Error('请先读取并选择模型。');
     const url = buildImportUrl(validateImportInput({
@@ -107,6 +108,7 @@ byId('import-open').addEventListener('click', () => {
     status('import-status', '已请求打开 CC Switch。浏览器询问时选择“打开”，再在 CC Switch 里核对并确认导入。');
   } catch (error) {
     status('import-status', error.message, true);
+    return false;
   }
 });
 
@@ -116,15 +118,8 @@ byId('import-clear').addEventListener('click', () => {
   status('import-status', '页面上的 Key 已清空。');
 });
 
-byId('download-legacy-rollback').addEventListener('click', () => {
-  const url = URL.createObjectURL(new Blob([buildRollbackCmd()], {type: 'application/octet-stream'}));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'huima-codex-legacy-rollback.cmd';
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
+guardClick(byId('download-legacy-rollback'), () => {
+  download(buildRollbackCmd(), 'huima-codex-legacy-rollback.cmd');
   status('legacy-status', '旧版回滚脚本已开始下载。');
 });
 

@@ -18,7 +18,7 @@
   <a class="skip-link" href="#main-content">跳到正文</a>
   <header class="topbar">
     <a class="brand" href="index.html" aria-label="汇码智能使用手册首页"><img class="brand-logo" src="assets/brand/logo-horizontal.svg" width="168" height="51" alt="汇码智能"><span class="brand-subtitle">使用手册</span></a>
-    <div class="search-box"><label class="sr-only" for="doc-search">搜索本页</label><input id="doc-search" type="search" placeholder="搜索本页：地址、导入、切换、401" autocomplete="off" spellcheck="false"></div>
+    <div class="search-box"><label class="sr-only" for="doc-search">搜索本页</label><input id="doc-search" type="search" placeholder="搜索本页：地址、导入、切换、401" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore></div>
     <div class="topbar-links"><a href="https://api.tysy.top/dashboard">进入控制台 ↗</a></div>
     <button id="menu-toggle" type="button" aria-controls="docs-sidebar" aria-expanded="false" aria-label="展开目录">目录</button>
   </header>
@@ -92,7 +92,7 @@
             <label><input type="radio" name="import-target" value="codex"><span>Codex<small>OpenAI Key</small></span></label>
           </div></fieldset>
           <label class="field-label" for="import-name">2. 在 CC Switch 里显示的名称</label><input id="import-name" value="汇码 - Claude Code" maxlength="60" autocomplete="off">
-          <label class="field-label" for="import-key">3. API Key</label><input id="import-key" type="password" maxlength="2048" autocomplete="off" spellcheck="false" placeholder="粘贴完整 API Key">
+          <label class="field-label" for="import-key">3. API Key</label><input id="import-key" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="粘贴完整 API Key">
           <div class="model-load-actions"><button class="button secondary" id="import-load" type="button">读取可用模型</button></div>
           <label class="field-label" for="import-model">4. 主模型</label><select id="import-model" disabled></select>
           <details class="role-models" id="import-roles"><summary>5. 按角色指定模型（选好主模型后自动填写，可修改）</summary><p class="field-hint">Claude Code 会按任务调用不同角色的模型。分组里没有的角色，会自动用最接近的可用模型代替，避免调用不存在的模型而报错。</p><div class="role-grid"><label for="import-role-fable"><span>Fable<small>最强，处理最难的任务；对应 /model fable</small></span><select id="import-role-fable" disabled></select></label><label for="import-role-opus"><span>Opus<small>复杂任务和规划；对应 /model opus</small></span><select id="import-role-opus" disabled></select></label><label for="import-role-sonnet"><span>Sonnet<small>日常编码主力；对应 /model sonnet</small></span><select id="import-role-sonnet" disabled></select></label><label for="import-role-haiku"><span>Haiku<small>快速小任务，也用于后台生成标题等</small></span><select id="import-role-haiku" disabled></select></label><label for="import-role-subagent"><span>子代理<small>派出去的子任务用哪个模型</small></span><select id="import-role-subagent" disabled></select></label></div></details>
