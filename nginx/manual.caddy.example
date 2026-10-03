@@ -1,0 +1,10 @@
+# Add inside the existing api.tysy.top site block.
+# Keep any Sub2API /docs/batch-image handler before this handler.
+# Remove the old /docs/* handle_path + root + file_server block.
+redir /docs /docs/ 308
+
+# Preserve /docs/ in the upstream URI; do not use handle_path.
+# The Ops frontend sets the manual's cache and security headers.
+handle /docs/* {
+    reverse_proxy 127.0.0.1:8088
+}

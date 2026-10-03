@@ -17,6 +17,7 @@
 
 ## 路径约定
 
+- `/docs/` — 使用手册，与 Ops 前端一起构建、发布；源码在 `frontend/manual/`，见 [使用手册部署说明](docs/使用手册部署说明.md)
 - `/ext/auth/*` — Bootstrap /（登出在 API）
 - `/ext/api/*` — JSON API
 - `/ext/app/*` — Vue SPA（`base: /ext/app/`）

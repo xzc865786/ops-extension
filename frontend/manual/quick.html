@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="汇码新手路线：勾选软件下载一键安装脚本，粘贴 API Key 下载一键配置脚本，双击即可使用 Claude Code、Codex 桌面版和 WorkBuddy。国内网络无需科学上网。">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>新手一键安装和配置 · 汇码智能</title>
+  <link rel="icon" href="assets/brand/favicon.ico" sizes="any">
+  <link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+  <link rel="stylesheet" href="assets/docs.css">
+  <script src="assets/docs.js" defer></script>
+  <script type="module" src="assets/quick.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="汇码智能使用手册首页"><img class="brand-logo" src="assets/brand/logo-horizontal.svg" width="168" height="51" alt="汇码智能"><span class="brand-subtitle">使用手册</span></a>
+    <div class="search-box"><label class="sr-only" for="doc-search">搜索本页</label><input id="doc-search" type="search" placeholder="搜索本页：安装、配置、恢复、报错" autocomplete="off" spellcheck="false"></div>
+    <div class="topbar-links"><a href="https://api.tysy.top/dashboard">进入控制台 ↗</a></div>
+    <button id="menu-toggle" type="button" aria-controls="docs-sidebar" aria-expanded="false" aria-label="展开目录">目录</button>
+  </header>
+  <div class="docs-layout">
+    <aside id="docs-sidebar" aria-label="文档目录">
+      <nav aria-label="手册章节">
+        <p class="nav-label">选择路线</p>
+        <a href="index.html#start">手册首页</a>
+        <a href="quick.html" aria-current="page">新手 · 一键安装和配置</a>
+        <a href="cc-switch.html">进阶 · 用 CC Switch 配置</a>
+        <p class="nav-label">新手路线</p>
+        <a href="#start">四步完成</a>
+        <a href="#prepare">1 准备 API Key</a>
+        <a href="#install">2 一键安装软件</a>
+        <a href="#configure">3 一键配置</a>
+        <a href="#verify">4 发消息测试</a>
+        <p class="nav-label">以后会用到</p>
+        <a href="#change">换 Key 或换模型</a>
+        <a href="#rollback">恢复原来的配置</a>
+        <a href="#faq">常见问题</a>
+        <a href="index.html#contact">联系客服</a>
+      </nav>
+      <div class="sidebar-note">适用 Windows 10 / 11<br>苹果电脑请走<a href="cc-switch.html">进阶路线</a></div>
+    </aside>
+    <main id="main-content" tabindex="-1">
+      <p id="search-status" class="search-status" aria-live="polite" role="status" hidden></p>
+
+      <section class="doc-section hero-section" id="start" data-title="新手 小白 一键 安装 配置 Windows 不需要科学上网">
+        <p class="eyebrow">路线一 · 新手推荐 · Windows</p>
+        <h1>点几下按钮，双击两个文件，<br>就能开始用。</h1>
+        <p class="lead">不需要懂编程，也不需要科学上网。网页帮你生成两个小脚本：一个负责安装软件，一个负责把汇码的地址和 Key 填进软件。</p>
+        <div class="quick-path" aria-label="新手四步">
+          <a href="#prepare"><span>01</span>准备 API Key</a><a href="#install"><span>02</span>一键安装</a><a href="#configure"><span>03</span>一键配置</a><a href="#verify"><span>04</span>发消息测试</a><a href="#faq"><span>?</span>遇到问题</a>
+        </div>
+        <div class="card-grid">
+          <article class="card"><p class="section-kicker">终端里的编程助手</p><h3>Claude Code</h3><p>在黑色命令窗口里对话，能读写你指定文件夹里的文件，适合写代码、改文档。</p></article>
+          <article class="card"><p class="section-kicker">有窗口的编程助手</p><h3>Codex 桌面版</h3><p>OpenAI 出品，像普通软件一样点开使用。装不上时脚本会自动改装命令行版。</p></article>
+          <article class="card"><p class="section-kicker">办公助手</p><h3>WorkBuddy</h3><p>腾讯出品的桌面 AI 助手，适合写作、整理资料等日常办公。</p></article>
+        </div>
+        <div class="notice"><strong>只想用其中一个？</strong>下面勾选时只选那一个就行，不需要全部安装。</div>
+      </section>
+
+      <section class="doc-section" id="prepare" data-title="准备 API Key 密钥 注册 充值 分组 厂商 Anthropic OpenAI">
+        <p class="eyebrow">第 1 步</p><h2>准备好 API Key</h2>
+        <p>还没有账号或 Key？先按手册首页完成<a href="index.html#account">注册登录</a>、<a href="index.html#balance">确认额度</a>和<a href="index.html#api-key">创建 API Key</a>，再回到这里。</p>
+        <div class="table-wrap"><table class="field-table"><caption>不同软件需要的 Key</caption><thead><tr><th scope="col">要用的软件</th><th scope="col">创建 Key 时选的厂商</th></tr></thead><tbody>
+          <tr><th scope="row">Claude Code</th><td>Anthropic（Claude 模型）</td></tr>
+          <tr><th scope="row">Codex</th><td>OpenAI（GPT 模型）</td></tr>
+          <tr><th scope="row">WorkBuddy</th><td>两种都可以</td></tr>
+        </tbody></table></div>
+        <p>不确定也没关系：第 3 步会自动检查 Key 能用哪些模型，不匹配会直接提示你。</p>
+      </section>
+
+      <section class="doc-section" id="install" data-title="安装 下载 脚本 CMD 双击 Node winget 微软商店 Codex 桌面版 WorkBuddy Claude Code 国内镜像">
+        <p class="eyebrow">第 2 步</p><h2>一键安装软件</h2>
+        <p>已经装好的软件可以不勾。脚本只从国内能访问的官方渠道和镜像下载，已经装过的会自动跳过。</p>
+        <div class="setup-panel">
+          <fieldset class="target-fieldset"><legend class="field-label">勾选要安装的软件</legend>
+            <div class="tool-pick">
+              <label><input type="checkbox" name="install-tool" value="claude" checked><span>Claude Code<small>从国内 npm 镜像安装，会顺带装好 Node.js</small></span></label>
+              <label><input type="checkbox" name="install-tool" value="codex" checked><span>Codex 桌面版<small>从微软商店安装；不行就自动改装命令行版</small></span></label>
+              <label><input type="checkbox" name="install-tool" value="workbuddy" checked><span>WorkBuddy<small>腾讯官方安装包，约 150 MB</small></span></label>
+            </div>
+          </fieldset>
+          <div class="setup-actions"><button class="button primary" id="download-install" type="button">下载安装脚本</button></div>
+          <p class="setup-status" id="install-status" role="status" aria-live="polite">安装脚本里没有任何 Key，可以放心保存，以后重装还能再用。</p>
+        </div>
+        <noscript><div class="notice warning">浏览器没有开启 JavaScript。可以下载<a href="assets/downloads/huima-install.cmd" download>通用安装脚本</a>，运行后按窗口提示输入编号选择软件。</div></noscript>
+        <h3>下载以后怎么做</h3>
+        <ol class="steps">
+          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>保留下载的文件</h3><p>浏览器可能提示“此类文件可能会损害你的设备”。这是浏览器对所有脚本文件的通用提醒，点击“保留”即可。</p></div></li>
+          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>双击运行 huima-install.cmd</h3><p>打开浏览器的“下载”列表，双击 <code>huima-install.cmd</code>。如果出现蓝色窗口“Windows 已保护你的电脑”，点击“更多信息”→“仍要运行”。</p></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>需要授权时点“是”</h3><p>安装 Node.js 时 Windows 会弹出授权窗口，点击“是”。其他时候不用操作，看着窗口里的进度等待即可，通常几分钟到半小时。</p></div></li>
+          <li class="step"><span class="step-number">4</span><div class="step-content"><h3>看到“安装结果”就完成了</h3><p>每个软件后面显示“完成”就说明装好了。显示“失败”时，检查网络后重新双击脚本，已装好的会自动跳过。按任意键关闭窗口，继续第 3 步。</p></div></li>
+        </ol>
+        <details><summary>脚本具体会做什么？</summary>
+          <div class="table-wrap"><table class="field-table"><caption>每个软件的安装来源</caption><thead><tr><th scope="col">软件</th><th scope="col">怎么安装</th></tr></thead><tbody>
+            <tr><th scope="row">Claude Code</th><td>先检查 Node.js，没有就从 npmmirror 国内镜像下载官方安装包并校验；再从国内镜像安装 <code>@anthropic-ai/claude-code</code>。</td></tr>
+            <tr><th scope="row">Codex 桌面版</th><td>用 Windows 自带的 winget 从微软商店安装（商店编号 9PLM9XGG6VKS）。失败时打开商店页面，并从国内镜像安装 Codex 命令行版，配置方法相同。</td></tr>
+            <tr><th scope="row">WorkBuddy</th><td>用 winget 安装腾讯官方安装包 Tencent.WorkBuddy。失败时打开 WorkBuddy 官网，由你点击下载安装。</td></tr>
+          </tbody></table></div>
+          <p>脚本不会关闭杀毒软件，不会修改系统安全设置，也不会读取你的文件。安装日志保存在 <code>%LOCALAPPDATA%\HuimaSetup\logs</code>，出问题时可以发给客服。</p>
+        </details>
+        <div class="notice"><strong>WorkBuddy 装好后</strong>需要用它自己的账号登录（按软件提示操作），这和汇码账号是分开的。</div>
+      </section>
+
+      <section class="doc-section" id="configure" data-title="配置 一键配置 脚本 API Key 模型 读取 下载 Claude Code Codex WorkBuddy settings.json config.toml models.json">
+        <p class="eyebrow">第 3 步</p><h2>一键配置：把 Key 填进软件</h2>
+        <p>在下面粘贴 Key、选好模型，下载配置脚本并双击运行，软件就会连上汇码。</p>
+        <div class="setup-panel">
+          <fieldset class="target-fieldset"><legend class="field-label">1. 勾选要配置的软件</legend>
+            <div class="tool-pick">
+              <label><input type="checkbox" name="config-tool" value="claude" checked><span>Claude Code<small>需要 Anthropic 厂商的 Key</small></span></label>
+              <label><input type="checkbox" name="config-tool" value="codex" checked><span>Codex<small>桌面版和命令行版都适用，需要 OpenAI 厂商的 Key</small></span></label>
+              <label><input type="checkbox" name="config-tool" value="workbuddy" checked><span>WorkBuddy<small>两种厂商的 Key 都可以</small></span></label>
+            </div>
+          </fieldset>
+          <label class="field-label" for="quick-key">2. 粘贴你的 API Key</label>
+          <input id="quick-key" type="password" maxlength="2048" autocomplete="off" spellcheck="false" placeholder="在汇码 API 密钥页面点复制图标，粘贴到这里">
+          <p class="field-hint">勾选的软件都会用这把 Key。某个软件要用另一把 Key，在下方它的卡片里展开“用另一把 Key”填写。</p>
+          <div class="model-load-actions"><button class="button secondary" id="load-models" type="button">读取可用模型</button></div>
+          <p class="field-label">3. 确认每个软件的模型</p>
+          <div class="tool-config" id="tool-claude">
+            <h4>Claude Code</h4>
+            <label class="field-hint" for="model-claude">主模型：打开 Claude Code 时默认使用，之后可以用 /model 切换。</label><select id="model-claude" disabled></select>
+            <p class="tool-status" id="status-claude" role="status" aria-live="polite"></p>
+            <details class="role-models" id="roles-claude"><summary>高级：按角色指定模型（已自动选好，一般不用改）</summary><p class="field-hint">Claude Code 会按任务调用不同角色的模型。分组里没有的角色，会自动用最接近的可用模型代替，避免调用不存在的模型而报错。</p><div class="role-grid"><label for="role-claude-fable"><span>Fable<small>最强，处理最难的任务；对应 /model fable</small></span><select id="role-claude-fable" disabled></select></label><label for="role-claude-opus"><span>Opus<small>复杂任务和规划；对应 /model opus</small></span><select id="role-claude-opus" disabled></select></label><label for="role-claude-sonnet"><span>Sonnet<small>日常编码主力；对应 /model sonnet</small></span><select id="role-claude-sonnet" disabled></select></label><label for="role-claude-haiku"><span>Haiku<small>快速小任务，也用于后台生成标题等</small></span><select id="role-claude-haiku" disabled></select></label><label for="role-claude-subagent"><span>子代理<small>派出去的子任务用哪个模型</small></span><select id="role-claude-subagent" disabled></select></label></div></details>
+            <details><summary>用另一把 Key</summary><label class="sr-only" for="key-claude">Claude Code 专用 Key</label><input id="key-claude" type="password" maxlength="2048" autocomplete="off" spellcheck="false" placeholder="只给 Claude Code 用的 Key（可留空）"><p class="field-hint">填写后点上方“读取可用模型”。</p></details>
+          </div>
+          <div class="tool-config" id="tool-codex">
+            <h4>Codex</h4>
+            <label class="sr-only" for="model-codex">Codex 使用的模型</label><select id="model-codex" disabled></select>
+            <p class="tool-status" id="status-codex" role="status" aria-live="polite"></p>
+            <details><summary>用另一把 Key</summary><label class="sr-only" for="key-codex">Codex 专用 Key</label><input id="key-codex" type="password" maxlength="2048" autocomplete="off" spellcheck="false" placeholder="只给 Codex 用的 Key（可留空）"><p class="field-hint">填写后点上方“读取可用模型”。</p></details>
+          </div>
+          <div class="tool-config" id="tool-workbuddy">
+            <h4>WorkBuddy</h4>
+            <label class="sr-only" for="model-workbuddy">WorkBuddy 使用的模型</label><select id="model-workbuddy" disabled></select>
+            <p class="tool-status" id="status-workbuddy" role="status" aria-live="polite"></p>
+            <details><summary>用另一把 Key</summary><label class="sr-only" for="key-workbuddy">WorkBuddy 专用 Key</label><input id="key-workbuddy" type="password" maxlength="2048" autocomplete="off" spellcheck="false" placeholder="只给 WorkBuddy 用的 Key（可留空）"><p class="field-hint">填写后点上方“读取可用模型”。</p></details>
+          </div>
+          <label class="check-row"><input type="checkbox" id="config-consent"><span>我知道下载的配置脚本里有我的完整 Key，只在自己的电脑上运行，不发给别人。</span></label>
+          <div class="setup-actions"><button class="button primary" id="download-config" type="button">下载配置脚本</button><button class="button secondary" id="clear-config" type="button">清空页面上的 Key</button></div>
+          <p class="setup-status" id="config-status" role="status" aria-live="polite">粘贴 Key 后，点击“读取可用模型”。</p>
+        </div>
+        <noscript><div class="notice warning">浏览器没有开启 JavaScript，无法生成配置脚本。请改走<a href="cc-switch.html">进阶路线</a>手动配置。</div></noscript>
+        <p class="caption">点“读取可用模型”时，页面会用你的 Key 向汇码查询模型列表，这一步不产生费用。Key 不会被保存，离开页面自动清空。</p>
+        <h3>下载以后怎么做</h3>
+        <ol class="steps">
+          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>先关掉要配置的软件</h3><p>关闭 Claude Code 的命令窗口、Codex 和 WorkBuddy，避免它们覆盖新配置。</p></div></li>
+          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>双击 huima-config.cmd</h3><p>和安装脚本一样，提示时选“保留”“更多信息 → 仍要运行”。窗口里会列出要配置的软件，确认后输入 <code>Y</code> 并回车。</p></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>看到“配置完成”</h3><p>每个软件后面显示“完成”就好了。最后会问是否删除这个脚本：输入 <code>Y</code> 回车，关闭窗口时它会自动删除，Key 不会留在下载文件夹里。</p></div></li>
+        </ol>
+        <details><summary>配置脚本会改哪些文件？</summary>
+          <div class="table-wrap"><table class="field-table"><caption>写入位置（%USERPROFILE% 是你的用户文件夹）</caption><thead><tr><th scope="col">软件</th><th scope="col">写入的文件和内容</th></tr></thead><tbody>
+            <tr><th scope="row">Claude Code</th><td><code>.claude\settings.json</code>：汇码地址、Key、主模型，以及 Fable / Opus / Sonnet / Haiku / 子代理各角色对应的模型；<code>.claude.json</code>：标记已完成首次引导，打开时不再要求登录 Anthropic 账号。其他设置保持不变。</td></tr>
+            <tr><th scope="row">Codex</th><td><code>.codex\config.toml</code>：添加“汇码”服务商并设为默认；<code>.codex\auth.json</code>：保存 Key（原来的登录信息会先备份）。</td></tr>
+            <tr><th scope="row">WorkBuddy</th><td><code>.workbuddy\models.json</code>：添加汇码自定义模型，保留你已有的其他自定义模型。</td></tr>
+          </tbody></table></div>
+          <p>修改前，原文件会备份到 <code>%USERPROFILE%\.huima\backups</code>。随时可以用<a href="#rollback">恢复脚本</a>还原。备份里可能有你以前的 Key，不要发给别人。</p>
+        </details>
+      </section>
+
+      <section class="doc-section" id="verify" data-title="测试 第一次 发消息 连接成功 使用记录 claude codex workbuddy 终端 PowerShell 练习文件夹">
+        <p class="eyebrow">第 4 步</p><h2>发一条消息，确认已经接通</h2>
+        <p>每个软件发一条短消息测试，再去汇码<a href="https://api.tysy.top/usage">使用记录</a>看到对应的记录，就说明全部完成了。测试消息也会产生少量费用，发一次就够。</p>
+        <div class="copy-row"><span class="copy-value">请只回复四个字：连接成功。</span><button class="copy-button" type="button" aria-label="复制测试消息">复制测试消息</button></div>
+        <h3>Claude Code</h3>
+        <ol class="steps">
+          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>建一个练习文件夹</h3><p>在桌面新建文件夹，例如“AI练习”，不要放重要文件。Claude Code 能读写这个文件夹里的内容。</p></div></li>
+          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>在文件夹里打开命令窗口</h3><p>打开“AI练习”文件夹，点击窗口顶部的地址栏，输入 <code>powershell</code> 并回车，会弹出一个命令窗口。</p></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>输入 claude 并回车</h3><p>第一次会问是否信任这个文件夹，确认是练习文件夹后选择信任（Yes）。然后粘贴测试消息并回车。</p></div></li>
+        </ol>
+        <h3>Codex 桌面版</h3>
+        <p>在开始菜单搜索“Codex”打开，选择练习文件夹，新建对话，粘贴测试消息发送。如果安装时改装成了命令行版，按上面 Claude Code 的方法打开命令窗口，输入 <code>codex</code> 回车即可。</p>
+        <div class="notice warning">如果 Codex 桌面版打开后仍要求登录 ChatGPT 账号，先关掉它，改用命令窗口里的 <code>codex</code>，并<a href="index.html#contact">告诉客服</a>你的 Codex 版本。这种情况不要为了登录去购买 ChatGPT 订阅。</div>
+        <h3>WorkBuddy</h3>
+        <p>打开 WorkBuddy 并登录。在聊天输入框附近的模型下拉框里，选择刚才配置的模型（不要选“Auto”），粘贴测试消息发送。</p>
+        <div class="notice">在模型列表里没找到汇码的模型？先完全退出 WorkBuddy 再打开。还是没有的话，按<a href="cc-switch.html#workbuddy">进阶路线的 WorkBuddy 步骤</a>在设置里手动添加，只需填三项。</div>
+        <div class="notice"><strong>完成标志：</strong>软件正常回复，并且汇码使用记录里能找到这条请求。没有回复或报错时，查看<a href="#faq">常见问题</a>。</div>
+      </section>
+
+      <section class="doc-section" id="change" data-title="换 Key 更换 密钥 换模型 重新配置">
+        <p class="eyebrow">以后会用到</p><h2>换 Key 或换模型</h2>
+        <p>回到<a href="#configure">第 3 步</a>，粘贴新的 Key 或选择新模型，重新下载配置脚本并运行即可。新配置会覆盖旧配置，覆盖前同样会自动备份。</p>
+        <p>只想换其中一个软件，第 3 步只勾选那一个。换下来的旧 Key 如果不再使用，记得到汇码 <a href="https://api.tysy.top/keys">API 密钥页面</a>禁用它。</p>
+      </section>
+
+      <section class="doc-section" id="rollback" data-title="恢复 回退 还原 撤销 备份 原来的配置">
+        <p class="eyebrow">以后会用到</p><h2>恢复原来的配置</h2>
+        <p>想撤销汇码的配置，回到运行配置脚本之前的样子，下载恢复脚本并双击运行。它会还原最近一次配置前的文件；再运行一次，可以继续还原更早的一次。</p>
+        <div class="setup-actions"><button class="button secondary" id="download-rollback" type="button">下载恢复脚本</button></div>
+        <p class="setup-status" id="rollback-status" role="status" aria-live="polite">恢复脚本里没有 Key，可以放心保存。</p>
+        <p>恢复只影响本机软件的设置，不会删除汇码账号里的 Key。要彻底停用某把 Key，请到汇码 <a href="https://api.tysy.top/keys">API 密钥页面</a>禁用。</p>
+      </section>
+
+      <section class="doc-section" id="faq" data-title="常见问题 报错 有害 SmartScreen 一闪而过 授权 winget 微软商店 不是内部或外部命令 登录 401 403 404 杀毒">
+        <p class="eyebrow">遇到问题</p><h2>常见问题</h2>
+        <div class="table-wrap"><table class="field-table"><caption>按出现的现象查找</caption><thead><tr><th scope="col">看到什么</th><th scope="col">怎么处理</th></tr></thead><tbody>
+          <tr><th scope="row">浏览器说文件可能有害</th><td>在下载列表点“保留”。脚本来自本手册页面，内容可以用记事本打开查看。</td></tr>
+          <tr><th scope="row">“Windows 已保护你的电脑”</th><td>点击“更多信息”，再点“仍要运行”。</td></tr>
+          <tr><th scope="row">窗口一闪就没了</th><td>确认下载的是 <code>.cmd</code> 文件，而不是 <code>.txt</code>。请直接双击运行，不要选“以管理员身份运行”，否则配置可能写到别的账户里。仍然闪退时联系客服。</td></tr>
+          <tr><th scope="row">杀毒软件拦截</th><td>选择“允许”或“信任”这个文件，不需要关闭杀毒软件。拿不准时把截图发给客服。</td></tr>
+          <tr><th scope="row">提示没有 winget</th><td>Windows 10 较老的版本可能没有。在微软商店搜索“应用安装程序”并更新，再重新运行安装脚本。Claude Code 不受影响。</td></tr>
+          <tr><th scope="row">Codex 桌面版装不上</th><td>脚本会自动改装命令行版，可以正常使用。想要桌面版，可在打开的微软商店页面点“获取”。</td></tr>
+          <tr><th scope="row">“claude 不是内部或外部命令”</th><td>关闭所有命令窗口，重新打开再试。仍然不行就重新运行安装脚本，查看“安装结果”。</td></tr>
+          <tr><th scope="row">Claude Code 仍要求登录</th><td>确认已运行配置脚本并显示“完成”，然后关闭命令窗口重新打开。还不行把配置脚本窗口的截图发给客服（先遮住 Key）。</td></tr>
+          <tr><th scope="row">401 / Key 无效</th><td>Key 可能复制不完整或已被禁用。到汇码重新复制，回到第 3 步重新生成配置脚本。</td></tr>
+          <tr><th scope="row">403 / 模型不存在</th><td>Key 的分组不支持这个模型。回到第 3 步点“读取可用模型”，从列表里重新选。</td></tr>
+          <tr><th scope="row">余额不足 / 429</th><td>查看账户余额和 Key 的额度限制，暂停反复重试。详见<a href="index.html#troubleshooting">手册首页的排查表</a>。</td></tr>
+        </tbody></table></div>
+        <p>还没解决？按<a href="index.html#contact">求助模板</a>联系客服，附上脚本窗口截图或日志文件夹。截图前遮住 Key。</p>
+      </section>
+
+      <footer class="site-footer"><span>汇码智能 · 新手路线</span><a href="index.html">返回手册首页</a><a href="cc-switch.html">进阶路线</a><a href="#start">回到顶部 ↑</a></footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="汇码智能使用手册：新手一键安装配置 Claude Code、Codex、WorkBuddy，或用 CC Switch 手动接入；含注册、充值、创建 API Key、用量与常见问题。">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>使用手册 · 汇码智能</title>
+  <link rel="icon" href="assets/brand/favicon.ico" sizes="any">
+  <link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+  <link rel="stylesheet" href="assets/docs.css">
+  <script src="assets/docs.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="汇码智能使用手册首页"><img class="brand-logo" src="assets/brand/logo-horizontal.svg" width="168" height="51" alt="汇码智能"><span class="brand-subtitle">使用手册</span></a>
+    <div class="search-box"><label class="sr-only" for="doc-search">搜索本页</label><input id="doc-search" type="search" placeholder="搜索本页：密钥、充值、401" autocomplete="off" spellcheck="false"></div>
+    <div class="topbar-links"><a href="https://api.tysy.top/dashboard">进入控制台 ↗</a></div>
+    <button id="menu-toggle" type="button" aria-controls="docs-sidebar" aria-expanded="false" aria-label="展开目录">目录</button>
+  </header>
+  <div class="docs-layout">
+    <aside id="docs-sidebar" aria-label="文档目录">
+      <nav aria-label="手册章节">
+        <p class="nav-label">选择路线</p>
+        <a href="#start">从这里开始</a>
+        <a href="quick.html">新手 · 一键安装和配置</a>
+        <a href="cc-switch.html">进阶 · 用 CC Switch 配置</a>
+        <p class="nav-label">准备账号和 Key</p>
+        <a href="#account">01 注册与登录</a>
+        <a href="#balance">02 额度与充值</a>
+        <a href="#api-key">03 创建 API Key</a>
+        <p class="nav-label">日常使用</p>
+        <a href="#usage">查看用量与控制消费</a>
+        <a href="#troubleshooting">常见问题与报错</a>
+        <a href="#security">安全使用须知</a>
+        <a href="#contact">联系客服</a>
+      </nav>
+      <div class="sidebar-note">两条路线都要先准备<br>账号、额度和 API Key</div>
+    </aside>
+    <main id="main-content" tabindex="-1">
+      <p id="search-status" class="search-status" aria-live="polite" role="status" hidden></p>
+
+      <section class="doc-section hero-section" id="start" data-title="开始 选择路线 新手 小白 一键安装 进阶 有基础 CC Switch Claude Code Codex WorkBuddy">
+        <p class="eyebrow">汇码智能 · 使用手册</p>
+        <h1>选一条路线，几分钟用上 AI。</h1>
+        <p class="lead">先准备好账号和 API Key，再按自己的情况选路线。没有技术基础也没关系：新手路线全程点按钮、双击文件就能完成，不需要科学上网。</p>
+        <div class="route-cards">
+          <a class="route-card dark" href="quick.html">
+            <span class="route-tag">路线一 · 新手推荐</span>
+            <h3>一键安装，一键配置</h3>
+            <p>适合第一次接触的用户。电脑上还没装软件也没关系。</p>
+            <ul><li>勾选要用的软件，下载安装脚本，双击自动装好</li><li>在网页上粘贴 Key，下载配置脚本，双击就能用</li><li>支持 Claude Code、Codex 桌面版、WorkBuddy（Windows）</li></ul>
+            <span class="route-cta">开始新手路线 →</span>
+          </a>
+          <a class="route-card" href="cc-switch.html">
+            <span class="route-tag">路线二 · 有技术基础</span>
+            <h3>用 CC Switch 自己配置</h3>
+            <p>适合已经装好 Claude Code、Codex 或 WorkBuddy 的用户。</p>
+            <ul><li>下载 CC Switch，用图形界面管理和切换多把 Key</li><li>可一键导入，也可对照参数表手动填写</li><li>Windows、macOS 都适用</li></ul>
+            <span class="route-cta">查看配置参数 →</span>
+          </a>
+        </div>
+        <div class="quick-path" aria-label="接入的五个步骤">
+          <a href="#account"><span>01</span>注册登录</a><a href="#balance"><span>02</span>确认额度</a><a href="#api-key"><span>03</span>创建 Key</a><a href="quick.html"><span>04</span>安装和配置</a><a href="quick.html#verify"><span>05</span>发消息测试</a>
+        </div>
+        <h2>先分清这三个东西</h2>
+        <div class="card-grid">
+          <article class="card"><p class="section-kicker">管理账户</p><h3>网站账号</h3><p>用邮箱和密码登录汇码，查看余额、管理 Key 和使用记录。</p></article>
+          <article class="card"><p class="section-kicker">连接服务</p><h3>API Key</h3><p>网站生成的一串凭证。填进软件后，软件才能调用服务、消耗你的额度。</p></article>
+          <article class="card"><p class="section-kicker">真正使用 AI</p><h3>客户端软件</h3><p>Claude Code、Codex、WorkBuddy 是你用来对话和干活的软件，需要单独安装。</p></article>
+        </div>
+        <div class="notice"><strong>已经有账号和 Key？</strong>直接选上面的路线。已经配置好却报错？查看<a href="#troubleshooting">常见问题</a>。</div>
+      </section>
+
+      <section class="doc-section" id="account" data-title="注册 登录 账户 密码 邮箱 验证码 邀请码">
+        <p class="eyebrow">准备 01</p><h2>注册与登录</h2>
+        <p>准备一个能正常收信的邮箱。已有账号就直接登录，不需要重复注册。</p>
+        <ol class="steps">
+          <li class="step"><span class="step-number" aria-hidden="true">1</span><div class="step-content"><h3>打开注册网址</h3><p>在浏览器最上方的<strong>地址栏</strong>输入 <a href="https://api.tysy.top/register" target="_blank" rel="noopener noreferrer">https://api.tysy.top/register</a>，再按回车。不要输进聊天框。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">2</span><div class="step-content"><h3>填写邮箱和密码</h3><p>输入自己的邮箱，设置密码，再在“确认密码”中输入一次相同密码。建议使用至少 12 位、且不与其他网站重复的密码。页面标注“可选”的邀请码没有就留空。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">3</span><div class="step-content"><h3>完成邮箱验证</h3><p>点击“继续”，按页面提示到邮箱查收验证码。填入最新邮件中的验证码，再点击验证按钮。验证码只填在网站验证页面，不要发给他人。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">4</span><div class="step-content"><h3>进入自己的控制台</h3><p>完成后按页面引导进入控制台；如果返回登录页，用刚才的邮箱和密码登录即可。</p></div></li>
+        </ol>
+        <figure class="figure"><a href="assets/screenshots/register.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开注册页大图"><img class="screenshot-frame" src="assets/screenshots/register.jpg" width="1272" height="716" loading="lazy" alt="汇码注册页：依次填写邮箱、密码、确认密码，可选邀请码，然后点击继续。"></a><figcaption class="caption">图 1 · 注册页实拍。无需填写邀请码时可以留空；点击图片可查看大图。</figcaption></figure>
+        <h3>以后从哪里登录？</h3>
+        <p>打开 <a href="https://api.tysy.top/login" target="_blank" rel="noopener noreferrer">登录页面</a>，填写邮箱和密码。忘记密码时点击“忘记密码？”，按邮件提示重设。</p>
+        <figure class="figure"><a href="assets/screenshots/login.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开登录页大图"><img class="screenshot-frame" src="assets/screenshots/login.jpg" width="1280" height="720" loading="lazy" alt="汇码登录页：邮箱、密码、登录按钮，下方有注册入口，密码框下有忘记密码入口。"></a><figcaption class="caption">图 2 · 登录页实拍。邮箱密码用于登录网站，不是客户端要填的 API 密钥。</figcaption></figure>
+        <div class="notice"><strong>收不到邮件？</strong>先检查邮箱拼写、垃圾邮件和全部邮件。使用最新验证码；等重新发送倒计时结束后再试。持续收不到时联系<a href="#contact">客服</a>，不要反复注册。</div>
+        <details><summary>不会复制、粘贴怎么办？</summary><p>Windows：选中文字，按 Ctrl+C 复制；点击输入框，按 Ctrl+V 粘贴。Mac 使用 Command+C 和 Command+V。手机可以长按文字或输入框，选择“复制”或“粘贴”。</p></details>
+      </section>
+
+      <section class="doc-section" id="balance" data-title="余额 额度 充值 支付 人民币 美元 USD 兑换码 到账">
+        <p class="eyebrow">准备 02</p><h2>确认额度，再开始使用</h2>
+        <p>登录后进入<a href="https://api.tysy.top/dashboard">仪表盘</a>查看余额。注册成功只表示账号已经创建，<strong>不代表一定有可用额度</strong>。</p>
+        <div class="notice"><strong>充值方式</strong>：本次核对时，网站在线支付未开启。如需充值，请先通过网站公开客服 QQ <strong>569229275</strong> 确认办理方式；后续以网站当前入口和公告为准。</div>
+        <ol class="steps">
+          <li class="step"><span class="step-number" aria-hidden="true">1</span><div class="step-content"><h3>先问清楚到账规则</h3><p>确认实付人民币金额、到账站内额度、可用模型、有效期及退款规则，不要只看一个数字就付款。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">2</span><div class="step-content"><h3>核对账号与收款方</h3><p>确认充入的是自己的账号。不要向陌生人在群聊里临时发来的收款码付款，客服核对账号不需要你的密码或 API 密钥。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">3</span><div class="step-content"><h3>回网站核对到账</h3><p>完成后回仪表盘查看余额。未到账时保留凭证，联系原办理客服核查，不要连续重复支付。</p></div></li>
+        </ol>
+        <h3>拿到兑换码怎么用？</h3>
+        <p>进入用户菜单中的<a href="https://api.tysy.top/redeem">兑换</a> → 粘贴完整兑换码 → 核对来源 → 点击“兑换” → 等待成功提示，再查看余额或对应权益。</p>
+        <p>兑换码区分大小写，每个码只能使用一次。兑换码也可能对应其他权益，不一定都是余额。出现“无效”或“已使用”时，联系提供兑换码的客服。</p>
+        <div class="notice warning"><strong>不要混淆三种金额。</strong>实付人民币、站内显示的 $ / USD 额度、密钥“额度限制”不是同一件事。站内显示单位不等于人民币实付金额；给密钥填写限额也不会充值。模型价格、倍率和到账规则以当前页面及本次购买约定为准。</div>
+      </section>
+
+      <section class="doc-section" id="api-key" data-title="API 密钥 Key 创建 复制 名称 厂商 OpenAI Anthropic 分组 限额 禁用">
+        <p class="eyebrow">准备 03</p><h2>创建你的第一把 API Key</h2>
+        <p>密钥就像软件连接服务的钥匙，可以消耗账户额度。请自己保管，不要发布到群聊、截图或公开代码里。</p>
+        <ol class="steps">
+          <li class="step"><span class="step-number" aria-hidden="true">1</span><div class="step-content"><h3>进入“API 密钥”</h3><p>在用户菜单点击<a href="https://api.tysy.top/keys">API 密钥</a>，再点击“创建密钥”。手机屏幕较小时，先点左上角菜单按钮。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">2</span><div class="step-content"><h3>填写名称，选择厂商和分组</h3><p>名称可写“我的电脑”。厂商和分组决定这把 Key 能用哪些模型、哪些软件，见下方对照表。分组也会影响计费，不确定时先问客服。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">3</span><div class="step-content"><h3>按预算设置限额</h3><p>向下滚动弹窗，可以查看“额度限制”和“密钥有效期”。不需要时，不要开启自定义密钥或随意填写 IP 限制。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">4</span><div class="step-content"><h3>创建后复制完整密钥</h3><p>检查厂商、分组和限额，再点击“创建”。回到密钥列表，点击密钥旁的<strong>复制图标</strong>，把完整密钥填入可信客户端的 API Key 栏。</p></div></li>
+        </ol>
+        <div class="card-grid screenshot-grid">
+          <figure class="figure"><a href="assets/screenshots/create-key.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开密钥表单大图"><img class="screenshot-frame" src="assets/screenshots/create-key.jpg" width="410" height="503" loading="lazy" alt="创建密钥弹窗，示例名称我的电脑，厂商选择 OpenAI，分组尚待选择。"></a><figcaption class="caption">图 3 · 表单上半部分。“我的电脑”只是名称示例。截图没有创建或显示真实密钥。</figcaption></figure>
+          <figure class="figure"><a href="assets/screenshots/key-limits.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开额度限制大图"><img class="screenshot-frame" src="assets/screenshots/key-limits.jpg" width="410" height="503" loading="lazy" alt="创建密钥弹窗向下滚动后可见额度限制，并标明 0 等于无限制，下方还有速率限制和密钥有效期。"></a><figcaption class="caption">图 4 · 弹窗向下滚动后能看到限额说明。截图中的空白不是推荐额度。</figcaption></figure>
+        </div>
+        <div class="table-wrap"><table class="field-table"><caption>要用的软件和 Key 的厂商要对应</caption><thead><tr><th scope="col">要用的软件</th><th scope="col">创建 Key 时选的厂商</th></tr></thead><tbody>
+          <tr><th scope="row">Claude Code</th><td>Anthropic（Claude 模型）</td></tr>
+          <tr><th scope="row">Codex</th><td>OpenAI（GPT 模型）</td></tr>
+          <tr><th scope="row">WorkBuddy</th><td>两种都可以，按想用的模型选</td></tr>
+        </tbody></table></div>
+        <p>同时要用 Claude Code 和 Codex，就分别创建两把 Key。配置页面会自动检查每把 Key 能用哪些模型，选错了会提示你。</p>
+        <div class="notice warning"><strong>限额填 0 不是停用。</strong>额度限制留空或填 0 表示不限制，不会增加余额。若要停止使用，请在密钥列表选择“禁用”。限额不能替代日常查看用量，长请求或并发任务仍需留意实际消费。</div>
+        <h3>创建完成，检查这三项</h3>
+        <ul><li>列表中出现你刚设置的名称，状态为“活跃”。</li><li>厂商及分组正确，能使用你需要的模型。</li><li>用复制图标获取完整密钥，不要照着星号或省略号手工输入。</li></ul>
+        <p>Key 准备好以后，回到<a href="#start">选择路线</a>：新手走<a href="quick.html">一键安装和配置</a>，有基础的走 <a href="cc-switch.html">CC Switch 配置</a>。</p>
+      </section>
+
+      <section class="doc-section" id="usage" data-title="用量 使用记录 消费 费用 Token 输入 输出 缓存 倍率 价格">
+        <p class="eyebrow">日常使用</p><h2>看懂用量，控制消费</h2>
+        <p>在<a href="https://api.tysy.top/dashboard">仪表盘</a>看余额与整体用量，在<a href="https://api.tysy.top/usage">使用记录</a>查看具体请求。切换日期、密钥或模型筛选时，注意筛选范围。</p>
+        <div class="table-wrap"><table class="field-table"><caption>常见计费词语</caption><thead><tr><th scope="col">词语</th><th scope="col">简单理解</th></tr></thead><tbody>
+          <tr><th scope="row">输入</th><td>发给模型的内容，可能包括当前问题、历史对话、文件和软件附加说明。</td></tr>
+          <tr><th scope="row">输出</th><td>模型生成的内容；部分模型还可能按规则计入推理用量。</td></tr>
+          <tr><th scope="row">Token</th><td>用于计量内容的单位，不等于汉字数，也不是发消息的次数。</td></tr>
+          <tr><th scope="row">缓存</th><td>某些请求可能使用缓存，读写计费规则可能不同，以当前模型规则和账单为准。</td></tr>
+          <tr><th scope="row">倍率 / 实际消费</th><td>实际扣费取决于模型、分组、输入输出等规则。一个倍率不能直接说明最终人民币价格，也不能直接当作官方价格的折扣。</td></tr>
+        </tbody></table></div>
+        <h3>四个容易做到的小习惯</h3>
+        <ul><li>先用短消息测试，再上传长文章、文件或图片。</li><li>和前文无关的新任务，可以新建会话，减少无关历史。</li><li>开启自动重试、长任务或高推理强度前，先了解费用影响。</li><li>超时后先看使用记录再决定是否重试；没有收到完整回复，不代表请求一定没有被处理。</li></ul>
+      </section>
+
+      <section class="doc-section" id="troubleshooting" data-title="常见问题 错误 报错 401 403 404 429 500 502 503 5xx 超时 无响应 无可用渠道">
+        <p class="eyebrow">问题排查</p><h2>遇到问题，先看这里</h2>
+        <p>先保留报错原文，再按下表检查。错误码只是线索，不一定只有一种原因；反复失败时先停止自动重试。</p>
+        <div class="table-wrap"><table class="field-table"><caption>常见现象与检查方法</caption><thead><tr><th scope="col">看到什么</th><th scope="col">先检查什么</th></tr></thead><tbody>
+          <tr><th scope="row">网站打不开 / 很慢</th><td>检查网址拼写和网络，看看其他网站是否正常。如果浏览器提示证书不安全，停止访问并联系网站方，不要强行绕过。</td></tr>
+          <tr><th scope="row">收不到验证邮件</th><td>核对邮箱，检查垃圾邮件和全部邮件，使用最新验证码。等倒计时结束后再发送。</td></tr>
+          <tr><th scope="row">401 / 密钥无效</th><td>从网站重新复制完整密钥；检查前后空格、填写位置，确认密钥没有被禁用或过期。</td></tr>
+          <tr><th scope="row">403 / 无权限</th><td>核对厂商、密钥分组、目标模型、有效期以及 IP 限制。不确定时联系客服。</td></tr>
+          <tr><th scope="row">404 / 模型不存在</th><td>核对接口类型、Base URL、完整模型 ID，尤其检查是否重复添加 /v1。</td></tr>
+          <tr><th scope="row">余额不足 / 额度耗尽</th><td>同时检查账户余额、密钥额度和有效期。账户有余额，也可能是单把密钥达到限制。</td></tr>
+          <tr><th scope="row">429 / 请求过多</th><td>停止连续重试，减少同时运行的任务并按提示等待。也可能是容量或配额限制，不要直接认定需要充值。</td></tr>
+          <tr><th scope="row">5xx / 超时 / 无可用渠道</th><td>查看<a href="https://api.tysy.top/monitor">渠道状态</a>及网站公告（如有入口）。持续失败时提供出错时间、模型和请求编号。</td></tr>
+          <tr><th scope="row">已付款但未到账</th><td>核对登录账号和约定到账方式，保存付款凭证，联系原办理客服，不要重复支付。</td></tr>
+          <tr><th scope="row">有不认识的消费</th><td>停止相关客户端任务，禁用疑似泄露的密钥，再核对记录并联系客服。不要只改登录密码。</td></tr>
+        </tbody></table></div>
+        <p>还没有解决？复制<a href="#contact">下方求助模板</a>。清楚的报错和时间，通常比“不能用了”更方便定位。</p>
+      </section>
+
+      <section class="doc-section" id="security" data-title="安全 密钥 泄露 密码 隐私 禁用 注册 规则">
+        <p class="eyebrow">保护你的账户</p><h2>安全使用须知</h2>
+        <div class="card-grid">
+          <article class="card"><h3>密钥不公开</h3><p>不发到群聊、公开文档或代码仓库。截图前检查 API Key、邮箱和私人对话。客服也不需要你的密码或验证码。</p></article>
+          <article class="card"><h3>只用可信软件</h3><p>从官方渠道安装。不为接入服务关闭安全软件、系统防护或操作确认。不同设备可以使用不同名称的密钥。</p></article>
+          <article class="card"><h3>异常时先停用</h3><p>在 API 密钥页面禁用疑似泄露的密钥，再创建新密钥并更新可信客户端。只改网站密码不会自动使旧密钥失效。</p></article>
+        </div>
+        <ul><li>发送给 AI 的内容，应去掉不必要的身份证号、银行卡号、公司机密或他人隐私。</li><li>不要批量注册领取额度、转借账号或绕过服务限制。多人或高用量需求请先咨询平台。</li><li>公共电脑使用后退出账号，不保存密码或 API 密钥。</li></ul>
+      </section>
+
+      <section class="doc-section" id="contact" data-title="客服 联系 QQ 求助 帮助 模板">
+        <p class="eyebrow">需要帮助</p><h2>把问题清楚地告诉客服</h2>
+        <p>网站公开客服 QQ：<strong>569229275</strong>。联系前请回网站核对最新联系方式，不要仅凭头像或昵称认定对方身份。</p>
+        <div class="copy-row support-template"><pre class="copy-value">使用的软件及版本：
+电脑或手机系统：
+操作到哪一步：
+出错时间：
+所选模型和分组：
+报错原文：
+请求编号（页面有则填写）：
+已经尝试过什么：
+截图：请先遮住密钥、个人信息和私人对话。</pre><button class="copy-button" type="button" aria-label="复制求助模板">复制求助模板</button></div>
+        <div class="notice warning">不要把完整密钥、登录密码、短信或邮箱验证码发给客服。支付问题只提供核查所需凭证，并遮住无关信息。</div>
+        <p class="caption">价格、模型、支付开关、按钮名称及可用功能可能更新，请以当前网站和平台说明为准。本页不读取或保存你的 Key，也不进行任何真实调用。</p>
+      </section>
+
+      <footer class="site-footer"><span>汇码智能 · 让第一次使用更简单</span><span>手册更新：2026 年 10 月 3 日</span><a href="https://api.tysy.top">返回网站</a><a href="#start">回到顶部 ↑</a></footer>
+    </main>
+  </div>
+</body>
+</html>

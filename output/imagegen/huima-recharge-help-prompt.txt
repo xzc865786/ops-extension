@@ -1,0 +1,17 @@
+Use case: infographic-diagram
+Asset type: downloadable customer payment-help PNG for 汇码 API 服务充值, to be uploaded into the existing site's recharge help-image field.
+Create one polished landscape Chinese infographic, about 1536x1024, crisp and readable at web width 600px. Minimal white and very pale mint background, teal highlights matching a teal-white SaaS dashboard, generous margins, large clear simplified Chinese typography, small flat illustrations of browser payment popup, payment-success check and support ticket. No realistic photos. Three numbered steps arranged horizontally; a prominent teal-outlined notice below. Not an actual screenshot and not a payment instrument.
+Text must be EXACT, do not add extra text:
+Title: "汇码 API 服务充值"
+Subtitle: "支付宝支付指引"
+Step 1 title: "01  完成支付"
+Step 1 text: "在支付宝收银台完成付款"
+Step 2 title: "02  确认到账"
+Step 2 text: "返回本站，查看订单与余额"
+Step 3 title: "03  关闭弹窗"
+Step 3 text: "本站显示支付成功后，可手动关闭支付窗口"
+Notice heading: "已付款但未到账？"
+Notice text: "请勿重复付款。保留订单号与付款记录，提交工单。"
+Footer left: "退款申请请提交工单，由管理员审核处理"
+Footer right: "客服 QQ：2712099934"
+Constraints: no QR code, no fake payment button, no bank account, no real Alipay logo, no invented policy promises, no USD/currency conversion claims, no watermarks, all text accurate and legible. A browser illustration may have a subtle close X but no additional labels. The important close-popup instruction should be the clearest instruction.
