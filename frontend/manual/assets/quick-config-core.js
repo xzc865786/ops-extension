@@ -3,14 +3,15 @@
 // the rollback CMD restores the most recent active backup.
 
 import {validateClaudeRoles} from './ccswitch-setup-core.js';
+import {derive, isSafeConfig} from './manual-config-core.js';
 
 const MODEL_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/;
 export const TOOLS = Object.freeze({
-  claude: {label: 'Claude Code', platform: 'anthropic'},
-  codex: {label: 'Codex', platform: 'openai'},
+  claude: {label: 'Claude Code'},
+  codex: {label: 'Codex'},
   // WorkBuddy only speaks the OpenAI-compatible protocol, so it takes OpenAI-style keys and GPT models.
   // Non-GPT models are filtered out for now; revisit parseAvailableModels when domestic models are added.
-  workbuddy: {label: 'WorkBuddy', platform: 'openai'},
+  workbuddy: {label: 'WorkBuddy'},
 });
 
 export function validateConfigInput(input = {}) {
@@ -111,7 +112,7 @@ function Set-ClaudeCode([string]$Key, [string]$Model, $Roles) {
   if ($envBlock.PSObject.Properties['ANTHROPIC_API_KEY']) { $envBlock.PSObject.Properties.Remove('ANTHROPIC_API_KEY') }
   # The main model goes to the "model" setting so a later /model choice persists; ANTHROPIC_MODEL would override it.
   if ($envBlock.PSObject.Properties['ANTHROPIC_MODEL']) { $envBlock.PSObject.Properties.Remove('ANTHROPIC_MODEL') }
-  Set-Field $envBlock 'ANTHROPIC_BASE_URL' 'https://api.tysy.top'
+  Set-Field $envBlock 'ANTHROPIC_BASE_URL' $script:Settings.site
   Set-Field $envBlock 'ANTHROPIC_AUTH_TOKEN' $Key
   $roleVars = [ordered]@{
     fable = 'ANTHROPIC_DEFAULT_FABLE_MODEL'; opus = 'ANTHROPIC_DEFAULT_OPUS_MODEL'
@@ -199,7 +200,7 @@ function Set-Codex([string]$Key, [string]$Model) {
   $out.Add('')
   $out.Add('[model_providers.huima]')
   $out.Add('name = "汇码"')
-  $out.Add('base_url = "https://api.tysy.top/v1"')
+  $out.Add('base_url = "' + $script:Settings.codex + '"')
   $out.Add('wire_api = "responses"')
   $out.Add('requires_openai_auth = true')
   $out.Add('')
@@ -223,11 +224,13 @@ function Set-WorkBuddy([string]$Key, [string]$Model) {
   $document = Read-JsonFile $path
   $entry = [pscustomobject][ordered]@{
     id = $Model; name = $Model; vendor = 'Custom'
-    url = 'https://api.tysy.top/v1/chat/completions'; apiKey = $Key
-    maxInputTokens = 128000; maxOutputTokens = 8192
-    supportsToolCall = $true; supportsImages = $false; supportsReasoning = $false
+    url = $script:Settings.workbuddy_url; apiKey = $Key
+    maxInputTokens = [int]$script:Settings.workbuddy.max_input_tokens; maxOutputTokens = [int]$script:Settings.workbuddy.max_output_tokens
+    supportsToolCall = [bool]$script:Settings.workbuddy.supports_tool_call
+    supportsImages = [bool]$script:Settings.workbuddy.supports_images
+    supportsReasoning = [bool]$script:Settings.workbuddy.supports_reasoning
   }
-  $isOurs = { param($item) (Test-JsonObject $item) -and $item.PSObject.Properties['url'] -and ([string]$item.url).StartsWith('https://api.tysy.top') }
+  $isOurs = { param($item) (Test-JsonObject $item) -and $item.PSObject.Properties['url'] -and ([string]$item.url).StartsWith($script:Settings.site) }
   # WorkBuddy itself creates models.json as a top-level array ([]) on first launch, so use that shape.
   if ($null -eq $document) {
     $document = @($entry)
@@ -248,14 +251,20 @@ function Set-WorkBuddy([string]$Key, [string]$Model) {
 }
 
 function Main {
-  $payload = ConvertFrom-Json -InputObject ($script:Utf8.GetString([Convert]::FromBase64String('__HUIMA_DATA__')))
+  $data = ConvertFrom-Json -InputObject ($script:Utf8.GetString([Convert]::FromBase64String('__HUIMA_DATA__')))
+  $payload = $data.tools
+  $script:Settings = $data.settings
+  # Defence in depth: the page already validated these, refuse anything that is not a plain https URL.
+  foreach ($url in @($script:Settings.site, $script:Settings.codex, $script:Settings.workbuddy_url)) {
+    if ([string]$url -notmatch '^https://[A-Za-z0-9.-]+(:\d{1,5})?(/[A-Za-z0-9._~/-]*)?$') { throw ('接口地址格式不正确：' + $url) }
+  }
   $names = @($payload.PSObject.Properties.Name)
   $labels = @{ claude = 'Claude Code'; codex = 'Codex'; workbuddy = 'WorkBuddy' }
   Write-Host '========================================================'
   Write-Host '               汇码 · 一键配置'
   Write-Host '========================================================'
   Write-Host ('将配置：' + (($names | ForEach-Object { $labels[$_] }) -join '、'))
-  Write-Host '接口地址：https://api.tysy.top'
+  Write-Host ('接口地址：' + $script:Settings.site)
   Write-Host '改动前会自动备份原文件，之后可用手册里的“恢复脚本”一键还原。'
   Write-Host ''
   Write-Host '请先关闭 Claude Code、Codex 和 WorkBuddy 窗口，再继续。' -ForegroundColor Yellow
@@ -352,9 +361,24 @@ if not "%HUIMA_EXIT%"=="10" exit /b %HUIMA_EXIT%
   return (launcher + powershell.replace(/"\\n"/g, '"`n"')).replace(/\r?\n/g, '\r\n');
 }
 
-export function buildConfigCmd(input) {
+// Settings the generated script needs from the manual configuration (all re-validated before use).
+function scriptSettings(cfg) {
+  if (!isSafeConfig(cfg)) throw new Error('手册配置异常，请刷新页面后重试。');
+  const {site, endpoints} = derive(cfg);
+  const wb = cfg.workbuddy;
+  return {
+    site, codex: endpoints.codex, workbuddy_url: endpoints.workbuddy,
+    workbuddy: {
+      max_input_tokens: wb.max_input_tokens, max_output_tokens: wb.max_output_tokens,
+      supports_tool_call: wb.supports_tool_call, supports_images: wb.supports_images, supports_reasoning: wb.supports_reasoning,
+    },
+  };
+}
+
+export function buildConfigCmd(input, cfg) {
   const tools = validateConfigInput(input);
-  return wrapCmd('汇码一键配置', CORE + CONFIGURE.replace('__HUIMA_DATA__', base64Utf8(JSON.stringify(tools))));
+  const data = {tools, settings: scriptSettings(cfg)};
+  return wrapCmd('汇码一键配置', CORE + CONFIGURE.replace('__HUIMA_DATA__', base64Utf8(JSON.stringify(data))));
 }
 
 export function buildRollbackCmd() {

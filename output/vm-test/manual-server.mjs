@@ -2,7 +2,7 @@
 // Serves frontend/manual at /docs/ with the same headers as frontend/nginx.conf, and forwards
 // /v1/* to https://api.tysy.top so "读取可用模型" works. Nothing is logged except method, path and status.
 // Run:  node output/vm-test/manual-server.mjs   (listens on 0.0.0.0:18089)
-import {createServer} from 'node:http';
+import {createServer, request as httpRequest} from 'node:http';
 import {request} from 'node:https';
 import {readFile, stat} from 'node:fs/promises';
 import {extname, join, normalize, resolve, sep} from 'node:path';
@@ -40,6 +40,18 @@ function proxy(req, res) {
   req.pipe(upstream);
 }
 
+// Optional: OPS_BACKEND=http://127.0.0.1:8090 forwards /ext/* to a local Ops backend (manual config API).
+function proxyOps(req, res) {
+  const target = new URL(process.env.OPS_BACKEND);
+  const upstream = httpRequest({host: target.hostname, port: target.port, method: req.method, path: req.url, headers: req.headers}, response => {
+    res.writeHead(response.statusCode, response.headers);
+    response.pipe(res);
+    console.log(`${req.method} ${req.url.split('?')[0]} -> ${response.statusCode} (ops)`);
+  });
+  upstream.on('error', error => send(res, 502, `ops backend error: ${error.message}`));
+  req.pipe(upstream);
+}
+
 async function serveDoc(req, res, pathname) {
   let relative = decodeURIComponent(pathname.slice('/docs/'.length)) || 'index.html';
   if (relative.endsWith('/')) relative += 'index.html';
@@ -67,6 +79,7 @@ createServer((req, res) => {
   const {pathname} = new URL(req.url, 'http://localhost');
   if (pathname === '/' || pathname === '/docs') return send(res, 308, '', {Location: '/docs/'});
   if (pathname.startsWith('/v1/')) return proxy(req, res);
+  if (pathname.startsWith('/ext/') && process.env.OPS_BACKEND) return proxyOps(req, res);
   if (pathname.startsWith('/docs/')) return serveDoc(req, res, pathname);
   if (pathname === '/vm/setup-ssh.ps1') {
     // Only this one file from output/vm-test is exposed: the VM fetches it with `irm ... | iex`.

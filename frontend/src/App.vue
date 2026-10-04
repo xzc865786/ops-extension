@@ -35,6 +35,7 @@ async function handleLogout() {
             <RouterLink class="nav-link" to="/admin/expenses">报账管理</RouterLink>
             <RouterLink class="nav-link" to="/admin/suppliers">主数据</RouterLink>
             <RouterLink class="nav-link" to="/admin/reports">费用报表</RouterLink>
+            <RouterLink class="nav-link" to="/admin/manual">手册配置</RouterLink>
           </template>
         </nav>
       </div>

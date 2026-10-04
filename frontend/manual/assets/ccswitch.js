@@ -2,6 +2,11 @@ import {buildImportUrl, getTargetDetails, parseAvailableModels, recommendModel, 
 import {fillRoleSelects, readRoleSelects, resetRoleSelects} from './claude-roles.js';
 import {download, guardClick} from './ui.js';
 import {buildRollbackCmd} from './codex-setup-core.js';
+import {manualConfigReady} from './manual-config.js';
+
+// Admin-editable endpoints and model rules; null only if even the bundled defaults failed to load.
+const cfg = await manualConfigReady.catch(() => null);
+const CONFIG_ERROR = '手册配置加载失败，请刷新页面后重试。';
 
 const byId = id => document.getElementById(id);
 const targets = Array.from(document.querySelectorAll('input[name="import-target"]'));
@@ -15,7 +20,7 @@ let lastModelIds = [];
 
 // Role suggestions depend on the main model (it is the fallback for roles the group lacks).
 modelSelect.addEventListener('change', () => {
-  if (selectedTarget() === 'claude' && modelSelect.value) fillRoleSelects('import-role-', lastModelIds, modelSelect.value);
+  if (selectedTarget() === 'claude' && modelSelect.value && cfg) fillRoleSelects('import-role-', lastModelIds, modelSelect.value, cfg);
 });
 
 function status(id, message, error = false) {
@@ -40,7 +45,7 @@ function resetModels(message = '先粘贴 Key，再点击“读取可用模型�
 
 function updateTarget() {
   const target = selectedTarget();
-  const details = getTargetDetails(target);
+  const details = cfg ? getTargetDetails(target, cfg) : {label: target === 'codex' ? 'Codex' : 'Claude Code', endpoint: ''};
   const autoName = `汇码 - ${details.label}`;
   if (nameInput.value === previousAutoName || !nameInput.value.trim()) nameInput.value = autoName;
   previousAutoName = autoName;
@@ -76,12 +81,13 @@ loadButton.addEventListener('click', async () => {
     if (response.status === 403) throw new Error('这把 Key 无权读取模型，请检查分组和状态。');
     if (!response.ok) throw new Error(`模型读取失败（HTTP ${response.status}），请稍后重试。`);
     const payload = await response.json().catch(() => { throw new Error('模型接口返回格式不正确，请稍后重试。'); });
-    const models = parseAvailableModels(payload, getTargetDetails(target).platform);
-    if (!models.length) throw new Error(`这把 Key 没有可用于 ${getTargetDetails(target).label} 的模型，请检查分组。`);
+    if (!cfg) throw new Error(CONFIG_ERROR);
+    const models = parseAvailableModels(payload, target, cfg);
+    if (!models.length) throw new Error(`这把 Key 没有可用于 ${getTargetDetails(target, cfg).label} 的模型，请检查分组。`);
     if (lookup !== controller || keyInput.value !== key || selectedTarget() !== target) return;
     lastModelIds = models.map(model => model.id);
     // Codex gets a default (gpt-6.1-sol, else gpt-6-luna); Claude Code users pick their own main model.
-    const preferred = target === 'codex' ? recommendModel(lastModelIds, 'codex') : '';
+    const preferred = target === 'codex' ? recommendModel(lastModelIds, 'codex', cfg) : '';
     modelSelect.replaceChildren(new Option('请选择模型', ''), ...models.map(({id, label}) =>
       new Option(id === preferred ? `${label}（推荐）` : label, id, false, id === preferred)));
     modelSelect.disabled = false;
@@ -102,10 +108,11 @@ loadButton.addEventListener('click', async () => {
 guardClick(byId('import-open'), () => {
   try {
     if (!modelSelect.value) throw new Error('请先读取并选择模型。');
+    if (!cfg) throw new Error(CONFIG_ERROR);
     const url = buildImportUrl(validateImportInput({
       target: selectedTarget(), name: nameInput.value, apiKey: keyInput.value, model: modelSelect.value,
       roles: selectedTarget() === 'claude' ? readRoleSelects('import-role-') : {},
-    }));
+    }), cfg);
     // The browser hands the link to the installed CC Switch; nothing is sent to a server.
     window.location.href = url;
     status('import-status', '已请求打开 CC Switch。浏览器询问时选择“打开”，再在 CC Switch 里核对并确认导入。');

@@ -22,10 +22,27 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$script:Registry = 'https://registry.npmmirror.com'
-$script:OfficialRegistry = 'https://registry.npmjs.org'
-$script:NodeMinimum = 22
-$script:NodeLts = 24
+function Get-Setting([string]$Name, [string]$Default, [string]$Pattern) {
+    # The manual page writes admin-configured values as `set "NAME=value"` lines at the top of this file.
+    # Anything missing or not matching the expected format falls back to the built-in default.
+    $value = [Environment]::GetEnvironmentVariable($Name)
+    if ($value -and $value -cmatch $Pattern) { return $value }
+    return $Default
+}
+$script:UrlPattern = '^https://[A-Za-z0-9.-]+(:\d{1,5})?(/[A-Za-z0-9._~/-]*)?$'
+$script:PackagePattern = '^(@[a-z0-9][a-z0-9._-]{0,100}/)?[a-z0-9][a-z0-9._-]{0,100}$'
+$script:Registry = Get-Setting 'HUIMA_NPM_REGISTRY' 'https://registry.npmmirror.com' $script:UrlPattern
+$script:OfficialRegistry = Get-Setting 'HUIMA_NPM_REGISTRY_FALLBACK' 'https://registry.npmjs.org' $script:UrlPattern
+$script:NodeMirror = Get-Setting 'HUIMA_NODE_MIRROR' 'https://registry.npmmirror.com/-/binary/node' $script:UrlPattern
+$script:NodeMinimum = [int](Get-Setting 'HUIMA_NODE_MIN' '22' '^\d{2}$')
+$script:NodeLts = [int](Get-Setting 'HUIMA_NODE_LTS' '24' '^\d{2}$')
+if ($script:NodeMinimum -gt $script:NodeLts) { $script:NodeMinimum = $script:NodeLts }
+$script:ClaudePackage = Get-Setting 'HUIMA_CLAUDE_PACKAGE' '@anthropic-ai/claude-code' $script:PackagePattern
+$script:CodexPackage = Get-Setting 'HUIMA_CODEX_PACKAGE' '@openai/codex' $script:PackagePattern
+$script:CodexStoreId = Get-Setting 'HUIMA_CODEX_STORE_ID' '9PLM9XGG6VKS' '^[A-Z0-9]{12}$'
+$script:WorkBuddyWingetId = Get-Setting 'HUIMA_WORKBUDDY_WINGET_ID' 'Tencent.WorkBuddy' '^[A-Za-z0-9][A-Za-z0-9-]{0,63}(\.[A-Za-z0-9][A-Za-z0-9-]{0,63}){1,3}$'
+$script:WorkBuddySite = Get-Setting 'HUIMA_WORKBUDDY_SITE' 'https://www.workbuddy.cn/' $script:UrlPattern
+$script:WorkBuddySizeMb = Get-Setting 'HUIMA_WORKBUDDY_SIZE_MB' '500' '^\d{1,5}$'
 $script:Npm = $null
 $script:Prefix = $null
 $script:WorkDir = $null
@@ -136,7 +153,7 @@ function Get-Download([string]$Url, [string]$Destination, [int]$Timeout = 240) {
 
 function Get-NodeInstaller([string]$Architecture) {
     # Read index.json: mirror latest-v24.x aliases can lag behind actual releases.
-    foreach ($base in @('https://registry.npmmirror.com/-/binary/node', 'https://nodejs.org/dist')) {
+    foreach ($base in @($script:NodeMirror, 'https://nodejs.org/dist')) {
         try {
             $index = Join-Path $script:WorkDir 'node-index.json'
             Get-Download "$base/index.json" $index 40
@@ -285,7 +302,7 @@ function Install-Tool([string]$Command, [string]$Package, [string]$Title) {
             if ($source.Direct) {
                 Write-Host '  本次尝试直连，不修改原有代理设置。'
                 # npm 10 treats '*' literally here; explicit domains work on npm 10/11.
-                $arguments += '--noproxy=npmmirror.com,npmjs.org'
+                $arguments += '--noproxy=' + ([Uri]$script:Registry).Host + ',' + ([Uri]$script:OfficialRegistry).Host
             }
             Invoke-Npm $arguments
             Write-ToolLauncher $Command $Package
@@ -322,7 +339,7 @@ function Test-WingetSuccess([int]$Code) {
 function Install-ClaudeCode([string]$Architecture) {
     try {
         Initialize-Npm $Architecture
-        $script:Results['Claude Code'] = if (Install-Tool 'claude' '@anthropic-ai/claude-code' 'Claude Code') { 'ok' } else { 'fail' }
+        $script:Results['Claude Code'] = if (Install-Tool 'claude' $script:ClaudePackage 'Claude Code') { 'ok' } else { 'fail' }
     } catch {
         Write-Host "  Claude Code 未安装：$($_.Exception.Message)" -ForegroundColor Red
         $script:Results['Claude Code'] = 'fail'
@@ -333,7 +350,7 @@ function Install-CodexDesktop([string]$Architecture) {
     Write-Step '安装 Codex 桌面版（微软商店）'
     if ($script:Winget) {
         Write-Host '  正在通过微软商店安装，首次可能需要几分钟。'
-        $code = Invoke-Winget @('install', '--id', '9PLM9XGG6VKS', '--source', 'msstore', '--exact',
+        $code = Invoke-Winget @('install', '--id', $script:CodexStoreId, '--source', 'msstore', '--exact',
             '--accept-package-agreements', '--accept-source-agreements')
         if (Test-WingetSuccess $code) {
             Write-Host '  Codex 桌面版已安装。在开始菜单搜索“Codex”即可打开。' -ForegroundColor Green
@@ -345,12 +362,12 @@ function Install-CodexDesktop([string]$Architecture) {
         Write-Host '  这台电脑没有 winget（应用安装程序），无法自动安装桌面版。' -ForegroundColor Yellow
     }
     $script:Results['Codex 桌面版'] = 'fail'
-    try { Start-Process 'ms-windows-store://pdp/?ProductId=9PLM9XGG6VKS' } catch { }
+    try { Start-Process ('ms-windows-store://pdp/?ProductId=' + $script:CodexStoreId) } catch { }
     Write-Host '  已尝试打开微软商店的 Codex 页面，稍后可以在那里点“获取”手动安装。'
     Write-Host '  现在先改装 Codex 命令行版，配置方法相同，在终端里使用。'
     try {
         Initialize-Npm $Architecture
-        $script:Results['Codex 命令行版'] = if (Install-Tool 'codex' '@openai/codex' 'Codex 命令行版') { 'ok' } else { 'fail' }
+        $script:Results['Codex 命令行版'] = if (Install-Tool 'codex' $script:CodexPackage 'Codex 命令行版') { 'ok' } else { 'fail' }
     } catch {
         Write-Host "  Codex 命令行版未安装：$($_.Exception.Message)" -ForegroundColor Red
         $script:Results['Codex 命令行版'] = 'fail'
@@ -360,8 +377,8 @@ function Install-CodexDesktop([string]$Architecture) {
 function Install-WorkBuddy {
     Write-Step '安装 WorkBuddy（腾讯官方安装包）'
     if ($script:Winget) {
-        Write-Host '  正在下载 WorkBuddy 安装包（约 500 MB），请耐心等待。'
-        $code = Invoke-Winget @('install', '--id', 'Tencent.WorkBuddy', '--source', 'winget', '--exact',
+        Write-Host ('  正在下载 WorkBuddy 安装包（约 ' + $script:WorkBuddySizeMb + ' MB），请耐心等待。')
+        $code = Invoke-Winget @('install', '--id', $script:WorkBuddyWingetId, '--source', 'winget', '--exact',
             '--accept-package-agreements', '--accept-source-agreements')
         if (Test-WingetSuccess $code) {
             Write-Host '  WorkBuddy 已安装。在开始菜单或桌面找到 WorkBuddy 打开，并按提示登录。' -ForegroundColor Green
@@ -370,7 +387,7 @@ function Install-WorkBuddy {
         }
         Write-Host "  自动安装未成功（代码 $code）。" -ForegroundColor Yellow
     }
-    try { Start-Process 'https://www.workbuddy.cn/' } catch { }
+    try { Start-Process $script:WorkBuddySite } catch { }
     Write-Host '  已打开 WorkBuddy 官网：点击“下载”，再双击下载好的安装包完成安装。'
     $script:Results['WorkBuddy'] = 'manual'
 }

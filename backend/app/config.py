@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     minio_public_endpoint: str | None = None  # host:port
     minio_public_url: str | None = None  # e.g. https://files.example.com
     attachment_max_bytes: int = 20 * 1024 * 1024
+    # Installers and archives offered for download from the manual (admin upload only).
+    manual_file_max_bytes: int = 100 * 1024 * 1024
     cors_origins: str = ""
     log_level: str = "INFO"
     # Dev-only: skip Sub2API and accept X-Dev-User JSON header

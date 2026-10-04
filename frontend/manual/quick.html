@@ -19,7 +19,7 @@
   <header class="topbar">
     <a class="brand" href="index.html" aria-label="汇码智能使用手册首页"><img class="brand-logo" src="assets/brand/logo-horizontal.svg" width="168" height="51" alt="汇码智能"><span class="brand-subtitle">使用手册</span></a>
     <div class="search-box"><label class="sr-only" for="doc-search">搜索本页</label><input id="doc-search" type="search" placeholder="搜索本页：安装、配置、恢复、报错" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore></div>
-    <div class="topbar-links"><a href="https://api.tysy.top/dashboard">进入控制台 ↗</a></div>
+    <div class="topbar-links"><a href="https://api.tysy.top/dashboard" data-cfg-href="/dashboard">进入控制台 ↗</a></div>
     <button id="menu-toggle" type="button" aria-controls="docs-sidebar" aria-expanded="false" aria-label="展开目录">目录</button>
   </header>
   <div class="docs-layout">
@@ -80,7 +80,7 @@
             <div class="tool-pick">
               <label><input type="checkbox" name="install-tool" value="claude" checked><span>Claude Code<small>从国内 npm 镜像安装，会顺带装好 Node.js</small></span></label>
               <label><input type="checkbox" name="install-tool" value="codex" checked><span>Codex 桌面版<small>从微软商店安装；不行就自动改装命令行版</small></span></label>
-              <label><input type="checkbox" name="install-tool" value="workbuddy" checked><span>WorkBuddy<small>腾讯官方安装包，约 500 MB</small></span></label>
+              <label><input type="checkbox" name="install-tool" value="workbuddy" checked><span>WorkBuddy<small>腾讯官方安装包，约 <span data-cfg="install.workbuddy_size_mb">500</span> MB</small></span></label>
             </div>
           </fieldset>
           <div class="setup-actions"><button class="button primary" id="download-install" type="button">下载安装脚本</button></div>
@@ -96,9 +96,9 @@
         </ol>
         <details><summary>脚本具体会做什么？</summary>
           <div class="table-wrap"><table class="field-table"><caption>每个软件的安装来源</caption><thead><tr><th scope="col">软件</th><th scope="col">怎么安装</th></tr></thead><tbody>
-            <tr><th scope="row">Claude Code</th><td>先检查 Node.js，没有就从 npmmirror 国内镜像下载官方安装包并校验；再从国内镜像安装 <code>@anthropic-ai/claude-code</code>。</td></tr>
-            <tr><th scope="row">Codex 桌面版</th><td>用 Windows 自带的 winget 从微软商店安装（商店编号 9PLM9XGG6VKS）。失败时打开商店页面，并从国内镜像安装 Codex 命令行版，配置方法相同。</td></tr>
-            <tr><th scope="row">WorkBuddy</th><td>用 winget 安装腾讯官方安装包 Tencent.WorkBuddy。失败时打开 WorkBuddy 官网，由你点击下载安装。</td></tr>
+            <tr><th scope="row">Claude Code</th><td>先检查 Node.js，没有就从 npmmirror 国内镜像下载官方安装包并校验；再从国内镜像安装 <code data-cfg="install.claude_package">@anthropic-ai/claude-code</code>。</td></tr>
+            <tr><th scope="row">Codex 桌面版</th><td>用 Windows 自带的 winget 从微软商店安装（商店编号 <span data-cfg="install.codex_store_id">9PLM9XGG6VKS</span>）。失败时打开商店页面，并从国内镜像安装 Codex 命令行版，配置方法相同。</td></tr>
+            <tr><th scope="row">WorkBuddy</th><td>用 winget 安装腾讯官方安装包 <span data-cfg="install.workbuddy_winget_id">Tencent.WorkBuddy</span>。失败时打开 WorkBuddy 官网，由你点击下载安装。</td></tr>
           </tbody></table></div>
           <p>脚本不会关闭杀毒软件，不会修改系统安全设置，也不会读取你的文件。安装日志保存在 <code>%LOCALAPPDATA%\HuimaSetup\logs</code>，出问题时可以发给客服。</p>
         </details>
@@ -162,7 +162,7 @@
 
       <section class="doc-section" id="verify" data-title="测试 第一次 发消息 连接成功 使用记录 claude codex workbuddy 终端 cmd 命令窗口 练习文件夹">
         <p class="eyebrow">第 4 步</p><h2>发一条消息，确认已经接通</h2>
-        <p>每个软件发一条短消息测试，再去汇码<a href="https://api.tysy.top/usage">使用记录</a>看到对应的记录，就说明全部完成了。测试消息也会产生少量费用，发一次就够。</p>
+        <p>每个软件发一条短消息测试，再去汇码<a href="https://api.tysy.top/usage" data-cfg-href="/usage">使用记录</a>看到对应的记录，就说明全部完成了。测试消息也会产生少量费用，发一次就够。</p>
         <div class="copy-row"><span class="copy-value">请只回复四个字：连接成功。</span><button class="copy-button" type="button" aria-label="复制测试消息">复制测试消息</button></div>
         <h3>Claude Code</h3>
         <ol class="steps">
@@ -183,7 +183,7 @@
       <section class="doc-section" id="change" data-title="换 Key 更换 密钥 换模型 重新配置">
         <p class="eyebrow">以后会用到</p><h2>换 Key 或换模型</h2>
         <p>回到<a href="#configure">第 3 步</a>，粘贴新的 Key 或选择新模型，重新下载配置脚本并运行即可。新配置会覆盖旧配置，覆盖前同样会自动备份。</p>
-        <p>只想换其中一个软件，第 3 步只勾选那一个。换下来的旧 Key 如果不再使用，记得到汇码 <a href="https://api.tysy.top/keys">API 密钥页面</a>禁用它。</p>
+        <p>只想换其中一个软件，第 3 步只勾选那一个。换下来的旧 Key 如果不再使用，记得到汇码 <a href="https://api.tysy.top/keys" data-cfg-href="/keys">API 密钥页面</a>禁用它。</p>
       </section>
 
       <section class="doc-section" id="rollback" data-title="恢复 回退 还原 撤销 备份 原来的配置">
@@ -191,7 +191,7 @@
         <p>想撤销汇码的配置，回到运行配置脚本之前的样子，下载恢复脚本并双击运行。它会还原最近一次配置前的文件；再运行一次，可以继续还原更早的一次。</p>
         <div class="setup-actions"><button class="button secondary" id="download-rollback" type="button">下载恢复脚本</button></div>
         <p class="setup-status" id="rollback-status" role="status" aria-live="polite">恢复脚本里没有 Key，可以放心保存。</p>
-        <p>恢复只影响本机软件的设置，不会删除汇码账号里的 Key。要彻底停用某把 Key，请到汇码 <a href="https://api.tysy.top/keys">API 密钥页面</a>禁用。</p>
+        <p>恢复只影响本机软件的设置，不会删除汇码账号里的 Key。要彻底停用某把 Key，请到汇码 <a href="https://api.tysy.top/keys" data-cfg-href="/keys">API 密钥页面</a>禁用。</p>
       </section>
 
       <section class="doc-section" id="faq" data-title="常见问题 报错 有害 SmartScreen 一闪而过 授权 winget 微软商店 不是内部或外部命令 登录 401 403 404 杀毒">

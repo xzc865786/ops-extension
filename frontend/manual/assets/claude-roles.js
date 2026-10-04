@@ -12,8 +12,8 @@ export function resetRoleSelects(prefix) {
   }
 }
 
-export function fillRoleSelects(prefix, ids, main) {
-  const suggested = suggestClaudeRoles(ids, main);
+export function fillRoleSelects(prefix, ids, main, cfg) {
+  const suggested = suggestClaudeRoles(ids, main, cfg);
   for (const role of ROLES) {
     const element = select(prefix, role);
     const options = ids.map(id => new Option(id, id));

@@ -9,6 +9,7 @@
 | Auth Bridge | Bootstrap 用 Sub2API `GET /api/v1/auth/me`（字段 `data.id`）签发 HttpOnly Session（`Path=/ext`） |
 | 工单 | 用户建单（固定 P2）/回复/关单/附件；管理员认领·释放·接管·内部备注·改状态/分类/优先级 |
 | 报账 | 仅 admin；供应商/成本中心/付款账户；公司直付 vs 个人垫付；允许申请人=审批人；分次付款、完整发票信息和附件 |
+| 手册配置 | 仅 admin；在后台修改使用手册的推荐模型与过滤规则、Claude 角色映射、安装来源、WorkBuddy 参数、CC Switch 下载（含安装包上传）、站点地址、客服 QQ、公告；保存即生效，带版本历史、对比与回滚 |
 | 报表 | 按费用发生日期区间筛选（本月/上月/本季度/上季度/本年/上年/近 12 个月快捷选项或自选区间）；按币种分别展示月度、分类/供应商/成本中心、付款和发票统计；明细与汇总 CSV/Excel |
 
 ## 站点首页
@@ -111,6 +112,7 @@ DEV_AUTH_BYPASS=true ./scripts/smoke_test.sh
 | 工单管理 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/tickets` |
 | 报账管理 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/expenses` |
 | 费用报表 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/reports` |
+| 手册配置 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/manual` |
 
 建议 `hide_open_button=true`。iframe 会自动追加 `user_id`/`token`/`theme`/`lang`/`ui_mode`；Bootstrap 校验后 302 到干净 URL（无 token）。**菜单必须指向 bootstrap**（不要直链 `/ext/app/...`），以便无入库 token 时仍能刷新身份快照与 Session。
 

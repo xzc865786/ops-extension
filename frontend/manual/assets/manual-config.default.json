@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "updated_on": "2026-10-03",
+  "site": {
+    "url": "https://api.tysy.top"
+  },
+  "contact": {
+    "qq": "569229275"
+  },
+  "announcement": {
+    "enabled": false,
+    "level": "info",
+    "text": ""
+  },
+  "models": {
+    "claude": {
+      "include": ["claude*"],
+      "exclude": [],
+      "recommend": ["*sonnet*", "*opus*"]
+    },
+    "codex": {
+      "include": ["gpt*", "o1*", "o3*", "o4*", "chatgpt-*"],
+      "exclude": [],
+      "recommend": ["gpt-6.1-sol", "gpt6.1-sol", "gpt-6-luna", "gpt6-luna", "*codex*", "gpt-5*"]
+    },
+    "workbuddy": {
+      "include": ["gpt*", "o1*", "o3*", "o4*", "chatgpt-*"],
+      "exclude": [],
+      "recommend": ["gpt-6.1-sol", "gpt6.1-sol", "gpt-6-luna", "gpt6-luna", "gpt-5*"]
+    }
+  },
+  "claude_roles": {
+    "fable": ["*fable*", "*opus*"],
+    "opus": ["*opus*", "*fable*"],
+    "sonnet": ["*sonnet*"],
+    "haiku": ["*haiku*", "*sonnet*"],
+    "subagent": []
+  },
+  "workbuddy": {
+    "max_input_tokens": 128000,
+    "max_output_tokens": 8192,
+    "supports_tool_call": true,
+    "supports_images": false,
+    "supports_reasoning": false
+  },
+  "install": {
+    "npm_registry": "https://registry.npmmirror.com",
+    "npm_registry_fallback": "https://registry.npmjs.org",
+    "node_mirror": "https://registry.npmmirror.com/-/binary/node",
+    "node_min_major": 22,
+    "node_lts_major": 24,
+    "claude_package": "@anthropic-ai/claude-code",
+    "codex_package": "@openai/codex",
+    "codex_store_id": "9PLM9XGG6VKS",
+    "workbuddy_winget_id": "Tencent.WorkBuddy",
+    "workbuddy_site": "https://www.workbuddy.cn/",
+    "workbuddy_size_mb": 500
+  },
+  "ccswitch": {
+    "version": "3.20.4",
+    "windows": {
+      "source": "url",
+      "file_id": null,
+      "url": "assets/downloads/CC-Switch-v3.20.4-Windows.msi"
+    },
+    "releases_url": "https://github.com/farion1231/cc-switch/releases/latest"
+  }
+}

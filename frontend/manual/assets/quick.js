@@ -2,6 +2,11 @@ import {parseAvailableModels, recommendModel, validateApiKey} from './ccswitch-s
 import {fillRoleSelects, readRoleSelects, resetRoleSelects} from './claude-roles.js';
 import {TOOLS, buildConfigCmd, buildRollbackCmd} from './quick-config-core.js';
 import {download, downloadUrl, guardClick} from './ui.js';
+import {manualConfigReady} from './manual-config.js';
+
+// Admin-editable settings (models, install sources, endpoints); null only if even the bundled defaults failed.
+const cfg = await manualConfigReady.catch(() => null);
+const CONFIG_ERROR = '手册配置加载失败，请刷新页面后重试。';
 
 const byId = id => document.getElementById(id);
 const toolNames = Object.keys(TOOLS);
@@ -59,6 +64,30 @@ function syncToolBlocks() {
 }
 
 // --- Step 2: install script -------------------------------------------------
+// Install sources from the configuration become `set` lines that huima-install.cmd reads (and re-validates).
+function installSettingLines(config) {
+  const install = config.install;
+  const values = {
+    HUIMA_NPM_REGISTRY: install.npm_registry,
+    HUIMA_NPM_REGISTRY_FALLBACK: install.npm_registry_fallback,
+    HUIMA_NODE_MIRROR: install.node_mirror,
+    HUIMA_NODE_MIN: install.node_min_major,
+    HUIMA_NODE_LTS: install.node_lts_major,
+    HUIMA_CLAUDE_PACKAGE: install.claude_package,
+    HUIMA_CODEX_PACKAGE: install.codex_package,
+    HUIMA_CODEX_STORE_ID: install.codex_store_id,
+    HUIMA_WORKBUDDY_WINGET_ID: install.workbuddy_winget_id,
+    HUIMA_WORKBUDDY_SITE: install.workbuddy_site,
+    HUIMA_WORKBUDDY_SIZE_MB: install.workbuddy_size_mb,
+  };
+  return Object.entries(values).map(([name, value]) => {
+    const text = String(value);
+    // isSafeConfig already restricted these; this guard keeps cmd metacharacters out regardless.
+    if (/["%^&|<>\r\n]/.test(text)) throw new Error(CONFIG_ERROR);
+    return `set "${name}=${text}"`;
+  });
+}
+
 guardClick(byId('download-install'), async () => {
   const tools = checked(installBoxes);
   if (!tools.length) {
@@ -69,7 +98,9 @@ guardClick(byId('download-install'), async () => {
     const response = await fetch('assets/downloads/huima-install.cmd', {cache: 'no-store'});
     if (!response.ok) throw new Error();
     const template = await response.text();
-    const script = template.replace(/^set "HUIMA_TOOLS=[^"\r\n]*"/m, `set "HUIMA_TOOLS=${tools.join(',')}"`);
+    if (!cfg) throw new Error(CONFIG_ERROR);
+    const lines = [`set "HUIMA_TOOLS=${tools.join(',')}"`, ...installSettingLines(cfg)];
+    const script = template.replace(/^set "HUIMA_TOOLS=[^"\r\n]*"/m, lines.join('\r\n'));
     if (script === template) throw new Error();
     download(script, 'huima-install.cmd');
     status('install-status', '安装脚本已开始下载。在浏览器的下载列表里找到 huima-install.cmd，双击运行。');
@@ -85,7 +116,7 @@ syncToolBlocks();
 
 // The main model is the fallback for roles the group lacks, so refresh the suggestions when it changes.
 byId('model-claude').addEventListener('change', event => {
-  if (event.target.value) fillRoleSelects('role-claude-', claudeIds, event.target.value);
+  if (event.target.value && cfg) fillRoleSelects('role-claude-', claudeIds, event.target.value, cfg);
 });
 
 toolNames.forEach(tool => byId(`key-${tool}`).addEventListener('input', () => {
@@ -106,7 +137,8 @@ async function fetchModels(key, signal) {
 }
 
 function fillModels(tool, payload) {
-  const models = parseAvailableModels(payload, TOOLS[tool].platform);
+  if (!cfg) throw new Error(CONFIG_ERROR);
+  const models = parseAvailableModels(payload, tool, cfg);
   const select = byId(`model-${tool}`);
   if (!models.length) {
     resetModels(tool, '这把 Key 没有可用于该软件的模型');
@@ -115,14 +147,14 @@ function fillModels(tool, payload) {
   }
   const ids = models.map(model => model.id);
   // Preselect a sensible default so beginners only need to confirm.
-  const preferred = recommendModel(ids, tool);
+  const preferred = recommendModel(ids, tool, cfg);
   select.replaceChildren(...models.map(({id, label}) => {
     const option = new Option(id === preferred ? `${label}（推荐）` : label, id);
     option.selected = id === preferred;
     return option;
   }));
   select.disabled = false;
-  if (tool === 'claude') { claudeIds = ids; fillRoleSelects('role-claude-', ids, preferred); }
+  if (tool === 'claude') { claudeIds = ids; fillRoleSelects('role-claude-', ids, preferred, cfg); }
   status(`status-${tool}`, `可用模型 ${models.length} 个，已选好推荐模型，也可以自己换。`);
   return true;
 }
@@ -191,7 +223,8 @@ guardClick(byId('download-config'), () => {
       if (tool === 'claude') input.claude.roles = readRoleSelects('role-claude-');
     }
     if (!consent.checked) throw new Error('请先勾选确认：配置脚本里有你的 Key。');
-    download(buildConfigCmd(input), 'huima-config.cmd');
+    if (!cfg) throw new Error(CONFIG_ERROR);
+    download(buildConfigCmd(input, cfg), 'huima-config.cmd');
     clearKeys();
     resetAll();
     status('config-status', '配置脚本已开始下载，页面上的 Key 已清空。在下载列表里双击 huima-config.cmd 运行。');

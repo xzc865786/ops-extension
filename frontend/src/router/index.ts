@@ -77,6 +77,12 @@ const router = createRouter({
       component: () => import('@/views/admin/reports/ReportDashboard.vue'),
     },
     {
+      path: '/admin/manual',
+      name: 'admin-manual',
+      meta: { admin: true },
+      component: () => import('@/views/admin/manual/ManualConfig.vue'),
+    },
+    {
       path: '/auth/error',
       component: () => import('@/views/auth/AuthError.vue'),
     },

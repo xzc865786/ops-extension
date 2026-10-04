@@ -152,6 +152,18 @@ class MinioStorage:
             file_name=fname,
         )
 
+    def put_bytes(self, *, key: str, data: bytes, content_type: str) -> None:
+        """Store already-validated bytes under an explicit key (callers do their own type checks)."""
+        self.ensure_bucket()
+        self.client.put_object(self.bucket, key, BytesIO(data), length=len(data), content_type=content_type)
+
+    def open_stream(self, object_key: str):
+        """Return the raw MinIO response for streaming; caller must close() and release_conn()."""
+        return self.client.get_object(self.bucket, object_key)
+
+    def remove(self, object_key: str) -> None:
+        self.client.remove_object(self.bucket, object_key)
+
     def presigned_get(self, object_key: str, expires_seconds: int = 120) -> str:
         from datetime import timedelta
 

@@ -37,3 +37,6 @@ backend/.venv/
 
 # Raw VM captures and debugging images; publish only curated manual screenshots.
 output/vm-test/shots/
+
+# Raw VM screenshots for the manual (processed copies live in frontend/manual/assets/screenshots)
+output/vm-test/shots/

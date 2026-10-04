@@ -42,7 +42,8 @@ location /ext/api/ {
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    client_max_body_size 25m;
+    # Manual installers (admin upload, up to 100MB) also go through /ext/api; attachments stay capped at 20MB in the app.
+    client_max_body_size 110m;
 }
 
 location /ext/auth/ {

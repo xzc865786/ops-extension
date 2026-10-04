@@ -10,6 +10,7 @@ from app.db.models.expense import (
     ExpensePayment,
     ExpenseEvent,
 )
+from app.db.models.manual import ManualConfigVersion, ManualFile
 
 __all__ = [
     "ExtensionUser",
@@ -26,4 +27,6 @@ __all__ = [
     "ExpenseAttachment",
     "ExpensePayment",
     "ExpenseEvent",
+    "ManualConfigVersion",
+    "ManualFile",
 ]
