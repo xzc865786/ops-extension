@@ -266,7 +266,10 @@ function Install-Tool([string]$Command, [string]$Package, [string]$Title) {
             Write-Host "  正在安装，请耐心等待。下载源：$registry"
             $arguments = @('install', '--global', "$Package@latest", '--prefix', $script:Prefix,
                 '--registry', $registry, '--include=optional', '--ignore-scripts=false',
-                '--no-audit', '--no-fund', '--fetch-retries=1', '--fetch-timeout=120000')
+                '--no-audit', '--no-fund', '--fetch-retries=1', '--fetch-timeout=120000',
+                # npm 11 warns (and later npm blocks) package install scripts unless allowed; Claude Code's
+                # postinstall copies its native binary into place. Older npm ignores the unknown option.
+                "--allow-scripts=$Package")
             if ($source.Direct) {
                 Write-Host '  本次尝试直连，不修改原有代理设置。'
                 # npm 10 treats '*' literally here; explicit domains work on npm 10/11.
@@ -345,7 +348,7 @@ function Install-CodexDesktop([string]$Architecture) {
 function Install-WorkBuddy {
     Write-Step '安装 WorkBuddy（腾讯官方安装包）'
     if ($script:Winget) {
-        Write-Host '  正在下载 WorkBuddy 安装包（约 150 MB），请耐心等待。'
+        Write-Host '  正在下载 WorkBuddy 安装包（约 500 MB），请耐心等待。'
         $code = Invoke-Winget @('install', '--id', 'Tencent.WorkBuddy', '--source', 'winget', '--exact',
             '--accept-package-agreements', '--accept-source-agreements')
         if (Test-WingetSuccess $code) {

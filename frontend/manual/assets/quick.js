@@ -1,4 +1,4 @@
-import {newestMatch, parseAvailableModels, validateApiKey} from './ccswitch-setup-core.js';
+import {parseAvailableModels, recommendModel, validateApiKey} from './ccswitch-setup-core.js';
 import {fillRoleSelects, readRoleSelects, resetRoleSelects} from './claude-roles.js';
 import {TOOLS, buildConfigCmd, buildRollbackCmd} from './quick-config-core.js';
 import {download, downloadUrl, guardClick} from './ui.js';
@@ -7,19 +7,10 @@ const byId = id => document.getElementById(id);
 const toolNames = Object.keys(TOOLS);
 const installBoxes = Array.from(document.querySelectorAll('input[name="install-tool"]'));
 const configBoxes = Array.from(document.querySelectorAll('input[name="config-tool"]'));
-const sharedKey = byId('quick-key');
 const loadButton = byId('load-models');
 const consent = byId('config-consent');
-let configTouched = false;
 let lookup = null;
 let claudeIds = [];
-
-// Preselect a sensible default so beginners only need to confirm.
-const PREFERRED = {
-  claude: [/sonnet/i, /opus/i],
-  codex: [/codex/i, /^gpt-5/i],
-  workbuddy: [/sonnet/i, /^gpt-5/i, /deepseek/i],
-};
 
 function status(id, message, error = false) {
   const element = byId(id);
@@ -31,9 +22,20 @@ function checked(boxes) {
   return boxes.filter(box => box.checked).map(box => box.value);
 }
 
-function overrideKey(tool) {
+// Each tool has its own key: Claude Code and Codex need keys from different vendors' groups.
+function keyOf(tool) {
   return byId(`key-${tool}`).value;
 }
+
+function clearKeys() {
+  toolNames.forEach(tool => { byId(`key-${tool}`).value = ''; });
+}
+
+const VENDOR_HINT = {
+  claude: '请换成 Anthropic 厂商的 Key 后重新读取。',
+  codex: '请换成 OpenAI 厂商的 Key 后重新读取。',
+  workbuddy: '请换一把有可用模型的 Key 后重新读取。',
+};
 
 function resetModels(tool, message = '先粘贴 Key，再点击“读取可用模型”') {
   const select = byId(`model-${tool}`);
@@ -57,12 +59,6 @@ function syncToolBlocks() {
 }
 
 // --- Step 2: install script -------------------------------------------------
-installBoxes.forEach(box => box.addEventListener('change', () => {
-  if (configTouched) return;
-  configBoxes.find(item => item.value === box.value).checked = box.checked;
-  syncToolBlocks();
-}));
-
 guardClick(byId('download-install'), async () => {
   const tools = checked(installBoxes);
   if (!tools.length) {
@@ -84,10 +80,7 @@ guardClick(byId('download-install'), async () => {
 });
 
 // --- Step 3: configuration script -------------------------------------------
-configBoxes.forEach(box => box.addEventListener('change', () => {
-  configTouched = true;
-  syncToolBlocks();
-}));
+configBoxes.forEach(box => box.addEventListener('change', syncToolBlocks));
 syncToolBlocks();
 
 // The main model is the fallback for roles the group lacks, so refresh the suggestions when it changes.
@@ -95,7 +88,6 @@ byId('model-claude').addEventListener('change', event => {
   if (event.target.value) fillRoleSelects('role-claude-', claudeIds, event.target.value);
 });
 
-sharedKey.addEventListener('input', resetAll);
 toolNames.forEach(tool => byId(`key-${tool}`).addEventListener('input', () => {
   resetModels(tool, '这把 Key 改过了，请重新读取模型');
   consent.checked = false;
@@ -118,15 +110,15 @@ function fillModels(tool, payload) {
   const select = byId(`model-${tool}`);
   if (!models.length) {
     resetModels(tool, '这把 Key 没有可用于该软件的模型');
-    status(`status-${tool}`, `这把 Key 的分组不支持 ${TOOLS[tool].label}。展开下方“用另一把 Key”，填写支持它的 Key 后重新读取。`, true);
+    status(`status-${tool}`, `这把 Key 的分组不支持 ${TOOLS[tool].label}。${VENDOR_HINT[tool]}`, true);
     return false;
   }
   const ids = models.map(model => model.id);
-  let preferred = ids[0];
-  for (const pattern of PREFERRED[tool]) {
-    const match = newestMatch(ids, pattern);
-    if (match) { preferred = match; break; }
-  }
+  // Preselect a sensible default so beginners only need to confirm. WorkBuddy reusing the
+  // Codex key gets exactly the Codex default (gpt-6.1-sol, else gpt-6-luna).
+  const sharesCodexKey = tool === 'workbuddy' && configBoxes.find(box => box.value === 'codex').checked
+    && keyOf('workbuddy') === keyOf('codex');
+  const preferred = recommendModel(ids, sharesCodexKey ? 'codex' : tool);
   select.replaceChildren(...models.map(({id, label}) => {
     const option = new Option(id === preferred ? `${label}（推荐）` : label, id);
     option.selected = id === preferred;
@@ -145,16 +137,19 @@ loadButton.addEventListener('click', async () => {
     return;
   }
   const keys = new Map();
-  try {
-    for (const tool of tools) {
-      const key = overrideKey(tool) || sharedKey.value;
+  for (const tool of tools) {
+    const key = keyOf(tool);
+    try {
+      if (!key) throw new Error(`请为 ${TOOLS[tool].label} 粘贴 Key。`);
       validateApiKey(key);
-      if (!keys.has(key)) keys.set(key, []);
-      keys.get(key).push(tool);
+    } catch (error) {
+      status('config-status', error.message.startsWith('请为') ? error.message : `${TOOLS[tool].label}：${error.message}`, true);
+      byId(`key-${tool}`).focus();
+      return;
     }
-  } catch (error) {
-    status('config-status', error.message, true);
-    return;
+    // Tools sharing one key (e.g. WorkBuddy reusing a Claude Code key) need only one lookup.
+    if (!keys.has(key)) keys.set(key, []);
+    keys.get(key).push(tool);
   }
   lookup?.abort();
   const controller = new AbortController();
@@ -162,7 +157,7 @@ loadButton.addEventListener('click', async () => {
   loadButton.disabled = true;
   loadButton.textContent = '读取中...';
   tools.forEach(tool => resetModels(tool, '正在读取模型...'));
-  status('config-status', '正在读取这把 Key 可用的模型...');
+  status('config-status', '正在读取可用的模型...');
   let ok = 0;
   try {
     for (const [key, group] of keys) {
@@ -195,13 +190,12 @@ guardClick(byId('download-config'), () => {
     for (const tool of tools) {
       const model = byId(`model-${tool}`).value;
       if (!model) throw new Error(`请先读取 ${TOOLS[tool].label} 的可用模型。`);
-      input[tool] = {apiKey: overrideKey(tool) || sharedKey.value, model};
+      input[tool] = {apiKey: keyOf(tool), model};
       if (tool === 'claude') input.claude.roles = readRoleSelects('role-claude-');
     }
     if (!consent.checked) throw new Error('请先勾选确认：配置脚本里有你的 Key。');
     download(buildConfigCmd(input), 'huima-config.cmd');
-    sharedKey.value = '';
-    toolNames.forEach(tool => { byId(`key-${tool}`).value = ''; });
+    clearKeys();
     resetAll();
     status('config-status', '配置脚本已开始下载，页面上的 Key 已清空。在下载列表里双击 huima-config.cmd 运行。');
   } catch (error) {
@@ -211,8 +205,7 @@ guardClick(byId('download-config'), () => {
 });
 
 byId('clear-config').addEventListener('click', () => {
-  sharedKey.value = '';
-  toolNames.forEach(tool => { byId(`key-${tool}`).value = ''; });
+  clearKeys();
   resetAll();
   status('config-status', '页面上的 Key 已清空。已经下载的脚本不会被删除。');
 });
@@ -223,5 +216,5 @@ guardClick(byId('download-rollback'), () => {
 });
 
 resetAll();
-window.addEventListener('pagehide', () => { sharedKey.value = ''; toolNames.forEach(tool => { byId(`key-${tool}`).value = ''; }); resetAll(); });
+window.addEventListener('pagehide', () => { clearKeys(); resetAll(); });
 window.addEventListener('pageshow', event => { if (event.persisted) resetAll(); });

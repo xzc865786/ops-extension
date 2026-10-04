@@ -80,7 +80,7 @@
             <div class="tool-pick">
               <label><input type="checkbox" name="install-tool" value="claude" checked><span>Claude Code<small>从国内 npm 镜像安装，会顺带装好 Node.js</small></span></label>
               <label><input type="checkbox" name="install-tool" value="codex" checked><span>Codex 桌面版<small>从微软商店安装；不行就自动改装命令行版</small></span></label>
-              <label><input type="checkbox" name="install-tool" value="workbuddy" checked><span>WorkBuddy<small>腾讯官方安装包，约 150 MB</small></span></label>
+              <label><input type="checkbox" name="install-tool" value="workbuddy" checked><span>WorkBuddy<small>腾讯官方安装包，约 500 MB</small></span></label>
             </div>
           </fieldset>
           <div class="setup-actions"><button class="button primary" id="download-install" type="button">下载安装脚本</button></div>
@@ -107,39 +107,37 @@
 
       <section class="doc-section" id="configure" data-title="配置 一键配置 脚本 API Key 模型 读取 下载 Claude Code Codex WorkBuddy settings.json config.toml models.json">
         <p class="eyebrow">第 3 步</p><h2>一键配置：把 Key 填进软件</h2>
-        <p>在下面粘贴 Key、选好模型，下载配置脚本并双击运行，软件就会连上汇码。</p>
+        <p>勾选要用的软件，给每个软件粘贴对应的 Key、选好模型，下载配置脚本并双击运行，软件就会连上汇码。默认只勾选了 Claude Code，要用 Codex 或 WorkBuddy 时再勾上。</p>
         <div class="setup-panel">
           <fieldset class="target-fieldset"><legend class="field-label">1. 勾选要配置的软件</legend>
             <div class="tool-pick">
               <label><input type="checkbox" name="config-tool" value="claude" checked><span>Claude Code<small>需要 Anthropic 厂商的 Key</small></span></label>
-              <label><input type="checkbox" name="config-tool" value="codex" checked><span>Codex<small>桌面版和命令行版都适用，需要 OpenAI 厂商的 Key</small></span></label>
-              <label><input type="checkbox" name="config-tool" value="workbuddy" checked><span>WorkBuddy<small>两种厂商的 Key 都可以</small></span></label>
+              <label><input type="checkbox" name="config-tool" value="codex"><span>Codex<small>桌面版和命令行版都适用，需要 OpenAI 厂商的 Key</small></span></label>
+              <label><input type="checkbox" name="config-tool" value="workbuddy"><span>WorkBuddy<small>两种厂商的 Key 都可以</small></span></label>
             </div>
           </fieldset>
-          <label class="field-label" for="quick-key">2. 粘贴你的 API Key</label>
-          <input id="quick-key" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="在汇码 API 密钥页面点复制图标，粘贴到这里">
-          <p class="field-hint">勾选的软件都会用这把 Key。某个软件要用另一把 Key，在下方它的卡片里展开“用另一把 Key”填写。</p>
-          <div class="model-load-actions"><button class="button secondary" id="load-models" type="button">读取可用模型</button></div>
-          <p class="field-label">3. 确认每个软件的模型</p>
+          <p class="field-label">2. 为每个软件粘贴 Key，再读取模型</p>
+          <p class="field-hint">不同软件要用不同厂商的 Key，所以每个勾选的软件都要单独粘贴：Claude Code 用 Anthropic 厂商的 Key，Codex 用 OpenAI 厂商的 Key。</p>
           <div class="tool-config" id="tool-claude">
             <h4>Claude Code</h4>
-            <label class="field-hint" for="model-claude">主模型：打开 Claude Code 时默认使用，之后可以用 /model 切换。</label><select id="model-claude" disabled></select>
+            <label class="tool-field" for="key-claude">API Key（Anthropic 厂商）</label><input id="key-claude" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="在汇码 API 密钥页面点复制图标，粘贴到这里">
+            <label class="tool-field" for="model-claude">主模型：打开 Claude Code 时默认使用，之后可以用 /model 切换</label><select id="model-claude" disabled></select>
             <p class="tool-status" id="status-claude" role="status" aria-live="polite"></p>
             <details class="role-models" id="roles-claude"><summary>高级：按角色指定模型（已自动选好，一般不用改）</summary><p class="field-hint">Claude Code 会按任务调用不同角色的模型。分组里没有的角色，会自动用最接近的可用模型代替，避免调用不存在的模型而报错。</p><div class="role-grid"><label for="role-claude-fable"><span>Fable<small>最强，处理最难的任务；对应 /model fable</small></span><select id="role-claude-fable" disabled></select></label><label for="role-claude-opus"><span>Opus<small>复杂任务和规划；对应 /model opus</small></span><select id="role-claude-opus" disabled></select></label><label for="role-claude-sonnet"><span>Sonnet<small>日常编码主力；对应 /model sonnet</small></span><select id="role-claude-sonnet" disabled></select></label><label for="role-claude-haiku"><span>Haiku<small>快速小任务，也用于后台生成标题等</small></span><select id="role-claude-haiku" disabled></select></label><label for="role-claude-subagent"><span>子代理<small>派出去的子任务用哪个模型</small></span><select id="role-claude-subagent" disabled></select></label></div></details>
-            <details><summary>用另一把 Key</summary><label class="sr-only" for="key-claude">Claude Code 专用 Key</label><input id="key-claude" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="只给 Claude Code 用的 Key（可留空）"><p class="field-hint">填写后点上方“读取可用模型”。</p></details>
           </div>
           <div class="tool-config" id="tool-codex">
             <h4>Codex</h4>
-            <label class="sr-only" for="model-codex">Codex 使用的模型</label><select id="model-codex" disabled></select>
+            <label class="tool-field" for="key-codex">API Key（OpenAI 厂商，不能用 Claude Code 那一把）</label><input id="key-codex" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="粘贴 OpenAI 厂商的 Key">
+            <label class="tool-field" for="model-codex">模型</label><select id="model-codex" disabled></select>
             <p class="tool-status" id="status-codex" role="status" aria-live="polite"></p>
-            <details><summary>用另一把 Key</summary><label class="sr-only" for="key-codex">Codex 专用 Key</label><input id="key-codex" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="只给 Codex 用的 Key（可留空）"><p class="field-hint">填写后点上方“读取可用模型”。</p></details>
           </div>
           <div class="tool-config" id="tool-workbuddy">
             <h4>WorkBuddy</h4>
-            <label class="sr-only" for="model-workbuddy">WorkBuddy 使用的模型</label><select id="model-workbuddy" disabled></select>
+            <label class="tool-field" for="key-workbuddy">API Key（Anthropic 或 OpenAI 厂商都可以，可以和上面某个软件用同一把）</label><input id="key-workbuddy" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="粘贴 Key">
+            <label class="tool-field" for="model-workbuddy">模型</label><select id="model-workbuddy" disabled></select>
             <p class="tool-status" id="status-workbuddy" role="status" aria-live="polite"></p>
-            <details><summary>用另一把 Key</summary><label class="sr-only" for="key-workbuddy">WorkBuddy 专用 Key</label><input id="key-workbuddy" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="只给 WorkBuddy 用的 Key（可留空）"><p class="field-hint">填写后点上方“读取可用模型”。</p></details>
           </div>
+          <div class="model-load-actions"><button class="button secondary" id="load-models" type="button">读取可用模型</button></div>
           <label class="check-row"><input type="checkbox" id="config-consent"><span>我知道下载的配置脚本里有我的完整 Key，只在自己的电脑上运行，不发给别人。</span></label>
           <div class="setup-actions"><button class="button primary" id="download-config" type="button">下载配置脚本</button><button class="button secondary" id="clear-config" type="button">清空页面上的 Key</button></div>
           <p class="setup-status" id="config-status" role="status" aria-live="polite">粘贴 Key 后，点击“读取可用模型”。</p>

@@ -1,4 +1,4 @@
-import {buildImportUrl, getTargetDetails, parseAvailableModels, validateApiKey, validateImportInput} from './ccswitch-setup-core.js';
+import {buildImportUrl, getTargetDetails, parseAvailableModels, recommendModel, validateApiKey, validateImportInput} from './ccswitch-setup-core.js';
 import {fillRoleSelects, readRoleSelects, resetRoleSelects} from './claude-roles.js';
 import {download, guardClick} from './ui.js';
 import {buildRollbackCmd} from './codex-setup-core.js';
@@ -79,9 +79,12 @@ loadButton.addEventListener('click', async () => {
     const models = parseAvailableModels(payload, getTargetDetails(target).platform);
     if (!models.length) throw new Error(`这把 Key 没有可用于 ${getTargetDetails(target).label} 的模型，请检查分组。`);
     if (lookup !== controller || keyInput.value !== key || selectedTarget() !== target) return;
-    modelSelect.replaceChildren(new Option('请选择模型', ''), ...models.map(({id, label}) => new Option(label, id)));
-    modelSelect.disabled = false;
     lastModelIds = models.map(model => model.id);
+    // Codex gets a default (gpt-6.1-sol, else gpt-6-luna); Claude Code users pick their own main model.
+    const preferred = target === 'codex' ? recommendModel(lastModelIds, 'codex') : '';
+    modelSelect.replaceChildren(new Option('请选择模型', ''), ...models.map(({id, label}) =>
+      new Option(id === preferred ? `${label}（推荐）` : label, id, false, id === preferred)));
+    modelSelect.disabled = false;
     status('import-status', `已读取 ${models.length} 个可用模型，请选择。`);
   } catch (error) {
     if (controller.signal.aborted || lookup !== controller) return;

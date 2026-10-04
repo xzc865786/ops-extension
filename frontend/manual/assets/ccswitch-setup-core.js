@@ -20,7 +20,7 @@ export function parseAvailableModels(payload, platform) {
     if (typeof id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(id) || seen.has(id)) return [];
     const owner = typeof item.owned_by === 'string' ? item.owned_by.toLowerCase() : '';
     const claudeModel = /^claude(?:-|$)/i.test(id);
-    const openaiModel = /^(?:gpt-|o\d(?:-|$)|chatgpt-)/i.test(id);
+    const openaiModel = /^(?:gpt-?\d|gpt-|o\d(?:-|$)|chatgpt-)/i.test(id);
     const matches = platform === 'any' ? true : platform === 'anthropic'
       ? claudeModel || (owner === 'anthropic' && !openaiModel)
       : openaiModel || (owner === 'openai' && !claudeModel);
@@ -72,6 +72,22 @@ export function validateClaudeRoles(roles = {}) {
     valid[role] = value;
   }
   return valid;
+}
+
+// Default model per client, tried in order; both manual pages preselect the first match.
+const PREFERRED_MODELS = Object.freeze({
+  claude: [/sonnet/i, /opus/i],
+  codex: [/^gpt-?6\.1-sol$/i, /^gpt-?6-luna$/i, /codex/i, /^gpt-5/i],
+  // WorkBuddy accepts either vendor's key: Sonnet for an Anthropic key, otherwise the Codex defaults.
+  workbuddy: [/sonnet/i, /^gpt-?6\.1-sol$/i, /^gpt-?6-luna$/i, /^gpt-5/i, /deepseek/i],
+});
+
+export function recommendModel(ids, client) {
+  for (const pattern of PREFERRED_MODELS[client] || []) {
+    const match = newestMatch(ids, pattern);
+    if (match) return match;
+  }
+  return ids[0] || '';
 }
 
 export function validateImportInput({target, name, apiKey, model, roles} = {}) {
