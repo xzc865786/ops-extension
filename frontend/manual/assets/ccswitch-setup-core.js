@@ -78,8 +78,7 @@ export function validateClaudeRoles(roles = {}) {
 const PREFERRED_MODELS = Object.freeze({
   claude: [/sonnet/i, /opus/i],
   codex: [/^gpt-?6\.1-sol$/i, /^gpt-?6-luna$/i, /codex/i, /^gpt-5/i],
-  // WorkBuddy accepts either vendor's key: Sonnet for an Anthropic key, otherwise the Codex defaults.
-  workbuddy: [/sonnet/i, /^gpt-?6\.1-sol$/i, /^gpt-?6-luna$/i, /^gpt-5/i, /deepseek/i],
+  workbuddy: [/^gpt-?6\.1-sol$/i, /^gpt-?6-luna$/i, /^gpt-5/i],
 });
 
 export function recommendModel(ids, client) {
@@ -106,6 +105,8 @@ export function buildImportUrl(input) {
   const {target, name, apiKey, model, roles} = validateImportInput(input);
   const params = new URLSearchParams({
     resource: 'provider', app: target, name,
+    // Without homepage CC Switch infers it from the endpoint domain (https://tysy.top), which is not our site.
+    homepage: 'https://api.tysy.top',
     endpoint: TARGETS[target].endpoint, apiKey, model, enabled: 'false',
   });
   if (target === 'claude') {

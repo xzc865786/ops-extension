@@ -34,3 +34,6 @@ data/
 minio-data/
 postgres-data/
 backend/.venv/
+
+# Raw VM captures and debugging images; publish only curated manual screenshots.
+output/vm-test/shots/

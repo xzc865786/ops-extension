@@ -244,6 +244,16 @@ function Write-ToolLauncher([string]$Command, [string]$Package) {
     }
     $content = "@echo off`r`nsetlocal DisableDelayedExpansion`r`n$launch`r`nexit /b %errorlevel%`r`n"
     [IO.File]::WriteAllText((Join-Path $script:Prefix "$Command.cmd"), $content, (New-Object Text.UTF8Encoding($false)))
+    Remove-PowerShellShim $script:Prefix $Command
+}
+
+function Remove-PowerShellShim([string]$Directory, [string]$Command) {
+    # npm also writes a .ps1 shim. PowerShell prefers it over the .cmd and the default execution
+    # policy blocks it ("禁止运行脚本"). Without it, typing the command in PowerShell runs the .cmd.
+    $shim = Join-Path $Directory "$Command.ps1"
+    if ((Test-Path -LiteralPath $shim) -and (Test-Path -LiteralPath (Join-Path $Directory "$Command.cmd"))) {
+        Remove-Item -LiteralPath $shim -Force
+    }
 }
 
 function Install-Tool([string]$Command, [string]$Package, [string]$Title) {
@@ -252,6 +262,7 @@ function Install-Tool([string]$Command, [string]$Package, [string]$Title) {
     $version = Get-ProgramVersion $existing
     if ($version) {
         Add-UserPath (Split-Path -Parent $existing)
+        Remove-PowerShellShim (Split-Path -Parent $existing) $Command
         Write-Host "  已安装：$version，跳过重复安装。" -ForegroundColor Green
         return $true
     }

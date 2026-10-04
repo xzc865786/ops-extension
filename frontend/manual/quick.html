@@ -61,13 +61,13 @@
         <div class="notice"><strong>只想用其中一个？</strong>下面勾选时只选那一个就行，不需要全部安装。</div>
       </section>
 
-      <section class="doc-section" id="prepare" data-title="准备 API Key 密钥 注册 充值 分组 厂商 Anthropic OpenAI">
+      <section class="doc-section" id="prepare" data-title="准备 API Key 密钥 注册 充值 分组 风格 Anthropic OpenAI">
         <p class="eyebrow">第 1 步</p><h2>准备好 API Key</h2>
         <p>还没有账号或 Key？先按手册首页完成<a href="index.html#account">注册登录</a>、<a href="index.html#balance">确认额度</a>和<a href="index.html#api-key">创建 API Key</a>，再回到这里。</p>
-        <div class="table-wrap"><table class="field-table"><caption>不同软件需要的 Key</caption><thead><tr><th scope="col">要用的软件</th><th scope="col">创建 Key 时选的厂商</th></tr></thead><tbody>
+        <div class="table-wrap"><table class="field-table"><caption>不同软件需要的 Key</caption><thead><tr><th scope="col">要用的软件</th><th scope="col">Key 的风格</th></tr></thead><tbody>
           <tr><th scope="row">Claude Code</th><td>Anthropic（Claude 模型）</td></tr>
           <tr><th scope="row">Codex</th><td>OpenAI（GPT 模型）</td></tr>
-          <tr><th scope="row">WorkBuddy</th><td>两种都可以</td></tr>
+          <tr><th scope="row">WorkBuddy</th><td>OpenAI 风格（和 Codex 同一种）</td></tr>
         </tbody></table></div>
         <p>不确定也没关系：第 3 步会自动检查 Key 能用哪些模型，不匹配会直接提示你。</p>
       </section>
@@ -89,10 +89,10 @@
         <noscript><div class="notice warning">浏览器没有开启 JavaScript。可以下载<a href="assets/downloads/huima-install.cmd" download>通用安装脚本</a>，运行后按窗口提示输入编号选择软件。</div></noscript>
         <h3>下载以后怎么做</h3>
         <ol class="steps">
-          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>保留下载的文件</h3><p>浏览器可能提示“此类文件可能会损害你的设备”。这是浏览器对所有脚本文件的通用提醒，点击“保留”即可。</p></div></li>
-          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>双击运行 huima-install.cmd</h3><p>打开浏览器的“下载”列表，双击 <code>huima-install.cmd</code>。如果出现蓝色窗口“Windows 已保护你的电脑”，点击“更多信息”→“仍要运行”。</p></div></li>
-          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>需要授权时点“是”</h3><p>安装 Node.js 时 Windows 会弹出授权窗口，点击“是”。其他时候不用操作，看着窗口里的进度等待即可，通常几分钟到半小时。</p></div></li>
-          <li class="step"><span class="step-number">4</span><div class="step-content"><h3>看到“安装结果”就完成了</h3><p>每个软件后面显示“完成”就说明装好了。显示“失败”时，检查网络后重新双击脚本，已装好的会自动跳过。按任意键关闭窗口，继续第 3 步。</p></div></li>
+          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>保留下载的文件</h3><p>Edge 会提示“huima-install.cmd 可能会损害你的设备。是否仍要保留？”。这是浏览器对所有脚本文件的通用提醒，点击“保留”即可。</p><figure class="figure narrow"><a href="assets/screenshots/quick-edge-keep.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Edge 下载面板提示 huima-install.cmd 可能会损害你的设备，下面有保留和删除两个按钮。"><img class="screenshot-frame" src="assets/screenshots/quick-edge-keep.jpg" width="392" height="200" loading="lazy" alt="Edge 下载面板提示 huima-install.cmd 可能会损害你的设备，下面有保留和删除两个按钮。"></a><figcaption class="caption">图 1 · 点“保留”。其他浏览器的文字可能略有不同。</figcaption></figure></div></li>
+          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>双击运行 huima-install.cmd</h3><p>打开浏览器的“下载”列表，点击 <code>huima-install.cmd</code>。Windows 可能弹出“打开文件 - 安全警告：无法验证发布者”，点“运行”；也可能是蓝色的“Windows 已保护你的电脑”，点“更多信息”→“仍要运行”。</p><figure class="figure narrow"><a href="assets/screenshots/quick-open-file-warning.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Windows 安全警告对话框：无法验证发布者，你确定要运行此软件吗？下面有运行和取消按钮。"><img class="screenshot-frame" src="assets/screenshots/quick-open-file-warning.jpg" width="466" height="370" loading="lazy" alt="Windows 安全警告对话框：无法验证发布者，你确定要运行此软件吗？下面有运行和取消按钮。"></a><figcaption class="caption">图 2 · 出现这个提示时点“运行”。</figcaption></figure></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>需要授权时点“是”</h3><p>安装 Node.js 时屏幕会变暗，弹出授权窗口，标题写的是“Windows® 安装程序”，这就是在安装 Node.js。<strong>默认选中的是“否”</strong>，请用鼠标点“是”，不要直接按回车。其他时候不用操作，看着窗口里的进度等待即可，通常几分钟到半小时。</p><figure class="figure narrow"><a href="assets/screenshots/quick-uac-node.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：用户账户控制窗口：你要允许此应用对你的设备进行更改吗？Windows 安装程序，下面有是和否按钮，否为默认选中。"><img class="screenshot-frame" src="assets/screenshots/quick-uac-node.jpg" width="458" height="351" loading="lazy" alt="用户账户控制窗口：你要允许此应用对你的设备进行更改吗？Windows 安装程序，下面有是和否按钮，否为默认选中。"></a><figcaption class="caption">图 3 · 点“是”。这是在安装 Node.js。</figcaption></figure></div></li>
+          <li class="step"><span class="step-number">4</span><div class="step-content"><h3>看到“安装结果”就完成了</h3><p>每个软件后面显示“完成”就说明装好了。显示“失败”时，检查网络后重新双击脚本，已装好的会自动跳过。按任意键关闭窗口，继续第 3 步。</p><figure class="figure"><a href="assets/screenshots/quick-install-result.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：安装窗口最后显示安装结果：Claude Code、Codex 桌面版、WorkBuddy 均为完成，下面是下一步提示和日志文件夹位置。"><img class="screenshot-frame" src="assets/screenshots/quick-install-result.jpg" width="1000" height="553" loading="lazy" alt="安装窗口最后显示安装结果：Claude Code、Codex 桌面版、WorkBuddy 均为完成，下面是下一步提示和日志文件夹位置。"></a><figcaption class="caption">图 4 · 三个软件都显示“完成”。</figcaption></figure></div></li>
         </ol>
         <details><summary>脚本具体会做什么？</summary>
           <div class="table-wrap"><table class="field-table"><caption>每个软件的安装来源</caption><thead><tr><th scope="col">软件</th><th scope="col">怎么安装</th></tr></thead><tbody>
@@ -111,29 +111,29 @@
         <div class="setup-panel">
           <fieldset class="target-fieldset"><legend class="field-label">1. 勾选要配置的软件</legend>
             <div class="tool-pick">
-              <label><input type="checkbox" name="config-tool" value="claude" checked><span>Claude Code<small>需要 Anthropic 厂商的 Key</small></span></label>
-              <label><input type="checkbox" name="config-tool" value="codex"><span>Codex<small>桌面版和命令行版都适用，需要 OpenAI 厂商的 Key</small></span></label>
-              <label><input type="checkbox" name="config-tool" value="workbuddy"><span>WorkBuddy<small>两种厂商的 Key 都可以</small></span></label>
+              <label><input type="checkbox" name="config-tool" value="claude" checked><span>Claude Code<small>需要 Anthropic 风格的 Key</small></span></label>
+              <label><input type="checkbox" name="config-tool" value="codex"><span>Codex<small>桌面版和命令行版都适用，需要 OpenAI 风格的 Key</small></span></label>
+              <label><input type="checkbox" name="config-tool" value="workbuddy"><span>WorkBuddy<small>需要 OpenAI 风格的 Key，可以和 Codex 用同一把</small></span></label>
             </div>
           </fieldset>
           <p class="field-label">2. 为每个软件粘贴 Key，再读取模型</p>
-          <p class="field-hint">不同软件要用不同厂商的 Key，所以每个勾选的软件都要单独粘贴：Claude Code 用 Anthropic 厂商的 Key，Codex 用 OpenAI 厂商的 Key。</p>
+          <p class="field-hint">不同软件要用不同风格的 Key，所以每个勾选的软件都要单独粘贴：Claude Code 用 Anthropic 风格的 Key，Codex 和 WorkBuddy 用 OpenAI 风格的 Key。</p>
           <div class="tool-config" id="tool-claude">
             <h4>Claude Code</h4>
-            <label class="tool-field" for="key-claude">API Key（Anthropic 厂商）</label><input id="key-claude" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="在汇码 API 密钥页面点复制图标，粘贴到这里">
+            <label class="tool-field" for="key-claude">API Key（Anthropic 风格）</label><input id="key-claude" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="在汇码 API 密钥页面点复制图标，粘贴到这里">
             <label class="tool-field" for="model-claude">主模型：打开 Claude Code 时默认使用，之后可以用 /model 切换</label><select id="model-claude" disabled></select>
             <p class="tool-status" id="status-claude" role="status" aria-live="polite"></p>
             <details class="role-models" id="roles-claude"><summary>高级：按角色指定模型（已自动选好，一般不用改）</summary><p class="field-hint">Claude Code 会按任务调用不同角色的模型。分组里没有的角色，会自动用最接近的可用模型代替，避免调用不存在的模型而报错。</p><div class="role-grid"><label for="role-claude-fable"><span>Fable<small>最强，处理最难的任务；对应 /model fable</small></span><select id="role-claude-fable" disabled></select></label><label for="role-claude-opus"><span>Opus<small>复杂任务和规划；对应 /model opus</small></span><select id="role-claude-opus" disabled></select></label><label for="role-claude-sonnet"><span>Sonnet<small>日常编码主力；对应 /model sonnet</small></span><select id="role-claude-sonnet" disabled></select></label><label for="role-claude-haiku"><span>Haiku<small>快速小任务，也用于后台生成标题等</small></span><select id="role-claude-haiku" disabled></select></label><label for="role-claude-subagent"><span>子代理<small>派出去的子任务用哪个模型</small></span><select id="role-claude-subagent" disabled></select></label></div></details>
           </div>
           <div class="tool-config" id="tool-codex">
             <h4>Codex</h4>
-            <label class="tool-field" for="key-codex">API Key（OpenAI 厂商，不能用 Claude Code 那一把）</label><input id="key-codex" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="粘贴 OpenAI 厂商的 Key">
+            <label class="tool-field" for="key-codex">API Key（OpenAI 风格，不能用 Claude Code 那一把）</label><input id="key-codex" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="粘贴 OpenAI 风格的 Key">
             <label class="tool-field" for="model-codex">模型</label><select id="model-codex" disabled></select>
             <p class="tool-status" id="status-codex" role="status" aria-live="polite"></p>
           </div>
           <div class="tool-config" id="tool-workbuddy">
             <h4>WorkBuddy</h4>
-            <label class="tool-field" for="key-workbuddy">API Key（Anthropic 或 OpenAI 厂商都可以，可以和上面某个软件用同一把）</label><input id="key-workbuddy" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="粘贴 Key">
+            <label class="tool-field" for="key-workbuddy">API Key（OpenAI 风格，可以和 Codex 用同一把）</label><input id="key-workbuddy" type="text" class="secret-field" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore placeholder="粘贴 Key">
             <label class="tool-field" for="model-workbuddy">模型</label><select id="model-workbuddy" disabled></select>
             <p class="tool-status" id="status-workbuddy" role="status" aria-live="polite"></p>
           </div>
@@ -148,7 +148,7 @@
         <ol class="steps">
           <li class="step"><span class="step-number">1</span><div class="step-content"><h3>先关掉要配置的软件</h3><p>关闭 Claude Code 的命令窗口、Codex 和 WorkBuddy，避免它们覆盖新配置。</p></div></li>
           <li class="step"><span class="step-number">2</span><div class="step-content"><h3>双击 huima-config.cmd</h3><p>和安装脚本一样，提示时选“保留”“更多信息 → 仍要运行”。窗口里会列出要配置的软件，确认后输入 <code>Y</code> 并回车。</p></div></li>
-          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>看到“配置完成”</h3><p>每个软件后面显示“完成”就好了。最后会问是否删除这个脚本：输入 <code>Y</code> 回车，关闭窗口时它会自动删除，Key 不会留在下载文件夹里。</p></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>看到“配置完成”</h3><p>每个软件后面显示“完成”就好了。Claude Code 下面还会列出各角色对应的模型。最后会问是否删除这个脚本：输入 <code>Y</code> 回车，关闭窗口时它会自动删除，Key 不会留在下载文件夹里。</p><figure class="figure"><a href="assets/screenshots/quick-config-result.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：配置窗口显示 Claude Code、Codex、WorkBuddy 都已写入配置，最后询问是否自动删除本文件。"><img class="screenshot-frame" src="assets/screenshots/quick-config-result.jpg" width="1000" height="558" loading="lazy" alt="配置窗口显示 Claude Code、Codex、WorkBuddy 都已写入配置，最后询问是否自动删除本文件。"></a><figcaption class="caption">图 5 · 配置完成，输入 Y 删除脚本。</figcaption></figure></div></li>
         </ol>
         <details><summary>配置脚本会改哪些文件？</summary>
           <div class="table-wrap"><table class="field-table"><caption>写入位置（%USERPROFILE% 是你的用户文件夹）</caption><thead><tr><th scope="col">软件</th><th scope="col">写入的文件和内容</th></tr></thead><tbody>
@@ -160,21 +160,22 @@
         </details>
       </section>
 
-      <section class="doc-section" id="verify" data-title="测试 第一次 发消息 连接成功 使用记录 claude codex workbuddy 终端 PowerShell 练习文件夹">
+      <section class="doc-section" id="verify" data-title="测试 第一次 发消息 连接成功 使用记录 claude codex workbuddy 终端 cmd 命令窗口 练习文件夹">
         <p class="eyebrow">第 4 步</p><h2>发一条消息，确认已经接通</h2>
         <p>每个软件发一条短消息测试，再去汇码<a href="https://api.tysy.top/usage">使用记录</a>看到对应的记录，就说明全部完成了。测试消息也会产生少量费用，发一次就够。</p>
         <div class="copy-row"><span class="copy-value">请只回复四个字：连接成功。</span><button class="copy-button" type="button" aria-label="复制测试消息">复制测试消息</button></div>
         <h3>Claude Code</h3>
         <ol class="steps">
-          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>建一个练习文件夹</h3><p>在桌面新建文件夹，例如“AI练习”，不要放重要文件。Claude Code 能读写这个文件夹里的内容。</p></div></li>
-          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>在文件夹里打开命令窗口</h3><p>打开“AI练习”文件夹，点击窗口顶部的地址栏，输入 <code>powershell</code> 并回车，会弹出一个命令窗口。</p></div></li>
-          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>输入 claude 并回车</h3><p>第一次会问是否信任这个文件夹，确认是练习文件夹后选择信任（Yes）。然后粘贴测试消息并回车。</p></div></li>
+          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>建一个练习文件夹</h3><p>在桌面新建文件夹，名字用英文，例如 <code>ai-test</code>，不要放重要文件。Claude Code 能读写这个文件夹里的内容。</p></div></li>
+          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>在文件夹里打开命令窗口</h3><p>打开 <code>ai-test</code> 文件夹，点击窗口顶部的地址栏，输入 <code>cmd</code> 并回车，会弹出一个黑色的命令窗口，位置就在这个文件夹里。</p><figure class="figure medium"><a href="assets/screenshots/quick-address-cmd.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：文件资源管理器打开 ai-test 文件夹，地址栏中输入了 cmd。"><img class="screenshot-frame" src="assets/screenshots/quick-address-cmd.jpg" width="785" height="590" loading="lazy" alt="文件资源管理器打开 ai-test 文件夹，地址栏中输入了 cmd。"></a><figcaption class="caption">图 6 · 在地址栏输入 cmd，再按回车。</figcaption></figure></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>输入 claude 并回车，信任这个文件夹</h3><p>第一次会问是否信任这个文件夹（界面是英文）。<strong>默认选中的是“No, exit”（退出）</strong>，请先按键盘的 <kbd>↓</kbd> 选到“Yes, I trust this folder”（是，我信任这个文件夹），再按回车。</p><figure class="figure"><a href="assets/screenshots/quick-claude-trust.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Claude Code 询问是否信任 ai-test 文件夹，选项为 No, exit 和 Yes, I trust this folder，当前选中 No。"><img class="screenshot-frame" src="assets/screenshots/quick-claude-trust.jpg" width="1000" height="423" loading="lazy" alt="Claude Code 询问是否信任 ai-test 文件夹，选项为 No, exit 和 Yes, I trust this folder，当前选中 No。"></a><figcaption class="caption">图 7 · 按 ↓ 选到“Yes, I trust this folder”，再按回车。</figcaption></figure></div></li>
+          <li class="step"><span class="step-number">4</span><div class="step-content"><h3>发送测试消息</h3><p>粘贴测试消息并回车，收到“连接成功”就好了。顶部会显示当前模型和“API Usage Billing”（按汇码用量计费）。</p><figure class="figure"><a href="assets/screenshots/quick-claude-reply.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Claude Code 界面顶部显示 Sonnet 5.5 和 API Usage Billing，发送的测试消息收到回复：连接成功。"><img class="screenshot-frame" src="assets/screenshots/quick-claude-reply.jpg" width="1000" height="450" loading="lazy" alt="Claude Code 界面顶部显示 Sonnet 5.5 和 API Usage Billing，发送的测试消息收到回复：连接成功。"></a><figcaption class="caption">图 8 · Claude Code 用汇码的模型回复了“连接成功”。</figcaption></figure><p>Claude Code 默认使用“自动模式”：它会自己判断操作的风险，低风险的操作直接执行，不再逐条询问。所以练习文件夹里不要放重要文件。</p><details><summary>想换模型？输入 /model</summary><p>在 Claude Code 里输入 <code>/model</code> 回车，可以看到 Opus、Fable、Sonnet、Haiku 各角色对应的汇码模型，用 <kbd>↑</kbd><kbd>↓</kbd> 选择、回车确认。分组里没有的角色会自动用相近的模型代替，所以可能出现两个相同的名称。</p><figure class="figure"><a href="assets/screenshots/quick-claude-model.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Claude Code 的 /model 菜单，列出 Default、Opus 5.5、Fable（对应 claude-opus-5-5）、Sonnet 5.5（当前选中）、Haiku 4.5。"><img class="screenshot-frame" src="assets/screenshots/quick-claude-model.jpg" width="1000" height="522" loading="lazy" alt="Claude Code 的 /model 菜单，列出 Default、Opus 5.5、Fable（对应 claude-opus-5-5）、Sonnet 5.5（当前选中）、Haiku 4.5。"></a><figcaption class="caption">图 9 · /model 菜单。“Custom … model”后面括号里是实际调用的汇码模型。</figcaption></figure></details></div></li>
         </ol>
         <h3>Codex 桌面版</h3>
-        <p>在开始菜单搜索“Codex”打开，选择练习文件夹，新建对话，粘贴测试消息发送。如果安装时改装成了命令行版，按上面 Claude Code 的方法打开命令窗口，输入 <code>codex</code> 回车即可。</p>
+        <p>在开始菜单搜索“Codex”打开，窗口标题显示“ChatGPT Work”，这就是 Codex 桌面版。左下角显示“汇码”、输入框右边显示“6.1 Sol”，说明已经连上汇码，不需要登录 ChatGPT 账号。点“Choose project”选练习文件夹，在输入框粘贴测试消息发送。如果安装时改装成了命令行版，按上面 Claude Code 的方法打开命令窗口，输入 <code>codex</code> 回车即可。</p><figure class="figure"><a href="assets/screenshots/quick-codex-desktop.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Codex 桌面版窗口，标题 ChatGPT Work，左下角显示汇码，输入框右侧显示 6.1 Sol Light。"><img class="screenshot-frame" src="assets/screenshots/quick-codex-desktop.jpg" width="1000" height="554" loading="lazy" alt="Codex 桌面版窗口，标题 ChatGPT Work，左下角显示汇码，输入框右侧显示 6.1 Sol Light。"></a><figcaption class="caption">图 10 · 左下角“汇码”、模型“6.1 Sol”说明配置生效。“Light”是推理强度，可以点开调整。</figcaption></figure>
         <div class="notice warning">如果 Codex 桌面版打开后仍要求登录 ChatGPT 账号，先关掉它，改用命令窗口里的 <code>codex</code>，并<a href="index.html#contact">告诉客服</a>你的 Codex 版本。这种情况不要为了登录去购买 ChatGPT 订阅。</div>
         <h3>WorkBuddy</h3>
-        <p>打开 WorkBuddy 并登录。在聊天输入框附近的模型下拉框里，选择刚才配置的模型（不要选“Auto”），粘贴测试消息发送。</p>
+        <p>打开 WorkBuddy 并登录。点输入框右下角的“<strong>快速</strong>”按钮打开模型列表，滚到最底部，在“自定义模型”里选中刚才配置的模型（例如 <code>gpt-6.1-sol</code>），粘贴测试消息发送。</p><figure class="figure medium"><a href="assets/screenshots/quick-workbuddy-model.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：WorkBuddy 模型列表，最底部的自定义模型分组里有 gpt-6.1-sol，下方是配置自定义模型入口。"><img class="screenshot-frame" src="assets/screenshots/quick-workbuddy-model.jpg" width="800" height="420" loading="lazy" alt="WorkBuddy 模型列表，最底部的自定义模型分组里有 gpt-6.1-sol，下方是配置自定义模型入口。"></a><figcaption class="caption">图 11 · 汇码的模型在列表最底部的“自定义模型”里。</figcaption></figure><figure class="figure"><a href="assets/screenshots/quick-workbuddy-reply.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：WorkBuddy 对话中收到回复连接成功，回复下方显示使用的模型 gpt-6.1-sol。"><img class="screenshot-frame" src="assets/screenshots/quick-workbuddy-reply.jpg" width="936" height="320" loading="lazy" alt="WorkBuddy 对话中收到回复连接成功，回复下方显示使用的模型 gpt-6.1-sol。"></a><figcaption class="caption">图 12 · 回复下方会显示使用的模型。</figcaption></figure>
         <div class="notice">在模型列表里没找到汇码的模型？先完全退出 WorkBuddy 再打开。还是没有的话，按<a href="cc-switch.html#workbuddy">进阶路线的 WorkBuddy 步骤</a>在设置里手动添加，只需填三项。</div>
         <div class="notice"><strong>完成标志：</strong>软件正常回复，并且汇码使用记录里能找到这条请求。没有回复或报错时，查看<a href="#faq">常见问题</a>。</div>
       </section>
@@ -203,6 +204,7 @@
           <tr><th scope="row">提示没有 winget</th><td>Windows 10 较老的版本可能没有。在微软商店搜索“应用安装程序”并更新，再重新运行安装脚本。Claude Code 不受影响。</td></tr>
           <tr><th scope="row">Codex 桌面版装不上</th><td>脚本会自动改装命令行版，可以正常使用。想要桌面版，可在打开的微软商店页面点“获取”。</td></tr>
           <tr><th scope="row">“claude 不是内部或外部命令”</th><td>关闭所有命令窗口，重新打开再试。仍然不行就重新运行安装脚本，查看“安装结果”。</td></tr>
+          <tr><th scope="row">“无法加载文件 claude.ps1，因为在此系统上禁止运行脚本”</th><td>在 PowerShell 窗口里会遇到。改用 <code>cmd</code> 打开命令窗口再输入 <code>claude</code>；或者重新运行一次安装脚本，它会修复这个问题，之后 PowerShell 也能用。不需要修改系统的脚本执行策略。</td></tr>
           <tr><th scope="row">Claude Code 仍要求登录</th><td>确认已运行配置脚本并显示“完成”，然后关闭命令窗口重新打开。还不行把配置脚本窗口的截图发给客服（先遮住 Key）。</td></tr>
           <tr><th scope="row">401 / Key 无效</th><td>Key 可能复制不完整或已被禁用。到汇码重新复制，回到第 3 步重新生成配置脚本。</td></tr>
           <tr><th scope="row">403 / 模型不存在</th><td>Key 的分组不支持这个模型。回到第 3 步点“读取可用模型”，从列表里重新选。</td></tr>

@@ -8,7 +8,9 @@ const MODEL_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/;
 export const TOOLS = Object.freeze({
   claude: {label: 'Claude Code', platform: 'anthropic'},
   codex: {label: 'Codex', platform: 'openai'},
-  workbuddy: {label: 'WorkBuddy', platform: 'any'},
+  // WorkBuddy only speaks the OpenAI-compatible protocol, so it takes OpenAI-style keys and GPT models.
+  // Non-GPT models are filtered out for now; revisit parseAvailableModels when domestic models are added.
+  workbuddy: {label: 'WorkBuddy', platform: 'openai'},
 });
 
 export function validateConfigInput(input = {}) {
@@ -226,8 +228,9 @@ function Set-WorkBuddy([string]$Key, [string]$Model) {
     supportsToolCall = $true; supportsImages = $false; supportsReasoning = $false
   }
   $isOurs = { param($item) (Test-JsonObject $item) -and $item.PSObject.Properties['url'] -and ([string]$item.url).StartsWith('https://api.tysy.top') }
+  # WorkBuddy itself creates models.json as a top-level array ([]) on first launch, so use that shape.
   if ($null -eq $document) {
-    $document = [pscustomobject][ordered]@{ models = @($entry); availableModels = @($Model) }
+    $document = @($entry)
   } elseif ($document -is [array]) {
     $document = @(@($document | Where-Object { !(& $isOurs $_) }) + $entry)
   } elseif ((Test-JsonObject $document) -and (!$document.PSObject.Properties['models'] -or $document.models -is [array])) {

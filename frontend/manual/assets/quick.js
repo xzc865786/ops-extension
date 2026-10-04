@@ -32,9 +32,9 @@ function clearKeys() {
 }
 
 const VENDOR_HINT = {
-  claude: '请换成 Anthropic 厂商的 Key 后重新读取。',
-  codex: '请换成 OpenAI 厂商的 Key 后重新读取。',
-  workbuddy: '请换一把有可用模型的 Key 后重新读取。',
+  claude: '请换成 Anthropic 风格的 Key 后重新读取。',
+  codex: '请换成 OpenAI 风格的 Key 后重新读取。',
+  workbuddy: '请换成 OpenAI 风格的 Key 后重新读取。',
 };
 
 function resetModels(tool, message = '先粘贴 Key，再点击“读取可用模型”') {
@@ -114,11 +114,8 @@ function fillModels(tool, payload) {
     return false;
   }
   const ids = models.map(model => model.id);
-  // Preselect a sensible default so beginners only need to confirm. WorkBuddy reusing the
-  // Codex key gets exactly the Codex default (gpt-6.1-sol, else gpt-6-luna).
-  const sharesCodexKey = tool === 'workbuddy' && configBoxes.find(box => box.value === 'codex').checked
-    && keyOf('workbuddy') === keyOf('codex');
-  const preferred = recommendModel(ids, sharesCodexKey ? 'codex' : tool);
+  // Preselect a sensible default so beginners only need to confirm.
+  const preferred = recommendModel(ids, tool);
   select.replaceChildren(...models.map(({id, label}) => {
     const option = new Option(id === preferred ? `${label}（推荐）` : label, id);
     option.selected = id === preferred;
