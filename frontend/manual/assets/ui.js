@@ -10,6 +10,9 @@ export function downloadUrl(url, name) {
 }
 
 export function download(text, name) {
+  // cmd.exe can misparse UTF-8 batch files with LF-only lines. Keep the
+  // downloaded script runnable even if a template was served with Unix lines.
+  if (/\.cmd$/i.test(name)) text = text.replace(/\r\n|\r|\n/g, '\r\n');
   const url = URL.createObjectURL(new Blob([text], {type: 'application/octet-stream'}));
   downloadUrl(url, name);
   setTimeout(() => URL.revokeObjectURL(url), 30000);

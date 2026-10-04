@@ -1,0 +1,2 @@
+# Windows command scripts must keep CRLF in checkouts and release archives.
+*.cmd text eol=crlf

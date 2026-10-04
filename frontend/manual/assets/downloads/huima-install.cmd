@@ -1,4 +1,5 @@
 @echo off
+rem Keep CRLF line endings when packaging or downloading this Windows script.
 setlocal EnableExtensions DisableDelayedExpansion
 chcp 65001 >nul 2>nul
 title 汇码 · 一键安装
