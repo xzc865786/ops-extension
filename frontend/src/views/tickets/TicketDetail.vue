@@ -6,6 +6,7 @@ import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/StatusBadge.vue'
 import FormDataView from '@/components/tickets/FormDataView.vue'
 import OrderTable from '@/components/tickets/OrderTable.vue'
+import ResolutionView from '@/components/tickets/ResolutionView.vue'
 import { downloadAttachment } from '@/utils/attachments'
 import { formatDateTime, labelFor, type LabelOption } from '@/utils/display'
 
@@ -180,11 +181,17 @@ async function download(id: number, filename: string) {
           v-if="ticket.orders?.length"
           :rows="ticket.orders.map((o: any) => ({ key: o.id, out_trade_no: o.out_trade_no, order: o.snapshot }))"
           :show-invoice="ticket.orders[0].purpose === 'INVOICE'"
+          snapshot
         />
         <div v-if="ticket.description" class="text-sm whitespace-pre-wrap">{{ ticket.description }}</div>
       </div>
       <p class="text-xs muted mt-2">提交的内容不可修改，请通过回复补充信息。</p>
       <div v-if="ticket.ref_ticket_no" class="text-sm mt-2">引用原单：{{ ticket.ref_ticket_no }}</div>
+    </div>
+
+    <div v-if="ticket.resolution" class="card p-5 sm:p-6">
+      <h2 class="section-title mb-2">处理结果</h2>
+      <ResolutionView :resolution="ticket.resolution" />
     </div>
 
     <div class="card p-5 sm:p-6">
@@ -208,7 +215,7 @@ async function download(id: number, filename: string) {
       <ul v-if="attachments.length" class="text-sm space-y-1 mb-3">
         <li v-for="a in attachments" :key="a.id">
           <button type="button" class="link" @click="download(a.id, a.file_name)">{{ a.file_name }}</button>
-          （{{ a.file_size }} bytes）
+          （{{ a.file_size }} bytes）<span v-if="a.kind === 'INVOICE_FILE'" class="badge-success ml-1">发票</span>
         </li>
       </ul>
       <p v-else class="text-sm muted mb-3">暂无附件。可在下方选择文件后上传。</p>

@@ -13,7 +13,7 @@ export interface OrderRow {
   noteKind?: 'error' | 'muted'
 }
 
-const props = defineProps<{ rows: OrderRow[]; showInvoice?: boolean; showLive?: boolean }>()
+const props = defineProps<{ rows: OrderRow[]; showInvoice?: boolean; showLive?: boolean; snapshot?: boolean }>()
 
 const money = (o: OrderSnapshot | null | undefined, key: keyof OrderSnapshot) =>
   o && o[key] !== undefined ? `${o.currency === 'CNY' || !o.currency ? '¥' : `${o.currency} `}${o[key]}` : '—'
@@ -35,7 +35,7 @@ const invoiceTotal = computed(() => {
           <th>到账额度</th>
           <th>类型</th>
           <th>支付时间</th>
-          <th>{{ showLive ? '提交时状态' : '状态' }}</th>
+          <th>{{ showLive || snapshot ? '提交时状态' : '状态' }}</th>
           <th v-if="showLive">当前状态</th>
           <th v-if="showInvoice">可开票金额</th>
         </tr>

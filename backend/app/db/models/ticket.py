@@ -1,5 +1,6 @@
 from app.db.types import BigInt, BigIntPK
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     BigInteger,
@@ -8,6 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
     func,
@@ -54,6 +56,8 @@ class Ticket(Base):
     form_data: Mapped[dict] = mapped_column(
         JSON().with_variant(JSONB(), "postgresql"), nullable=False, default=dict
     )
+    # Admin's recorded outcome for refund / invoice tickets (refunded, rejected, invoice issued).
+    resolution: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB(), "postgresql"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -63,6 +67,9 @@ class Ticket(Base):
     attachments: Mapped[list["TicketAttachment"]] = relationship(back_populates="ticket")
     events: Mapped[list["TicketEvent"]] = relationship(back_populates="ticket")
     orders: Mapped[list["TicketOrder"]] = relationship(back_populates="ticket", order_by="TicketOrder.id")
+    refund_operations: Mapped[list["TicketRefundOperation"]] = relationship(
+        back_populates="ticket", order_by="TicketRefundOperation.id"
+    )
 
     @property
     def order_nos(self) -> list[str]:
@@ -102,6 +109,7 @@ class TicketAttachment(Base):
     mime_type: Mapped[str] = mapped_column(String(128), nullable=False)
     file_size: Mapped[int] = mapped_column(BigInt, nullable=False)
     sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    kind: Mapped[str] = mapped_column(String(20), nullable=False, default="GENERAL")  # GENERAL | INVOICE_FILE
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     ticket: Mapped[Ticket] = relationship(back_populates="attachments")
@@ -141,6 +149,34 @@ class TicketOrder(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     ticket: Mapped[Ticket] = relationship(back_populates="orders")
+
+
+class TicketRefundOperation(Base):
+    """One refund request sent to Sub2API from a ticket, with what came of it."""
+
+    __tablename__ = "ticket_refund_operations"
+    __table_args__ = (Index("ix_ticket_refund_operations_ticket", "ticket_id"),)
+
+    id: Mapped[int] = mapped_column(BigIntPK, primary_key=True, autoincrement=True)
+    ticket_id: Mapped[int] = mapped_column(BigInt, ForeignKey("tickets.id"), nullable=False)
+    sub2api_order_id: Mapped[int] = mapped_column(BigInt, nullable=False)
+    out_trade_no: Mapped[str] = mapped_column(String(64), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    deduct_balance: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    force: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    reason: Mapped[str] = mapped_column(String(255), nullable=False)
+    # IN_PROGRESS | SUCCESS | PENDING | REQUIRE_FORCE | FAILED | UNKNOWN
+    result: Mapped[str] = mapped_column(String(20), nullable=False)
+    message: Mapped[str | None] = mapped_column(Text)
+    response_summary: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB(), "postgresql"))
+    operator_user_id: Mapped[int] = mapped_column(BigInt, ForeignKey("extension_users.id"), nullable=False)
+    operator_name: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    ticket: Mapped[Ticket] = relationship(back_populates="refund_operations")
 
 
 class TicketFormConfigVersion(Base):

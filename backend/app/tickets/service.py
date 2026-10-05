@@ -259,6 +259,7 @@ def load_ticket_detail(db: Session, ticket_id: int, *, include_internal: bool) -
             selectinload(Ticket.attachments),
             selectinload(Ticket.events),
             selectinload(Ticket.orders),
+            selectinload(Ticket.refund_operations),
         )
     )
     if not ticket:
@@ -410,6 +411,10 @@ def patch_ticket_admin(db: Session, ticket: Ticket, admin: CurrentUser, data) ->
             raise bad_request("无效状态", "INVALID_STATUS") from exc
         cur = TicketStatus(ticket.status)
         if new_status != cur:
+            kind = (ticket.form_schema or {}).get("kind")
+            if (new_status == TicketStatus.RESOLVED and kind in ("refund", "invoice")
+                    and ticket.form_version is not None and not ticket.resolution):
+                raise bad_request("退款和开票工单请先在处理面板登记结果（退款、开票或驳回）", "RESOLUTION_REQUIRED")
             if new_status not in TICKET_STATUS_TRANSITIONS.get(cur, set()) and new_status != TicketStatus.CLOSED:
                 # allow direct CLOSED from any non-closed
                 if new_status != TicketStatus.CLOSED:
@@ -434,6 +439,8 @@ def patch_ticket_admin(db: Session, ticket: Ticket, admin: CurrentUser, data) ->
         _, config = form_config.live_config(db)
         if not config.category(data.category):
             raise bad_request("无效分类", "INVALID_CATEGORY")
+        if data.category != ticket.category and (ticket.resolution or ticket.refund_operations):
+            raise bad_request("已经处理过退款或开票的工单不能修改分类", "CATEGORY_LOCKED")
         if data.category != ticket.category:
             old = ticket.category
             ticket.category = data.category

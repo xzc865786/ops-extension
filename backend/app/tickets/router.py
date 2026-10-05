@@ -8,8 +8,13 @@ from app.db.models.ticket import TicketAttachment
 from app.db.session import get_db
 from app.deps import CurrentUser, require_admin, require_login
 from app.orders import service as orders
-from app.tickets import service
+from app.tickets import handling, service
 from app.tickets.schemas import (
+    InvoiceIssueBody,
+    ManualRefundBody,
+    RefundBody,
+    RefundOperationOut,
+    RejectBody,
     TicketAdminPatch,
     TicketAttachmentOut,
     TicketCreate,
@@ -28,7 +33,14 @@ def _ticket_out(ticket, *, include_internal: bool) -> dict:
     if not include_internal:
         data["messages"] = [m for m in data["messages"] if not m["is_internal"]]
         data["events"] = [e for e in data["events"] if e["event_type"] != TicketEventType.INTERNAL_NOTE_ADDED.value]
+        data["refund_operations"] = []
+        if data["resolution"]:
+            data["resolution"] = {k: v for k, v in data["resolution"].items() if not k.startswith("operator_")}
     return data
+
+
+def _admin_detail(db: Session, ticket_id: int) -> dict:
+    return _ticket_out(service.load_ticket_detail(db, ticket_id, include_internal=True), include_internal=True)
 
 
 @router.get("/tickets/meta")
@@ -216,6 +228,42 @@ def admin_get_ticket(
 def admin_live_orders(ticket_id: int, db: Session = Depends(get_db), admin: CurrentUser = Depends(require_admin)):
     detail = service.load_ticket_detail(db, ticket_id, include_internal=True)
     return orders.live_orders(db, detail)
+
+
+@router.post("/admin/tickets/{ticket_id}/refund")
+def admin_refund(ticket_id: int, body: RefundBody, db: Session = Depends(get_db),
+                 admin: CurrentUser = Depends(require_admin)):
+    op = handling.execute_refund(db, ticket_id, admin, amount=body.amount, deduct_balance=body.deduct_balance,
+                                 force=body.force, reason=body.reason)
+    return {"operation": RefundOperationOut.model_validate(op).model_dump(), "ticket": _admin_detail(db, ticket_id)}
+
+
+@router.post("/admin/tickets/{ticket_id}/refund/sync")
+def admin_refund_sync(ticket_id: int, db: Session = Depends(get_db), admin: CurrentUser = Depends(require_admin)):
+    result = handling.sync_refund(db, ticket_id, admin)
+    return {**result, "ticket": _admin_detail(db, ticket_id)}
+
+
+@router.post("/admin/tickets/{ticket_id}/refund/manual")
+def admin_refund_manual(ticket_id: int, body: ManualRefundBody, db: Session = Depends(get_db),
+                        admin: CurrentUser = Depends(require_admin)):
+    handling.register_manual_refund(db, ticket_id, admin, body.amount, body.note)
+    return _admin_detail(db, ticket_id)
+
+
+@router.post("/admin/tickets/{ticket_id}/reject")
+def admin_reject(ticket_id: int, body: RejectBody, db: Session = Depends(get_db),
+                 admin: CurrentUser = Depends(require_admin)):
+    handling.reject(db, ticket_id, admin, body.reason)
+    return _admin_detail(db, ticket_id)
+
+
+@router.post("/admin/tickets/{ticket_id}/invoice")
+def admin_issue_invoice(ticket_id: int, body: InvoiceIssueBody, db: Session = Depends(get_db),
+                        admin: CurrentUser = Depends(require_admin)):
+    handling.issue_invoice(db, ticket_id, admin, invoice_no=body.invoice_no, issued_on=body.issued_on,
+                           amount=body.amount, attachment_id=body.attachment_id, emailed=body.emailed)
+    return _admin_detail(db, ticket_id)
 
 
 @router.post("/admin/tickets/{ticket_id}/claim")

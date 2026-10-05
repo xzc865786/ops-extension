@@ -117,12 +117,12 @@ def active_duplicate(db: Session, purpose: str, nos: list[str], *, exclude_ticke
     """(out_trade_no, ticket_no) of a ticket already handling one of these orders for this purpose.
 
     Payment tickets may repeat. A refund / invoice ticket blocks while open, and for good once it
-    has been resolved, even if closed afterwards.
+    has been resolved, even if closed afterwards, unless the request was rejected.
     """
     if purpose == "PAYMENT" or not nos:
         return None
     q = (
-        select(TicketOrder.out_trade_no, Ticket.ticket_no)
+        select(TicketOrder.out_trade_no, Ticket.ticket_no, Ticket.resolution)
         .join(Ticket, Ticket.id == TicketOrder.ticket_id)
         .where(TicketOrder.purpose == purpose, TicketOrder.out_trade_no.in_(nos),
                or_(Ticket.status != TicketStatus.CLOSED.value, Ticket.resolved_at.is_not(None)))
@@ -130,8 +130,10 @@ def active_duplicate(db: Session, purpose: str, nos: list[str], *, exclude_ticke
     )
     if exclude_ticket_id is not None:
         q = q.where(Ticket.id != exclude_ticket_id)
-    row = db.execute(q.limit(1)).first()
-    return tuple(row) if row else None
+    for no, ticket_no, resolution in db.execute(q):
+        if (resolution or {}).get("outcome") != "REJECTED":
+            return no, ticket_no
+    return None
 
 
 def _duplicate_message(purpose: str, dup: tuple) -> str:

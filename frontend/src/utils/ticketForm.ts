@@ -191,3 +191,31 @@ export function orderNosOf(value: unknown): string[] {
   if (Array.isArray(value)) return value.map(String)
   return typeof value === 'string' ? splitOrderNos(value) : []
 }
+
+// ---- refunds and resolutions -----------------------------------------------
+
+/** Money returned to the payer for a credited refund amount (mirrors Sub2API's proportional rule). */
+export function gatewayAmount(order: OrderSnapshot | null | undefined, refund: number): number {
+  const amount = Number(order?.amount || 0)
+  const pay = Number(order?.pay_amount || 0)
+  if (!(amount > 0 && pay > 0) || !(refund > 0)) return refund > 0 ? refund : 0
+  if (Math.abs(refund - amount) <= 0.01) return pay
+  return Math.round((pay * refund) / amount * 100) / 100
+}
+
+export const REFUND_RESULT_LABELS: Record<string, string> = {
+  IN_PROGRESS: '处理中',
+  SUCCESS: '成功',
+  PENDING: '渠道处理中',
+  REQUIRE_FORCE: '需要确认',
+  FAILED: '失败',
+  UNKNOWN: '结果未知',
+}
+
+export const OPEN_REFUND_RESULTS = ['IN_PROGRESS', 'PENDING', 'UNKNOWN']
+
+export const RESOLUTION_SOURCE_LABELS: Record<string, string> = {
+  SUB2API: '工单内退款',
+  SYNC: '从 Sub2API 同步',
+  MANUAL: '手动登记',
+}

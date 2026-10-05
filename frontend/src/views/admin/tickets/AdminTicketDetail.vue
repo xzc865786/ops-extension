@@ -6,8 +6,10 @@ import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/StatusBadge.vue'
 import FormDataView from '@/components/tickets/FormDataView.vue'
 import OrderTable from '@/components/tickets/OrderTable.vue'
+import InvoicePanel from '@/components/tickets/InvoicePanel.vue'
+import RefundPanel from '@/components/tickets/RefundPanel.vue'
 import { downloadAttachment } from '@/utils/attachments'
-import { formatDateTime, labelFor } from '@/utils/display'
+import { TICKET_EVENT_LABELS, formatDateTime, labelFor } from '@/utils/display'
 
 const route = useRoute()
 const toast = useToast()
@@ -32,12 +34,18 @@ async function load() {
     api.get(`/admin/tickets/${route.params.id}`),
     api.get('/tickets/meta'),
   ])
-  ticket.value = t
   meta.value = m
+  applyTicket(t)
+}
+
+function applyTicket(t: any) {
+  ticket.value = t
   patch.status = t.status
   patch.category = t.category
   patch.priority = t.priority
 }
+
+const kind = computed(() => ticket.value?.form_schema?.kind)
 
 onMounted(load)
 
@@ -279,6 +287,9 @@ async function download(id: number, filename: string) {
       >保存变更</button>
     </div>
 
+    <RefundPanel v-if="kind === 'refund'" :ticket="ticket" :lookup-enabled="!!meta.order_lookup" @updated="applyTicket" />
+    <InvoicePanel v-else-if="kind === 'invoice'" :ticket="ticket" @updated="applyTicket" @reload="load" />
+
     <div class="card p-5 sm:p-6">
       <h2 class="section-title mb-2">消息 / 内部备注</h2>
       <div
@@ -309,7 +320,7 @@ async function download(id: number, filename: string) {
       <ul v-if="attachments.length" class="text-sm space-y-1 mb-3">
         <li v-for="a in attachments" :key="a.id">
           <button type="button" class="link" @click="download(a.id, a.file_name)">{{ a.file_name }}</button>
-          （{{ a.file_size }} bytes）
+          （{{ a.file_size }} bytes）<span v-if="a.kind === 'INVOICE_FILE'" class="badge-success ml-1">发票</span>
         </li>
       </ul>
       <p v-else class="text-sm muted mb-3">暂无附件。可在下方选择文件后上传。</p>
@@ -338,7 +349,7 @@ async function download(id: number, filename: string) {
       <h2 class="font-medium mb-2">事件时间线</h2>
       <ul class="text-sm space-y-1">
         <li v-for="e in ticket.events" :key="e.id">
-          <span class="muted">{{ formatDateTime(e.created_at) }}</span> · {{ e.event_type }}
+          <span class="muted">{{ formatDateTime(e.created_at) }}</span> · {{ TICKET_EVENT_LABELS[e.event_type] || e.event_type }}
         </li>
       </ul>
       <p v-if="!ticket.events?.length" class="text-sm muted">暂无事件</p>

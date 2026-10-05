@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -47,6 +48,7 @@ class TicketAttachmentOut(BaseModel):
     file_name: str
     mime_type: str
     file_size: int
+    kind: str = "GENERAL"
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -71,6 +73,47 @@ class TicketOrderOut(BaseModel):
     snapshot: dict | None
 
     model_config = {"from_attributes": True}
+
+
+class RefundOperationOut(BaseModel):
+    id: int
+    out_trade_no: str
+    amount: Decimal
+    deduct_balance: bool
+    force: bool
+    reason: str
+    result: str
+    message: str | None
+    response_summary: dict | None
+    operator_name: str | None
+    created_at: datetime
+    updated_at: datetime | None
+
+    model_config = {"from_attributes": True}
+
+
+class RefundBody(BaseModel):
+    amount: Decimal = Field(..., gt=0, max_digits=14, decimal_places=2)
+    deduct_balance: bool = True
+    force: bool = False
+    reason: str = Field(default="", max_length=100)
+
+
+class RejectBody(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=500)
+
+
+class ManualRefundBody(BaseModel):
+    amount: Decimal = Field(..., gt=0, max_digits=14, decimal_places=2)
+    note: str | None = Field(default=None, max_length=200)
+
+
+class InvoiceIssueBody(BaseModel):
+    invoice_no: str = Field(..., max_length=40)
+    issued_on: date
+    amount: Decimal = Field(..., gt=0, max_digits=14, decimal_places=2)
+    attachment_id: int
+    emailed: bool = False
 
 
 class TicketOut(BaseModel):
@@ -102,6 +145,8 @@ class TicketOut(BaseModel):
     attachments: list[TicketAttachmentOut] = []
     events: list[TicketEventOut] = []
     orders: list[TicketOrderOut] = []
+    resolution: dict | None = None
+    refund_operations: list[RefundOperationOut] = []
 
     model_config = {"from_attributes": True}
 
