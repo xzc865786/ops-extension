@@ -18,8 +18,8 @@
 .tool-pick { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:6px 0 4px; }
 .tool-pick label { position:relative; cursor:pointer; }
 .tool-pick input { position:absolute; width:1px; height:1px; opacity:0; }
-.tool-pick span { display:flex; flex-direction:column; gap:3px; height:100%; padding:14px 16px 14px 44px; border:1px solid #c5ccd4; border-radius:10px; background:white; font-weight:650; line-height:1.5; }
-.tool-pick span::before { position:absolute; top:16px; left:16px; width:18px; height:18px; border:1.5px solid #9aa3ad; border-radius:5px; background:white; content:""; }
+.tool-pick label > span { display:flex; flex-direction:column; gap:3px; height:100%; padding:14px 16px 14px 44px; border:1px solid #c5ccd4; border-radius:10px; background:white; font-weight:650; line-height:1.5; }
+.tool-pick label > span::before { position:absolute; top:16px; left:16px; width:18px; height:18px; border:1.5px solid #9aa3ad; border-radius:5px; background:white; content:""; }
 .tool-pick small { color:var(--muted); font-size:12px; font-weight:450; line-height:1.6; }
 .tool-pick input:checked + span { border-color:var(--accent); background:var(--accent-soft); }
 .tool-pick input:checked + span::before { border-color:var(--accent); background:var(--accent); }
