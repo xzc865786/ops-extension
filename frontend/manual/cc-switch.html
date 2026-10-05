@@ -25,23 +25,32 @@
   <div class="docs-layout">
     <aside id="docs-sidebar" aria-label="文档目录">
       <nav aria-label="手册章节">
-        <p class="nav-label">选择路线</p>
-        <a href="index.html#start">手册首页</a>
-        <a href="quick.html">新手 · 一键安装和配置</a>
-        <a href="cc-switch.html" aria-current="page">进阶 · 用 CC Switch 配置</a>
-        <p class="nav-label">进阶路线</p>
-        <a href="#start">开始之前</a>
-        <a href="#download">1 安装 CC Switch</a>
-        <a href="#params">2 接入参数</a>
-        <a href="#import">3 一键导入</a>
-        <a href="#claude">手动配置 Claude Code</a>
-        <a href="#codex">手动配置 Codex</a>
-        <a href="#workbuddy">配置 WorkBuddy</a>
-        <a href="#verify">4 发消息测试</a>
-        <p class="nav-label">日常操作</p>
-        <a href="#switch">多把 Key 切换</a>
-        <a href="#restore">恢复原配置</a>
-        <a href="#faq">常见问题</a>
+        <a class="nav-home" href="index.html#start">手册首页 · 选择路线</a>
+        <p class="nav-label">一、准备账号</p>
+        <a href="index.html#account"><span class="nav-num">01</span>注册与登录</a>
+        <a href="index.html#balance"><span class="nav-num">02</span>额度与充值</a>
+        <a href="index.html#api-key"><span class="nav-num">03</span>创建 API Key</a>
+        <p class="nav-label">二、安装和配置 · 二选一</p>
+        <a class="nav-route" href="quick.html">新手路线 · 一键安装配置<small>Windows · 适合第一次用</small></a>
+        <a class="nav-route is-open" href="#start">进阶路线 · CC Switch<small>Win / Mac · 已装好软件</small></a>
+        <div class="nav-sub">
+          <a href="#download"><span class="nav-num">4.1</span>安装 CC Switch</a>
+          <a href="#params"><span class="nav-num">4.2</span>接入参数</a>
+          <a href="#import"><span class="nav-num">4.3</span>一键导入（推荐）</a>
+          <a class="nav-alt" href="#claude">手动：Claude Code</a>
+          <a class="nav-alt" href="#codex">手动：Codex</a>
+          <a class="nav-alt" href="#workbuddy">WorkBuddy 配置</a>
+          <a href="#verify"><span class="nav-num">05</span>发消息测试</a>
+          <a href="#switch">多把 Key 切换</a>
+          <a href="#restore">恢复原配置</a>
+          <a href="#faq">本路线常见问题</a>
+        </div>
+        <p class="nav-label">三、日常使用</p>
+        <a href="index.html#usage">查看用量与控制消费</a>
+        <a href="index.html#security">安全使用须知</a>
+        <p class="nav-label">四、遇到问题</p>
+        <a href="index.html#troubleshooting">常见问题与报错</a>
+        <a href="index.html#contact">联系客服</a>
       </nav>
       <div class="sidebar-note">CC Switch 指 farion1231/cc-switch<br>Windows 与 macOS 均适用</div>
     </aside>
@@ -57,11 +66,11 @@
           <article class="card"><h3>WorkBuddy</h3><p>CC Switch 不管理 WorkBuddy。在 WorkBuddy 自己的设置里添加自定义模型，填三项即可。</p></article>
           <article class="card"><h3>还没装客户端？</h3><p>改走<a href="quick.html">新手路线</a>，脚本会帮你装好并配置。</p></article>
         </div>
-        <div class="notice warning">Key 的风格要和客户端对应：Claude Code 用 Anthropic 风格的 Key，Codex 和 WorkBuddy 用 OpenAI 风格的 Key。还没有 Key？先看<a href="index.html#api-key">创建 API Key</a>。</div>
+        <div class="notice warning">Key 的风格要和客户端对应：Claude Code 用 Anthropic 风格的 Key，Codex 和 WorkBuddy 用 OpenAI 风格的 Key。进阶路线是整个接入流程的第 4、5 步，开始前需要完成手册首页的 01–03。还没有 Key？先看 03 <a href="index.html#api-key">创建 API Key</a>。</div>
       </section>
 
       <section class="doc-section" id="download" data-title="下载 安装 CC Switch MSI DMG Windows macOS ARM64 GitHub">
-        <p class="eyebrow">第 1 步</p><h2>安装 CC Switch</h2>
+        <p class="eyebrow">第 4.1 步 · 安装</p><h2>安装 CC Switch</h2>
         <div class="setup-actions"><a class="button primary" href="assets/downloads/CC-Switch-v3.20.4-Windows.msi" data-cfg-download="ccswitch-windows" download>下载 Windows 版 v<span data-cfg="ccswitch.version">3.20.4</span>（本站，国内直连）</a><a class="button secondary" href="https://github.com/farion1231/cc-switch/releases/latest" data-cfg-link="ccswitch.releases_url" target="_blank" rel="noopener noreferrer">GitHub 官方发布页 ↗</a></div>
         <ul>
           <li><strong>Windows x64</strong>：用本站安装包，双击 <code>.msi</code> 按向导安装。</li>
@@ -72,7 +81,7 @@
       </section>
 
       <section class="doc-section" id="params" data-title="参数 地址 Base URL 端点 协议 Responses Anthropic Chat Completions ANTHROPIC_AUTH_TOKEN 模型">
-        <p class="eyebrow">第 2 步</p><h2>接入参数</h2>
+        <p class="eyebrow">第 4.2 步 · 参数</p><h2>接入参数</h2>
         <p>三个客户端的地址各不相同，不要互相照抄。</p>
         <div class="table-wrap"><table class="field-table"><caption>汇码接入参数</caption><thead><tr><th scope="col">客户端</th><th scope="col">请求地址</th><th scope="col">协议 / 鉴权</th></tr></thead><tbody>
           <tr><th scope="row">Claude Code</th><td><code data-cfg="site.url">https://api.tysy.top</code></td><td>Anthropic；<code>ANTHROPIC_AUTH_TOKEN</code></td></tr>
@@ -84,7 +93,7 @@
       </section>
 
       <section class="doc-section" id="import" data-title="一键导入 导入 ccswitch 链接 生成 Key 模型 读取">
-        <p class="eyebrow">第 3 步 · 推荐</p><h2>一键导入 CC Switch</h2>
+        <p class="eyebrow">第 4.3 步 · 推荐</p><h2>一键导入 CC Switch</h2>
         <p>填好 Key、选好模型，点击导入，CC Switch 会弹出预览，你确认后才会保存。不想用网页导入，可以跳到<a href="#claude">手动配置</a>。</p>
         <div class="setup-panel">
           <fieldset class="target-fieldset"><legend class="field-label">1. 选择客户端</legend><div class="target-switch">
@@ -109,7 +118,7 @@
       </section>
 
       <section class="doc-section" id="claude" data-title="手动 Claude Code Claude 面板 自定义 供应商 添加 ANTHROPIC_AUTH_TOKEN 启用">
-        <p class="eyebrow">手动配置</p><h2>在 CC Switch 添加 Claude Code</h2>
+        <p class="eyebrow">第 4.3 步 · 或手动配置</p><h2>在 CC Switch 添加 Claude Code</h2>
         <ol class="steps">
           <li class="step"><span class="step-number">1</span><div class="step-content"><h3>在 Claude 面板点“+”，选“自定义配置”</h3><p>在 Claude 面板点右上角橙色 <strong>+</strong>。顶部保持“<strong>Claude 供应商</strong>”，预设列表里选第一个“<strong>自定义配置</strong>”（默认已选中）。下面那些是其他中转商的预设，<strong>不要选</strong>。</p><figure class="figure"><a href="assets/screenshots/ccs-preset.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：CC Switch 添加新供应商页面，顶部 Claude 供应商标签已选中，预设列表第一个自定义配置已选中，后面是大量其他中转商预设。"><img class="screenshot-frame" src="assets/screenshots/ccs-preset.jpg" width="1000" height="519" loading="lazy" alt="CC Switch 添加新供应商页面，顶部 Claude 供应商标签已选中，预设列表第一个自定义配置已选中，后面是大量其他中转商预设。"></a><figcaption class="caption">图 5 · 保持“自定义配置”，往下滚动填写表单。</figcaption></figure></div></li>
           <li class="step"><span class="step-number">2</span><div class="step-content"><h3>填写名称、Key 和请求地址</h3><p>供应商名称填“汇码”，官网链接可填 <code data-cfg="site.url">https://api.tysy.top</code>，API Key 粘贴 Anthropic 风格的完整 Key，请求地址填下面的地址。“完整 URL”开关<strong>保持关闭</strong>，地址末尾不要加斜杠。</p><div class="copy-row"><code class="copy-value" data-cfg="site.url">https://api.tysy.top</code><button class="copy-button" type="button" aria-label="复制 Claude Code 地址">复制</button></div><figure class="figure"><a href="assets/screenshots/ccs-claude-form.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：CC Switch Claude 供应商表单：供应商名称、备注、官网链接、API Key、请求地址（完整 URL 开关关闭），下方是折叠的高级选项。"><img class="screenshot-frame" src="assets/screenshots/ccs-claude-form.jpg" width="1000" height="516" loading="lazy" alt="CC Switch Claude 供应商表单：供应商名称、备注、官网链接、API Key、请求地址（完整 URL 开关关闭），下方是折叠的高级选项。"></a><figcaption class="caption">图 6 · 表单上半部分。</figcaption></figure></div></li>
@@ -136,7 +145,7 @@
       </section>
 
       <section class="doc-section" id="codex" data-title="手动 Codex 面板 自定义 Responses 原生 官方登录 保留 config.toml">
-        <p class="eyebrow">手动配置</p><h2>在 CC Switch 添加 Codex</h2>
+        <p class="eyebrow">第 4.3 步 · 或手动配置</p><h2>在 CC Switch 添加 Codex</h2>
         <ol class="steps">
           <li class="step"><span class="step-number">1</span><div class="step-content"><h3>需要保留官方登录？先开开关</h3><p>想保留 ChatGPT 官方登录，先在 <strong>设置 → 通用 → Codex 应用增强</strong> 中开启“非接管切换时保留官方登录”，并备份现有配置。</p></div></li>
           <li class="step"><span class="step-number">2</span><div class="step-content"><h3>选 Codex 面板，添加自定义配置</h3><p>点顶部第三个 OpenAI 图标切到 <strong>Codex</strong> 面板 → 右上角 <strong>+</strong> → 预设保持第一个“<strong>自定义配置</strong>”。名称填“汇码”。</p></div></li>
@@ -159,7 +168,7 @@ requires_openai_auth = true</code></pre>
       </section>
 
       <section class="doc-section" id="workbuddy" data-title="WorkBuddy 自定义模型 设置 模型 添加 Custom chat completions 接口地址">
-        <p class="eyebrow">手动配置</p><h2>在 WorkBuddy 添加自定义模型</h2>
+        <p class="eyebrow">第 4.3 步 · WorkBuddy 单独配置</p><h2>在 WorkBuddy 添加自定义模型</h2>
         <p>WorkBuddy 不通过 CC Switch 配置，在它自己的设置里添加即可。</p>
         <ol class="steps">
           <li class="step"><span class="step-number">1</span><div class="step-content"><h3>打开“添加模型”</h3><p>点左下角头像 →“设置”→“模型”→ 右上角“添加模型”。也可以点输入框右下角的“快速”按钮，在列表最底部点“配置自定义模型”。</p></div></li>
@@ -171,7 +180,7 @@ requires_openai_auth = true</code></pre>
       </section>
 
       <section class="doc-section" id="verify" data-title="测试 验证 status 发消息 使用记录 连接成功">
-        <p class="eyebrow">第 4 步</p><h2>发一条消息测试</h2>
+        <p class="eyebrow">第 5 步 · 测试</p><h2>发一条消息测试</h2>
         <div class="copy-row"><span class="copy-value">请只回复四个字：连接成功。</span><button class="copy-button" type="button" aria-label="复制测试消息">复制测试消息</button></div>
         <ul>
           <li><strong>Claude Code</strong>：在练习目录运行 <code>claude</code>。第一次打开会先出现两页引导：选文字样式（直接按回车）、安全提示（按回车），然后问是否信任文件夹（按 <kbd>↓</kbd> 选“Yes, I trust this folder”再回车）。进入后先输入 <code>/status</code> 确认地址是 <code data-cfg="site.host">api.tysy.top</code>，再发测试消息。</li>
@@ -182,7 +191,7 @@ requires_openai_auth = true</code></pre>
       </section>
 
       <section class="doc-section" id="switch" data-title="切换 多把 Key 换 Key 编辑 启用 卡片">
-        <p class="eyebrow">日常操作</p><h2>多把 Key 切换</h2>
+        <p class="eyebrow">以后会用到</p><h2>多把 Key 切换</h2>
         <ul>
           <li><strong>换 Key</strong>：先结束任务、退出客户端 → 在 CC Switch 卡片上点“编辑”→ 替换 API Key → 保存 → 重开客户端测试。</li>
           <li><strong>多把 Key 并存</strong>：分别建“汇码·个人”“汇码·工作”两张卡片，需要时点目标卡片的“启用”，再重开客户端。</li>
@@ -192,7 +201,7 @@ requires_openai_auth = true</code></pre>
       </section>
 
       <section class="doc-section" id="restore" data-title="恢复 回退 官方登录 原配置 旧版脚本 回滚">
-        <p class="eyebrow">日常操作</p><h2>恢复原配置</h2>
+        <p class="eyebrow">以后会用到</p><h2>恢复原配置</h2>
         <ul>
           <li><strong>切回原来的服务商</strong>：在 CC Switch 启用之前的卡片，重开客户端，用 <code>/status</code> 或短消息确认。</li>
           <li><strong>恢复 Claude 官方登录</strong>：启用“Claude 官方”预设，清理你自己在系统环境变量里写过的汇码地址和 Key，再按官方引导或 <code>/login</code> 登录。</li>
@@ -207,7 +216,7 @@ requires_openai_auth = true</code></pre>
       </section>
 
       <section class="doc-section" id="faq" data-title="常见问题 导入没反应 仍要求登录 401 403 404 环境变量 冲突">
-        <p class="eyebrow">遇到问题</p><h2>常见问题</h2>
+        <p class="eyebrow">遇到问题</p><h2>进阶路线常见问题</h2>
         <details><summary>点“在 CC Switch 中导入”没反应？</summary><p>确认 CC Switch 已安装并至少打开过一次；免安装 ZIP 版可能没有登记导入链接，换用 MSI 安装版或手动配置。</p></details>
         <details><summary>配置成功了，Claude Code 仍要求登录？</summary><p>检查汇码卡片是否是蓝色高亮（已启用）、面板是否选对、Key 是否完整。第一次打开时出现的“选文字样式”“安全提示”是正常的引导页，按回车即可，不是登录页。</p></details>
         <details><summary>出现 401、403 或模型不存在？</summary><p>401 多为 Key 不完整、失效；403 可能是分组无权限；模型不存在时，用上方“读取可用模型”核对完整 ID。</p></details>

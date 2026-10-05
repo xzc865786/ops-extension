@@ -25,21 +25,22 @@
   <div class="docs-layout">
     <aside id="docs-sidebar" aria-label="文档目录">
       <nav aria-label="手册章节">
-        <p class="nav-label">选择路线</p>
-        <a href="#start">从这里开始</a>
-        <a href="quick.html">新手 · 一键安装和配置</a>
-        <a href="cc-switch.html">进阶 · 用 CC Switch 配置</a>
-        <p class="nav-label">准备账号和 Key</p>
-        <a href="#account">01 注册与登录</a>
-        <a href="#balance">02 额度与充值</a>
-        <a href="#api-key">03 创建 API Key</a>
-        <p class="nav-label">日常使用</p>
+        <a class="nav-home" href="#start">手册首页 · 选择路线</a>
+        <p class="nav-label">一、准备账号</p>
+        <a href="#account"><span class="nav-num">01</span>注册与登录</a>
+        <a href="#balance"><span class="nav-num">02</span>额度与充值</a>
+        <a href="#api-key"><span class="nav-num">03</span>创建 API Key</a>
+        <p class="nav-label">二、安装和配置 · 二选一</p>
+        <a class="nav-route" href="quick.html">新手路线 · 一键安装配置<small>Windows · 适合第一次用</small></a>
+        <a class="nav-route" href="cc-switch.html">进阶路线 · CC Switch<small>Win / Mac · 已装好软件</small></a>
+        <p class="nav-label">三、日常使用</p>
         <a href="#usage">查看用量与控制消费</a>
-        <a href="#troubleshooting">常见问题与报错</a>
         <a href="#security">安全使用须知</a>
+        <p class="nav-label">四、遇到问题</p>
+        <a href="#troubleshooting">常见问题与报错</a>
         <a href="#contact">联系客服</a>
       </nav>
-      <div class="sidebar-note">两条路线都要先准备<br>账号、额度和 API Key</div>
+      <div class="sidebar-note">第一次用？按 01 → 05 的顺序<br>走一遍就能用上</div>
     </aside>
     <main id="main-content" tabindex="-1">
       <p id="search-status" class="search-status" aria-live="polite" role="status" hidden></p>
@@ -76,25 +77,25 @@
         <div class="notice"><strong>已经有账号和 Key？</strong>直接选上面的路线。已经配置好却报错？查看<a href="#troubleshooting">常见问题</a>。</div>
       </section>
 
-      <section class="doc-section" id="account" data-title="注册 登录 账户 密码 邮箱 验证码 邀请码">
-        <p class="eyebrow">准备 01</p><h2>注册与登录</h2>
+      <section class="doc-section" id="account" data-title="注册 登录 账户 密码 邮箱 验证码 邀请码 条款 同意 灰色 无法输入">
+        <p class="eyebrow">第 1 步 · 准备账号</p><h2>注册与登录</h2>
         <p>准备一个能正常收信的邮箱。已有账号就直接登录，不需要重复注册。</p>
         <ol class="steps">
-          <li class="step"><span class="step-number" aria-hidden="true">1</span><div class="step-content"><h3>打开注册网址</h3><p>在浏览器最上方的<strong>地址栏</strong>输入 <a href="https://api.tysy.top/register" data-cfg-href="/register" data-cfg-text target="_blank" rel="noopener noreferrer">https://api.tysy.top/register</a>，再按回车。不要输进聊天框。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">1</span><div class="step-content"><h3>打开注册网址</h3><p>在浏览器最上方的<strong>地址栏</strong>输入 <a href="https://api.tysy.top/register" data-cfg-href="/register" data-cfg-text target="_blank" rel="noopener noreferrer">https://api.tysy.top/register</a>，再按回车。不要输进聊天框。</p><p>如果先弹出“条款更新通知”，看过条款后点击“同意并继续”。没有同意之前，输入框是灰色的，无法填写。</p></div></li>
           <li class="step"><span class="step-number" aria-hidden="true">2</span><div class="step-content"><h3>填写邮箱和密码</h3><p>输入自己的邮箱，设置密码，再在“确认密码”中输入一次相同密码。建议使用至少 12 位、且不与其他网站重复的密码。页面标注“可选”的邀请码没有就留空。</p></div></li>
           <li class="step"><span class="step-number" aria-hidden="true">3</span><div class="step-content"><h3>完成邮箱验证</h3><p>点击“继续”，按页面提示到邮箱查收验证码。填入最新邮件中的验证码，再点击验证按钮。验证码只填在网站验证页面，不要发给他人。</p></div></li>
           <li class="step"><span class="step-number" aria-hidden="true">4</span><div class="step-content"><h3>进入自己的控制台</h3><p>完成后按页面引导进入控制台；如果返回登录页，用刚才的邮箱和密码登录即可。</p></div></li>
         </ol>
-        <figure class="figure"><a href="assets/screenshots/register.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开注册页大图"><img class="screenshot-frame" src="assets/screenshots/register.jpg" width="1272" height="716" loading="lazy" alt="汇码注册页：依次填写邮箱、密码、确认密码，可选邀请码，然后点击继续。"></a><figcaption class="caption">图 1 · 注册页实拍。无需填写邀请码时可以留空；点击图片可查看大图。</figcaption></figure>
+        <figure class="figure"><a href="assets/screenshots/register.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开注册页大图"><img class="screenshot-frame" src="assets/screenshots/register.jpg" width="1280" height="720" loading="lazy" alt="汇码注册页：依次填写邮箱、密码、确认密码，可选邀请码，然后点击继续。"></a><figcaption class="caption">图 1 · 注册页实拍。无需填写邀请码时可以留空；点击图片可查看大图。</figcaption></figure>
         <h3>以后从哪里登录？</h3>
-        <p>打开 <a href="https://api.tysy.top/login" data-cfg-href="/login" target="_blank" rel="noopener noreferrer">登录页面</a>，填写邮箱和密码。忘记密码时点击“忘记密码？”，按邮件提示重设。</p>
+        <p>打开 <a href="https://api.tysy.top/login" data-cfg-href="/login" target="_blank" rel="noopener noreferrer">登录页面</a>，填写邮箱和密码。忘记密码时点击“忘记密码？”，按邮件提示重设。服务条款更新后，登录页会再弹一次条款通知，同意后才能登录。</p>
         <figure class="figure"><a href="assets/screenshots/login.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开登录页大图"><img class="screenshot-frame" src="assets/screenshots/login.jpg" width="1280" height="720" loading="lazy" alt="汇码登录页：邮箱、密码、登录按钮，下方有注册入口，密码框下有忘记密码入口。"></a><figcaption class="caption">图 2 · 登录页实拍。邮箱密码用于登录网站，不是客户端要填的 API 密钥。</figcaption></figure>
         <div class="notice"><strong>收不到邮件？</strong>先检查邮箱拼写、垃圾邮件和全部邮件。使用最新验证码；等重新发送倒计时结束后再试。持续收不到时联系<a href="#contact">客服</a>，不要反复注册。</div>
         <details><summary>不会复制、粘贴怎么办？</summary><p>Windows：选中文字，按 Ctrl+C 复制；点击输入框，按 Ctrl+V 粘贴。Mac 使用 Command+C 和 Command+V。手机可以长按文字或输入框，选择“复制”或“粘贴”。</p></details>
       </section>
 
       <section class="doc-section" id="balance" data-title="余额 额度 充值 支付 人民币 美元 USD 兑换码 到账">
-        <p class="eyebrow">准备 02</p><h2>确认额度，再开始使用</h2>
+        <p class="eyebrow">第 2 步 · 准备账号</p><h2>确认额度，再开始使用</h2>
         <p>登录后进入<a href="https://api.tysy.top/dashboard" data-cfg-href="/dashboard">仪表盘</a>查看余额。注册成功只表示账号已经创建，<strong>不代表一定有可用额度</strong>。</p>
         <div class="notice"><strong>充值方式</strong>：本次核对时，网站在线支付未开启。如需充值，请先通过网站公开客服 QQ <strong data-cfg="contact.qq">569229275</strong> 确认办理方式；后续以网站当前入口和公告为准。</div>
         <ol class="steps">
@@ -109,7 +110,7 @@
       </section>
 
       <section class="doc-section" id="api-key" data-title="API 密钥 Key 创建 复制 名称 风格 厂商 OpenAI Anthropic 分组 限额 禁用">
-        <p class="eyebrow">准备 03</p><h2>创建你的第一把 API Key</h2>
+        <p class="eyebrow">第 3 步 · 准备账号</p><h2>创建你的第一把 API Key</h2>
         <p>密钥就像软件连接服务的钥匙，可以消耗账户额度。请自己保管，不要发布到群聊、截图或公开代码里。</p>
         <ol class="steps">
           <li class="step"><span class="step-number" aria-hidden="true">1</span><div class="step-content"><h3>进入“API 密钥”</h3><p>在用户菜单点击<a href="https://api.tysy.top/keys" data-cfg-href="/keys">API 密钥</a>，再点击“创建密钥”。手机屏幕较小时，先点左上角菜单按钮。</p></div></li>
@@ -147,8 +148,18 @@
         <ul><li>先用短消息测试，再上传长文章、文件或图片。</li><li>和前文无关的新任务，可以新建会话，减少无关历史。</li><li>开启自动重试、长任务或高推理强度前，先了解费用影响。</li><li>超时后先看使用记录再决定是否重试；没有收到完整回复，不代表请求一定没有被处理。</li></ul>
       </section>
 
+      <section class="doc-section" id="security" data-title="安全 密钥 泄露 密码 隐私 禁用 注册 规则">
+        <p class="eyebrow">日常使用</p><h2>安全使用须知</h2>
+        <div class="card-grid">
+          <article class="card"><h3>密钥不公开</h3><p>不发到群聊、公开文档或代码仓库。截图前检查 API Key、邮箱和私人对话。客服也不需要你的密码或验证码。</p></article>
+          <article class="card"><h3>只用可信软件</h3><p>从官方渠道安装。不为接入服务关闭安全软件、系统防护或操作确认。不同设备可以使用不同名称的密钥。</p></article>
+          <article class="card"><h3>异常时先停用</h3><p>在 API 密钥页面禁用疑似泄露的密钥，再创建新密钥并更新可信客户端。只改网站密码不会自动使旧密钥失效。</p></article>
+        </div>
+        <ul><li>发送给 AI 的内容，应去掉不必要的身份证号、银行卡号、公司机密或他人隐私。</li><li>不要批量注册领取额度、转借账号或绕过服务限制。多人或高用量需求请先咨询平台。</li><li>公共电脑使用后退出账号，不保存密码或 API 密钥。</li></ul>
+      </section>
+
       <section class="doc-section" id="troubleshooting" data-title="常见问题 错误 报错 401 403 404 429 500 502 503 5xx 超时 无响应 无可用渠道">
-        <p class="eyebrow">问题排查</p><h2>遇到问题，先看这里</h2>
+        <p class="eyebrow">遇到问题</p><h2>遇到问题，先看这里</h2>
         <p>先保留报错原文，再按下表检查。错误码只是线索，不一定只有一种原因；反复失败时先停止自动重试。</p>
         <div class="table-wrap"><table class="field-table"><caption>常见现象与检查方法</caption><thead><tr><th scope="col">看到什么</th><th scope="col">先检查什么</th></tr></thead><tbody>
           <tr><th scope="row">网站打不开 / 很慢</th><td>检查网址拼写和网络，看看其他网站是否正常。如果浏览器提示证书不安全，停止访问并联系网站方，不要强行绕过。</td></tr>
@@ -165,18 +176,8 @@
         <p>还没有解决？复制<a href="#contact">下方求助模板</a>。清楚的报错和时间，通常比“不能用了”更方便定位。</p>
       </section>
 
-      <section class="doc-section" id="security" data-title="安全 密钥 泄露 密码 隐私 禁用 注册 规则">
-        <p class="eyebrow">保护你的账户</p><h2>安全使用须知</h2>
-        <div class="card-grid">
-          <article class="card"><h3>密钥不公开</h3><p>不发到群聊、公开文档或代码仓库。截图前检查 API Key、邮箱和私人对话。客服也不需要你的密码或验证码。</p></article>
-          <article class="card"><h3>只用可信软件</h3><p>从官方渠道安装。不为接入服务关闭安全软件、系统防护或操作确认。不同设备可以使用不同名称的密钥。</p></article>
-          <article class="card"><h3>异常时先停用</h3><p>在 API 密钥页面禁用疑似泄露的密钥，再创建新密钥并更新可信客户端。只改网站密码不会自动使旧密钥失效。</p></article>
-        </div>
-        <ul><li>发送给 AI 的内容，应去掉不必要的身份证号、银行卡号、公司机密或他人隐私。</li><li>不要批量注册领取额度、转借账号或绕过服务限制。多人或高用量需求请先咨询平台。</li><li>公共电脑使用后退出账号，不保存密码或 API 密钥。</li></ul>
-      </section>
-
       <section class="doc-section" id="contact" data-title="客服 联系 QQ 求助 帮助 模板">
-        <p class="eyebrow">需要帮助</p><h2>把问题清楚地告诉客服</h2>
+        <p class="eyebrow">遇到问题</p><h2>把问题清楚地告诉客服</h2>
         <p data-cfg-block>网站公开客服 QQ：<strong data-cfg="contact.qq">569229275</strong>。联系前请回网站核对最新联系方式，不要仅凭头像或昵称认定对方身份。</p>
         <div class="copy-row support-template"><pre class="copy-value">使用的软件及版本：
 电脑或手机系统：
