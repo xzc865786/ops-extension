@@ -99,7 +99,8 @@
         activeSection = visibleSections[visibleSections.length - 1];
       }
       for (const link of navLinks) {
-        const active = !link.hidden && targetId(link) === activeSection?.id;
+        // The open route is already marked by its colour; highlighting it too made it the loudest item.
+        const active = !link.hidden && !link.classList.contains('nav-route') && targetId(link) === activeSection?.id;
         link.classList.toggle('active', active);
         if (active) link.setAttribute('aria-current', 'location');
         else link.removeAttribute('aria-current');
