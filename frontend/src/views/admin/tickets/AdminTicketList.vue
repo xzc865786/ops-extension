@@ -4,10 +4,11 @@ import { RouterLink } from 'vue-router'
 import api from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { formatDateTime } from '@/utils/display'
+import { formatDateTime, labelFor, type LabelOption } from '@/utils/display'
 
 const auth = useAuthStore()
 const items = ref<any[]>([])
+const categories = ref<LabelOption[]>([])
 const tab = ref('all')
 const keyword = ref('')
 
@@ -23,7 +24,10 @@ async function load() {
   items.value = data.items
 }
 
-onMounted(load)
+onMounted(() => {
+  void load()
+  void api.get('/tickets/meta').then(({ data }) => { categories.value = data.categories }).catch(() => {})
+})
 
 const tabs = [
   { id: 'all', label: '全部' },
@@ -38,7 +42,12 @@ const tabs = [
 
 <template>
   <div>
-    <h1 class="page-title shell-page-title mb-4">工单管理</h1>
+    <div class="page-toolbar">
+      <h1 class="page-title shell-page-title">工单管理</h1>
+      <div class="page-toolbar-actions">
+        <RouterLink to="/admin/tickets/form-config" class="btn-secondary btn-sm">表单配置</RouterLink>
+      </div>
+    </div>
     <div class="tabs mb-4 w-fit max-w-full">
       <button
         v-for="t in tabs"
@@ -56,6 +65,7 @@ const tabs = [
       <thead class="text-left">
         <tr>
           <th class="p-2">单号</th>
+          <th class="p-2">分类</th>
           <th class="p-2">标题</th>
           <th class="p-2">优先级</th>
           <th class="p-2">状态</th>
@@ -68,13 +78,14 @@ const tabs = [
           <td class="p-2">
             <RouterLink class="link" :to="`/admin/tickets/${t.id}`">{{ t.ticket_no }}</RouterLink>
           </td>
+          <td class="p-2 whitespace-nowrap">{{ labelFor(categories, t.category) }}</td>
           <td class="p-2">{{ t.title }}</td>
           <td class="p-2">{{ t.priority }}</td>
           <td class="p-2"><StatusBadge :status="t.status" kind="ticket" /></td>
           <td class="p-2">{{ t.claimed_by_user_id || '-' }}</td>
           <td class="p-2">{{ formatDateTime(t.created_at) }}</td>
         </tr>
-        <tr v-if="!items.length"><td colspan="6" class="p-8 text-center muted">暂无工单</td></tr>
+        <tr v-if="!items.length"><td colspan="7" class="p-8 text-center muted">暂无工单</td></tr>
       </tbody>
     </table></div>
   </div>

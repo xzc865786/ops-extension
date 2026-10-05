@@ -4,17 +4,23 @@ from sqlalchemy import func, select, text, update
 from sqlalchemy.orm import Session, selectinload
 
 from app.common.enums import (
-    TICKET_CATEGORY_LABELS,
     TICKET_STATUS_TRANSITIONS,
     ClosedBy,
-    TicketCategory,
     TicketEventType,
     TicketPriority,
     TicketStatus,
 )
-from app.common.errors import bad_request, conflict, forbidden, not_found
+from app.common.errors import AppError, bad_request, conflict, forbidden, not_found
 from app.db.models.ticket import Ticket, TicketAttachment, TicketEvent, TicketMessage
 from app.deps import CurrentUser
+from app.tickets import form_config
+from app.tickets.form_schema import (
+    LEGACY_FIELDS,
+    legacy_snapshot,
+    render_title,
+    snapshot,
+    validate_form_data,
+)
 
 
 def generate_ticket_no(db: Session) -> str:
@@ -63,43 +69,72 @@ def add_event(
     return ev
 
 
+def _prepare_form(db: Session, data) -> dict:
+    """Validate a submission against the live form config; returns the ticket's form columns and texts."""
+    version, config = form_config.live_config(db)
+    category = config.category(data.category)
+    if not category or not category.enabled:
+        raise bad_request("无效分类", "INVALID_CATEGORY")
+    title = (data.title or "").strip()
+    description = (data.description or "").strip()
+
+    if data.form_version is None:
+        # Pre-form clients send the fixed troubleshooting columns; accepted until they are gone.
+        if not title or not description:
+            raise bad_request("标题和描述不能为空", "TICKET_FORM_INVALID")
+        legacy = {f["key"]: getattr(data, f["key"]) for f in LEGACY_FIELDS}
+        form_data = {k: (v.isoformat(timespec="minutes") if isinstance(v, datetime) else v)
+                     for k, v in legacy.items() if v not in (None, "")}
+        return {"title": title, "description": description, "form_version": None,
+                "form_schema": legacy_snapshot(category.key, category.label), "form_data": form_data, **legacy}
+
+    try:
+        form_data = validate_form_data(category, data.form_data or {})
+    except ValueError as exc:
+        message = str(exc)
+        if data.form_version != version:
+            message += "（表单配置已更新，请刷新页面后重新填写）"
+        raise AppError(422, message, "TICKET_FORM_INVALID") from exc
+
+    if category.title_mode == "auto" or (category.title_mode == "optional" and not title):
+        title = render_title(category, form_data) if category.title_template else category.label
+    if not title:
+        raise AppError(422, "标题不能为空", "TICKET_FORM_INVALID")
+    if category.description_mode == "hidden":
+        description = ""
+    elif category.description_mode == "required" and not description:
+        raise AppError(422, "描述不能为空", "TICKET_FORM_INVALID")
+    return {"title": title[:200], "description": description, "form_version": version,
+            "form_schema": snapshot(category), "form_data": form_data}
+
+
 def create_ticket(db: Session, user: CurrentUser, data) -> Ticket:
     from sqlalchemy.exc import IntegrityError
 
-    try:
-        category = TicketCategory(data.category)
-    except ValueError as exc:
-        raise bad_request("无效分类", "INVALID_CATEGORY") from exc
-
+    form = _prepare_form(db, data)
     last_err: Exception | None = None
     for _attempt in range(8):
         try:
             ticket = Ticket(
                 ticket_no=generate_ticket_no(db),
                 creator_user_id=user.id,
-                title=data.title.strip(),
-                description=data.description.strip(),
-                category=category.value,
+                category=data.category,
                 priority=TicketPriority.P2.value,  # forced
                 status=TicketStatus.OPEN.value,
                 ref_ticket_no=data.ref_ticket_no,
-                request_id=data.request_id,
-                model_name=data.model_name,
-                api_endpoint=data.api_endpoint,
-                occurred_at=data.occurred_at,
-                error_message=data.error_message,
+                **form,
             )
             db.add(ticket)
             db.flush()
-            # first message mirrors description
-            msg = TicketMessage(
-                ticket_id=ticket.id,
-                sender_user_id=user.id,
-                sender_role=user.sub2api_role,
-                content=data.description.strip(),
-                is_internal=False,
-            )
-            db.add(msg)
+            if form["description"]:
+                # first message mirrors description
+                db.add(TicketMessage(
+                    ticket_id=ticket.id,
+                    sender_user_id=user.id,
+                    sender_role=user.sub2api_role,
+                    content=form["description"],
+                    is_internal=False,
+                ))
             add_event(
                 db,
                 ticket.id,
@@ -375,13 +410,13 @@ def patch_ticket_admin(db: Session, ticket: Ticket, admin: CurrentUser, data) ->
                 new_value={"status": ticket.status},
             )
     if data.category is not None:
-        try:
-            cat = TicketCategory(data.category)
-        except ValueError as exc:
-            raise bad_request("无效分类", "INVALID_CATEGORY") from exc
-        if cat.value != ticket.category:
+        # Admins may move a ticket to any configured category, disabled ones included.
+        _, config = form_config.live_config(db)
+        if not config.category(data.category):
+            raise bad_request("无效分类", "INVALID_CATEGORY")
+        if data.category != ticket.category:
             old = ticket.category
-            ticket.category = cat.value
+            ticket.category = data.category
             add_event(
                 db,
                 ticket.id,
@@ -412,10 +447,13 @@ def patch_ticket_admin(db: Session, ticket: Ticket, admin: CurrentUser, data) ->
     return ticket
 
 
-def meta_for_user(*, is_admin: bool) -> dict:
-    cats = [{"value": c.value, "label": TICKET_CATEGORY_LABELS[c]} for c in TicketCategory]
+def meta_for_user(db: Session, *, is_admin: bool) -> dict:
+    version, config = form_config.live_config(db)
+    # Disabled categories stay listed so existing tickets keep their labels; the create form hides them.
+    cats = [{"value": c.key, "label": c.label, **c.model_dump(mode="json", by_alias=True, exclude_none=True)}
+            for c in config.categories]
     priorities = [{"value": p.value, "label": p.value} for p in TicketPriority]
     if not is_admin:
         priorities = [p for p in priorities if p["value"] == "P2"]
     statuses = [{"value": s.value, "label": s.value} for s in TicketStatus]
-    return {"categories": cats, "priorities": priorities, "statuses": statuses}
+    return {"form_version": version, "categories": cats, "priorities": priorities, "statuses": statuses}

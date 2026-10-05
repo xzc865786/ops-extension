@@ -31,8 +31,8 @@ def _ticket_out(ticket, *, include_internal: bool) -> dict:
 
 
 @router.get("/tickets/meta")
-def tickets_meta(user: CurrentUser = Depends(require_login)):
-    return service.meta_for_user(is_admin=user.is_admin)
+def tickets_meta(db: Session = Depends(get_db), user: CurrentUser = Depends(require_login)):
+    return service.meta_for_user(db, is_admin=user.is_admin)
 
 
 @router.get("/tickets")

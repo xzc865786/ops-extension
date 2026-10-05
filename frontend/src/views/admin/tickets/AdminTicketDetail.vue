@@ -4,8 +4,9 @@ import { RouterLink, useRoute } from 'vue-router'
 import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/StatusBadge.vue'
+import FormDataView from '@/components/tickets/FormDataView.vue'
 import { downloadAttachment } from '@/utils/attachments'
-import { formatDateTime } from '@/utils/display'
+import { formatDateTime, labelFor } from '@/utils/display'
 
 const route = useRoute()
 const toast = useToast()
@@ -192,16 +193,15 @@ async function download(id: number, filename: string) {
     <div class="card p-5 sm:p-6">
       <h1 class="page-title">{{ ticket.title }}</h1>
       <p class="text-sm muted">
-        {{ ticket.ticket_no }} · 创建者 {{ ticket.creator_user_id }}
+        {{ ticket.ticket_no }} · {{ labelFor(meta.categories, ticket.category) }} · 创建者 {{ ticket.creator_user_id }}
         <StatusBadge :status="ticket.status" kind="ticket" />
       </p>
-      <div class="whitespace-pre-wrap text-sm mt-2">{{ ticket.description }}</div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-1 text-sm mt-3">
-        <p v-if="ticket.request_id">Request ID：{{ ticket.request_id }}</p>
-        <p v-if="ticket.model_name">模型：{{ ticket.model_name }}</p>
-        <p v-if="ticket.api_endpoint">API 接口：{{ ticket.api_endpoint }}</p>
-        <p v-if="ticket.occurred_at">发生时间：{{ formatDateTime(ticket.occurred_at) }}</p>
-        <p v-if="ticket.error_message" class="whitespace-pre-wrap md:col-span-2">错误信息：{{ ticket.error_message }}</p>
+      <p v-if="ticket.form_schema && ticket.form_schema.key !== ticket.category" class="text-xs muted mt-1">
+        提交时的分类：{{ ticket.form_schema.label }}（以下字段按提交时的表单显示）
+      </p>
+      <div class="mt-3 border-t pt-3 space-y-3">
+        <FormDataView :schema="ticket.form_schema" :data="ticket.form_data" />
+        <div v-if="ticket.description" class="whitespace-pre-wrap text-sm">{{ ticket.description }}</div>
       </div>
 
       <div
@@ -233,7 +233,7 @@ async function download(id: number, filename: string) {
           <option v-for="s in meta.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
         </select>
         <select v-model="patch.category" class="input" :disabled="isClosed">
-          <option v-for="c in meta.categories" :key="c.value" :value="c.value">{{ c.label }}</option>
+          <option v-for="c in meta.categories" :key="c.value" :value="c.value">{{ c.label }}{{ c.enabled === false ? '（已停用）' : '' }}</option>
         </select>
         <select v-model="patch.priority" class="input" :disabled="isClosed">
           <option v-for="p in meta.priorities" :key="p.value" :value="p.value">{{ p.label }}</option>

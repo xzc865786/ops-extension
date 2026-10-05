@@ -27,6 +27,12 @@ const router = createRouter({
       component: () => import('@/views/admin/tickets/AdminTicketList.vue'),
     },
     {
+      path: '/admin/tickets/form-config',
+      name: 'admin-ticket-form-config',
+      meta: { admin: true },
+      component: () => import('@/views/admin/tickets/TicketFormConfig.vue'),
+    },
+    {
       path: '/admin/tickets/:id',
       name: 'admin-ticket-detail',
       meta: { admin: true },

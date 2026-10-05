@@ -1,20 +1,6 @@
 from enum import StrEnum
 
 
-class TicketCategory(StrEnum):
-    API_ERROR = "API_ERROR"
-    AUTH_ERROR = "AUTH_ERROR"
-    BILLING_ERROR = "BILLING_ERROR"
-    RECHARGE_PAYMENT = "RECHARGE_PAYMENT"
-    INVOICE = "INVOICE"
-    REFUND = "REFUND"
-    MODEL_AVAILABILITY = "MODEL_AVAILABILITY"
-    RATE_LIMIT = "RATE_LIMIT"
-    ACCOUNT = "ACCOUNT"
-    FEATURE_REQUEST = "FEATURE_REQUEST"
-    OTHER = "OTHER"
-
-
 class TicketPriority(StrEnum):
     P0 = "P0"
     P1 = "P1"
@@ -166,17 +152,3 @@ COST_CENTER_SEEDS = [
     ("ADMIN", "行政"),
     ("OTHER", "其他"),
 ]
-
-TICKET_CATEGORY_LABELS = {
-    TicketCategory.API_ERROR: "API 错误",
-    TicketCategory.AUTH_ERROR: "认证错误",
-    TicketCategory.BILLING_ERROR: "计费错误",
-    TicketCategory.RECHARGE_PAYMENT: "充值/支付",
-    TicketCategory.INVOICE: "发票",
-    TicketCategory.REFUND: "退款",
-    TicketCategory.MODEL_AVAILABILITY: "模型可用性",
-    TicketCategory.RATE_LIMIT: "限流",
-    TicketCategory.ACCOUNT: "账户",
-    TicketCategory.FEATURE_REQUEST: "功能建议",
-    TicketCategory.OTHER: "其他",
-}

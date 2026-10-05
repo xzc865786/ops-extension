@@ -1,0 +1,251 @@
+{
+  "schema": 1,
+  "categories": [
+    {
+      "key": "API_ERROR",
+      "label": "API 错误",
+      "description": "调用接口报错、返回异常或超时",
+      "kind": "general",
+      "enabled": true,
+      "notice": "",
+      "title_mode": "required",
+      "title_template": "",
+      "description_mode": "optional",
+      "require_attachment": false,
+      "attachment_hint": "可以上传报错截图或日志",
+      "fields": [
+        {"key": "model_name", "label": "模型", "type": "text", "required": true, "placeholder": "例如 claude-sonnet-5-5"},
+        {"key": "error_message", "label": "错误信息", "type": "textarea", "required": true, "help": "请粘贴完整的报错内容"},
+        {"key": "occurred_at", "label": "发生时间", "type": "datetime", "required": true},
+        {"key": "request_id", "label": "Request ID", "type": "text", "help": "响应头或报错里的请求 ID，有的话方便定位"},
+        {"key": "api_endpoint", "label": "API 接口", "type": "text", "placeholder": "例如 /v1/messages"},
+        {"key": "http_status", "label": "HTTP 状态码", "type": "number", "min": 100, "max": 599},
+        {"key": "client", "label": "使用的客户端", "type": "select", "options": [
+          {"value": "CLAUDE_CODE", "label": "Claude Code"},
+          {"value": "CODEX", "label": "Codex"},
+          {"value": "CURSOR", "label": "Cursor"},
+          {"value": "CHERRY_STUDIO", "label": "Cherry Studio"},
+          {"value": "WORKBUDDY", "label": "WorkBuddy"},
+          {"value": "SDK", "label": "自己写的代码 / SDK"},
+          {"value": "OTHER", "label": "其他"}
+        ]},
+        {"key": "reproducible", "label": "能否稳定复现", "type": "radio", "options": [
+          {"value": "ALWAYS", "label": "每次都出现"},
+          {"value": "SOMETIMES", "label": "偶尔出现"},
+          {"value": "ONCE", "label": "只出现过一次"}
+        ]}
+      ]
+    },
+    {
+      "key": "AUTH_ERROR",
+      "label": "认证错误",
+      "description": "Key 无效、401/403、无权访问",
+      "kind": "general",
+      "enabled": true,
+      "notice": "请不要在工单里填写完整的 API Key。",
+      "title_mode": "required",
+      "title_template": "",
+      "description_mode": "optional",
+      "require_attachment": false,
+      "attachment_hint": "",
+      "fields": [
+        {"key": "key_hint", "label": "Key 名称或前 4 位", "type": "text", "max_length": 60, "help": "只填 Key 的名称或开头几位，不要填完整 Key"},
+        {"key": "error_code", "label": "错误码", "type": "select", "options": [
+          {"value": "HTTP_401", "label": "401 未认证"},
+          {"value": "HTTP_403", "label": "403 无权限"},
+          {"value": "OTHER", "label": "其他"}
+        ]},
+        {"key": "client", "label": "使用的客户端", "type": "text", "max_length": 60},
+        {"key": "occurred_at", "label": "发生时间", "type": "datetime", "required": true},
+        {"key": "error_message", "label": "错误信息", "type": "textarea"}
+      ]
+    },
+    {
+      "key": "BILLING_ERROR",
+      "label": "计费错误",
+      "description": "扣费和用量不符",
+      "kind": "general",
+      "enabled": true,
+      "notice": "",
+      "title_mode": "required",
+      "title_template": "",
+      "description_mode": "required",
+      "require_attachment": false,
+      "attachment_hint": "建议上传用量记录截图",
+      "fields": [
+        {"key": "period", "label": "时间范围", "type": "text", "required": true, "max_length": 100, "placeholder": "例如 10 月 3 日 14:00–15:00"},
+        {"key": "actual_amount", "label": "实际扣费", "type": "money", "required": true},
+        {"key": "expected_amount", "label": "预期扣费", "type": "money"},
+        {"key": "model_name", "label": "模型", "type": "text"},
+        {"key": "request_id", "label": "Request ID", "type": "text"}
+      ]
+    },
+    {
+      "key": "RECHARGE_PAYMENT",
+      "label": "充值/支付",
+      "description": "付款未到账、重复扣款、支付失败",
+      "kind": "payment",
+      "enabled": true,
+      "notice": "",
+      "title_mode": "auto",
+      "title_template": "充值问题 · {issue_type} · {order_no}",
+      "description_mode": "optional",
+      "require_attachment": false,
+      "attachment_hint": "建议上传付款截图（含交易号）",
+      "fields": [
+        {"key": "issue_type", "label": "问题类型", "type": "select", "required": true, "options": [
+          {"value": "NOT_CREDITED", "label": "已付款未到账"},
+          {"value": "DUPLICATE", "label": "重复扣款"},
+          {"value": "FAILED", "label": "支付失败"},
+          {"value": "OTHER", "label": "其他"}
+        ]},
+        {"key": "order_no", "label": "订单号", "type": "order_no", "required": true, "help": "在 Sub2API「我的订单」中复制订单号"},
+        {"key": "pay_channel", "label": "支付渠道", "type": "radio", "required": true, "options": [
+          {"value": "ALIPAY", "label": "支付宝"},
+          {"value": "WECHAT", "label": "微信"},
+          {"value": "OTHER", "label": "其他"}
+        ]},
+        {"key": "paid_at", "label": "支付时间", "type": "datetime"},
+        {"key": "trade_no", "label": "支付宝/微信交易号", "type": "text", "max_length": 64}
+      ]
+    },
+    {
+      "key": "INVOICE",
+      "label": "发票",
+      "description": "为充值订单申请电子普通发票",
+      "kind": "invoice",
+      "enabled": true,
+      "notice": "目前只开具电子普通发票，开具后发送到下方的收票邮箱。开票金额按订单实付金额计算。",
+      "title_mode": "auto",
+      "title_template": "开票申请 · {title}",
+      "description_mode": "optional",
+      "require_attachment": false,
+      "attachment_hint": "",
+      "fields": [
+        {"key": "order_nos", "label": "订单号", "type": "order_no_list", "required": true, "help": "最多 10 个，用空格、逗号或换行分隔"},
+        {"key": "title_type", "label": "抬头类型", "type": "radio", "required": true, "options": [
+          {"value": "PERSONAL", "label": "个人"},
+          {"value": "COMPANY", "label": "企业"}
+        ]},
+        {"key": "title", "label": "抬头名称", "type": "text", "required": true, "max_length": 100},
+        {"key": "tax_id", "label": "税号", "type": "text", "required": true, "max_length": 30, "show_if": {"field": "title_type", "equals": "COMPANY"}},
+        {"key": "email", "label": "收票邮箱", "type": "email", "required": true}
+      ]
+    },
+    {
+      "key": "REFUND",
+      "label": "退款",
+      "description": "已充值未使用的额度申请原路退回",
+      "kind": "refund",
+      "enabled": true,
+      "notice": "已消耗的额度不予退还，最终退款金额以客服审核为准。退款原路退回，同时扣减账户中对应的余额。",
+      "title_mode": "auto",
+      "title_template": "退款申请 · {order_no}",
+      "description_mode": "optional",
+      "require_attachment": false,
+      "attachment_hint": "",
+      "fields": [
+        {"key": "order_no", "label": "订单号", "type": "order_no", "required": true, "help": "在 Sub2API「我的订单」中复制订单号"},
+        {"key": "expected_amount", "label": "期望退款金额", "type": "money", "help": "留空表示由客服核定"},
+        {"key": "reason", "label": "退款原因", "type": "select", "required": true, "options": [
+          {"value": "NOT_NEEDED", "label": "不再需要"},
+          {"value": "QUALITY", "label": "服务质量问题"},
+          {"value": "MISTAKE", "label": "误充值"},
+          {"value": "OTHER", "label": "其他"}
+        ]},
+        {"key": "policy_ack", "label": "我已了解：已消耗的额度不退，退款后扣减对应余额", "type": "confirm", "required": true}
+      ]
+    },
+    {
+      "key": "MODEL_AVAILABILITY",
+      "label": "模型可用性",
+      "description": "某个模型无法使用或不稳定",
+      "kind": "general",
+      "enabled": true,
+      "notice": "",
+      "title_mode": "required",
+      "title_template": "",
+      "description_mode": "optional",
+      "require_attachment": false,
+      "attachment_hint": "",
+      "fields": [
+        {"key": "model_name", "label": "模型", "type": "text", "required": true},
+        {"key": "error_message", "label": "错误信息", "type": "textarea"},
+        {"key": "occurred_at", "label": "发生时间", "type": "datetime"},
+        {"key": "group", "label": "所在分组", "type": "text", "max_length": 60}
+      ]
+    },
+    {
+      "key": "RATE_LIMIT",
+      "label": "限流",
+      "description": "频繁遇到 429 或需要提高并发",
+      "kind": "general",
+      "enabled": true,
+      "notice": "",
+      "title_mode": "required",
+      "title_template": "",
+      "description_mode": "optional",
+      "require_attachment": false,
+      "attachment_hint": "",
+      "fields": [
+        {"key": "model_name", "label": "模型", "type": "text", "required": true},
+        {"key": "error_message", "label": "429 报错原文", "type": "textarea"},
+        {"key": "expected_rate", "label": "期望的 RPM/并发", "type": "text", "max_length": 60},
+        {"key": "scenario", "label": "使用场景", "type": "textarea", "max_length": 1000}
+      ]
+    },
+    {
+      "key": "ACCOUNT",
+      "label": "账户",
+      "description": "修改邮箱、找回账号、封禁申诉、注销",
+      "kind": "general",
+      "enabled": true,
+      "notice": "",
+      "title_mode": "optional",
+      "title_template": "账户问题 · {issue_type}",
+      "description_mode": "required",
+      "require_attachment": false,
+      "attachment_hint": "",
+      "fields": [
+        {"key": "issue_type", "label": "问题类型", "type": "select", "required": true, "options": [
+          {"value": "CHANGE_EMAIL", "label": "修改邮箱"},
+          {"value": "RECOVER", "label": "找回账号"},
+          {"value": "APPEAL", "label": "封禁申诉"},
+          {"value": "DELETE", "label": "注销账号"},
+          {"value": "OTHER", "label": "其他"}
+        ]}
+      ]
+    },
+    {
+      "key": "FEATURE_REQUEST",
+      "label": "功能建议",
+      "description": "希望增加或改进的功能",
+      "kind": "general",
+      "enabled": true,
+      "notice": "",
+      "title_mode": "required",
+      "title_template": "",
+      "description_mode": "hidden",
+      "require_attachment": false,
+      "attachment_hint": "",
+      "fields": [
+        {"key": "scenario", "label": "使用场景", "type": "textarea", "required": true, "help": "你在什么情况下需要这个功能"},
+        {"key": "expectation", "label": "期望效果", "type": "textarea", "required": true}
+      ]
+    },
+    {
+      "key": "OTHER",
+      "label": "其他",
+      "description": "以上都不符合",
+      "kind": "general",
+      "enabled": true,
+      "notice": "",
+      "title_mode": "required",
+      "title_template": "",
+      "description_mode": "required",
+      "require_attachment": false,
+      "attachment_hint": "",
+      "fields": []
+    }
+  ]
+}

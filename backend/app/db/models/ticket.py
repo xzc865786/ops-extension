@@ -7,6 +7,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     String,
     Text,
     func,
@@ -47,6 +48,12 @@ class Ticket(Base):
     closed_by: Mapped[str | None] = mapped_column(String(10))
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Per-category form: the config version used, a snapshot of the category's fields and the cleaned values.
+    form_version: Mapped[int | None] = mapped_column(Integer)
+    form_schema: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB(), "postgresql"))
+    form_data: Mapped[dict] = mapped_column(
+        JSON().with_variant(JSONB(), "postgresql"), nullable=False, default=dict
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -108,3 +115,18 @@ class TicketEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     ticket: Mapped[Ticket] = relationship(back_populates="events")
+
+
+class TicketFormConfigVersion(Base):
+    """One row per saved ticket form configuration; the highest version is the live one."""
+
+    __tablename__ = "ticket_form_config_versions"
+
+    id: Mapped[int] = mapped_column(BigIntPK, primary_key=True, autoincrement=True)
+    version: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
+    config: Mapped[dict] = mapped_column(JSON().with_variant(JSONB(), "postgresql"), nullable=False)
+    note: Mapped[str | None] = mapped_column(String(200))
+    restored_from: Mapped[int | None] = mapped_column(Integer)
+    created_by_user_id: Mapped[int | None] = mapped_column(BigInt, ForeignKey("extension_users.id"))
+    created_by_name: Mapped[str | None] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

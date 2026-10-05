@@ -5,10 +5,14 @@ from pydantic import BaseModel, Field
 
 
 class TicketCreate(BaseModel):
-    title: str = Field(..., min_length=1, max_length=200)
-    description: str = Field(..., min_length=1)
+    # Required or not depends on the category's form config.
+    title: str | None = Field(default=None, max_length=200)
+    description: str | None = None
     category: str
+    form_version: int | None = None  # None: client predates per-category forms
+    form_data: dict[str, Any] = Field(default_factory=dict)
     ref_ticket_no: str | None = None
+    # Fixed troubleshooting fields sent by pre-form clients.
     request_id: str | None = None
     model_name: str | None = None
     api_endpoint: str | None = None
@@ -76,6 +80,9 @@ class TicketOut(BaseModel):
     api_endpoint: str | None
     occurred_at: datetime | None
     error_message: str | None
+    form_version: int | None = None
+    form_schema: dict | None = None
+    form_data: dict = {}
     closed_by: str | None
     closed_at: datetime | None
     resolved_at: datetime | None

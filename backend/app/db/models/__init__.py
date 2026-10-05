@@ -1,5 +1,5 @@
 from app.db.models.user import ExtensionUser, Session as UserSession
-from app.db.models.ticket import Ticket, TicketMessage, TicketAttachment, TicketEvent
+from app.db.models.ticket import Ticket, TicketMessage, TicketAttachment, TicketEvent, TicketFormConfigVersion
 from app.db.models.expense import (
     Supplier,
     CostCenter,
@@ -19,6 +19,7 @@ __all__ = [
     "TicketMessage",
     "TicketAttachment",
     "TicketEvent",
+    "TicketFormConfigVersion",
     "Supplier",
     "CostCenter",
     "PaymentAccount",
