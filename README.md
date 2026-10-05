@@ -136,6 +136,7 @@ V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留�
 
 | 变量 | 说明 |
 |------|------|
+| `SUB2API_ADMIN_API_KEY` | 可选；Sub2API 系统设置里的 Admin API Key，用于工单订单校验（退款、开票、充值类工单）。拥有 Sub2API 全部管理权限，只放在服务器环境变量里。留空则不校验订单，只按订单号查重 |
 | `SESSION_TTL_HOURS` | Session / Cookie 绝对 TTL，默认 `2` |
 | `SESSION_MAX_AGE_WITHOUT_BOOTSTRAP` | 距上次 Bootstrap 的最大秒数，超时 401 强制重登，默认 `7200` |
 | `MINIO_ENDPOINT` | 后端访问 MinIO（可为 compose 内网 `minio:9000`） |
@@ -145,6 +146,7 @@ V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留�
 
 - 用户创建工单优先级强制 P2；标题/描述创建后不可改
 - 工单表单按分类配置（`GET/PUT /ext/api/v1/admin/tickets/form-config`）。建单请求带 `form_version` 和 `form_data`，后端按当前配置校验；每张工单保存提交时的字段快照 `form_schema`，之后改配置不影响旧工单显示。退款、发票、充值类分类的“系统字段”（订单号等）不能删除或改类型。不带 `form_version` 的旧版请求仍按原有固定字段接收
+- 配置 `SUB2API_ADMIN_API_KEY` 后，退款、开票、充值类工单提交时到 Sub2API 校验订单：订单必须存在且属于当前用户，状态适合该类工单；开票金额按实付金额扣除已退部分计算。同一订单的退款或开票工单未关闭时不能重复提交，已解决的不能再次提交。工单保存提交时的订单快照（不含付款人邮箱、支付链接等），管理员可查询订单实时状态
 - CLOSED 终态不可重开；内部备注对用户 API 永不返回
 - 认领使用原子 `UPDATE ... WHERE claimed_by_user_id IS NULL`；管理员可直接接管
 - 附件 ≤20MB；白名单：图片 / PDF / `.log`/`.txt`

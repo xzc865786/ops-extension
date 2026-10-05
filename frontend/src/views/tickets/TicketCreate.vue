@@ -5,12 +5,14 @@ import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import CategoryPicker from '@/components/tickets/CategoryPicker.vue'
 import DynamicForm from '@/components/tickets/DynamicForm.vue'
-import { collectValues, initialValues, localErrors, type FormCategory } from '@/utils/ticketForm'
+import OrderCheck from '@/components/tickets/OrderCheck.vue'
+import { ORDER_FIELDS, collectValues, initialValues, localErrors, type FormCategory } from '@/utils/ticketForm'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const formVersion = ref<number | null>(null)
+const orderLookup = ref(false)
 const categories = ref<FormCategory[]>([])
 const categoryKey = ref('')
 const values = reactive<Record<string, any>>({})
@@ -22,11 +24,13 @@ const saving = ref(false)
 const loadError = ref('')
 
 const category = computed(() => categories.value.find((c) => c.key === categoryKey.value) || null)
+const orderField = computed(() => (category.value ? ORDER_FIELDS[category.value.kind] : undefined))
 
 onMounted(async () => {
   try {
     const { data } = await api.get('/tickets/meta')
     formVersion.value = data.form_version
+    orderLookup.value = !!data.order_lookup
     categories.value = data.categories.filter((c: FormCategory) => c.enabled)
     const wanted = String(route.query.category || '')
     if (categories.value.some((c) => c.key === wanted)) categoryKey.value = wanted
@@ -134,6 +138,7 @@ async function submit() {
         </div>
 
         <DynamicForm :fields="category.fields" :values="values" :errors="fieldErrors" />
+        <OrderCheck v-if="orderLookup && orderField" :key="category.key" :kind="category.kind" :value="values[orderField]" />
 
         <div v-if="category.description_mode !== 'hidden'">
           <label class="input-label" for="ticket-desc">

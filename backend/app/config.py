@@ -7,6 +7,10 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://ops:ops@localhost:5432/huima_ops"
     sub2api_base_url: str = "http://sub2api:8080"
+    # Sub2API Admin API Key (system settings). Full admin power: backend only, never logged or returned.
+    # Empty disables order checks; order tickets are then accepted unverified.
+    sub2api_admin_api_key: str = ""
+    sub2api_admin_timeout: float = 10.0
     session_secret: str = "dev-secret-change-me"
     # Short TTL: Sub2API bearer is never stored; Custom Menu must re-hit Bootstrap.
     session_ttl_hours: int = 2

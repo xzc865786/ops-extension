@@ -63,6 +63,16 @@ class TicketEventOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class TicketOrderOut(BaseModel):
+    id: int
+    purpose: str
+    out_trade_no: str
+    sub2api_order_id: int | None
+    snapshot: dict | None
+
+    model_config = {"from_attributes": True}
+
+
 class TicketOut(BaseModel):
     id: int
     ticket_no: str
@@ -91,6 +101,7 @@ class TicketOut(BaseModel):
     messages: list[TicketMessageOut] = []
     attachments: list[TicketAttachmentOut] = []
     events: list[TicketEventOut] = []
+    orders: list[TicketOrderOut] = []
 
     model_config = {"from_attributes": True}
 
@@ -104,6 +115,7 @@ class TicketListItem(BaseModel):
     status: str
     claimed_by_user_id: int | None
     creator_user_id: int
+    order_nos: list[str] = []
     created_at: datetime
     updated_at: datetime
 

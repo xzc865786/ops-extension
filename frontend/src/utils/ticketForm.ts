@@ -147,3 +147,47 @@ export function displayValue(field: FormField, value: any): string {
   if (field.type === 'money') return `¥${value}`
   return String(value)
 }
+
+// ---- Sub2API orders --------------------------------------------------------
+
+/** Which field holds the order number(s) for a kind, and whether that kind checks orders. */
+export const ORDER_FIELDS: Partial<Record<Kind, string>> = { refund: 'order_no', invoice: 'order_nos', payment: 'order_no' }
+
+export const ORDER_STATUS_LABELS: Record<string, string> = {
+  PENDING: '待支付',
+  PAID: '已支付',
+  RECHARGING: '充值中',
+  COMPLETED: '已完成',
+  EXPIRED: '已过期',
+  CANCELLED: '已取消',
+  FAILED: '支付失败',
+  REFUND_REQUESTED: '已申请退款',
+  REFUNDING: '退款中',
+  REFUND_PENDING: '退款处理中',
+  PARTIALLY_REFUNDED: '部分退款',
+  REFUNDED: '已退款',
+  REFUND_FAILED: '退款失败',
+}
+
+export const ORDER_TYPE_LABELS: Record<string, string> = { balance: '余额充值', subscription: '订阅' }
+
+export interface OrderSnapshot {
+  id?: number
+  out_trade_no?: string
+  amount?: string
+  pay_amount?: string
+  bonus_amount?: string
+  refund_amount?: string
+  invoiceable_amount?: string
+  currency?: string
+  status?: string
+  order_type?: string
+  payment_type?: string
+  paid_at?: string
+  created_at?: string
+}
+
+export function orderNosOf(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String)
+  return typeof value === 'string' ? splitOrderNos(value) : []
+}

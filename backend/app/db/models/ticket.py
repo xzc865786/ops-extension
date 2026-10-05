@@ -62,6 +62,11 @@ class Ticket(Base):
     messages: Mapped[list["TicketMessage"]] = relationship(back_populates="ticket")
     attachments: Mapped[list["TicketAttachment"]] = relationship(back_populates="ticket")
     events: Mapped[list["TicketEvent"]] = relationship(back_populates="ticket")
+    orders: Mapped[list["TicketOrder"]] = relationship(back_populates="ticket", order_by="TicketOrder.id")
+
+    @property
+    def order_nos(self) -> list[str]:
+        return [o.out_trade_no for o in self.orders]
 
 
 class TicketMessage(Base):
@@ -115,6 +120,27 @@ class TicketEvent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     ticket: Mapped[Ticket] = relationship(back_populates="events")
+
+
+class TicketOrder(Base):
+    """A Sub2API payment order referenced by a refund / invoice / payment ticket."""
+
+    __tablename__ = "ticket_orders"
+    __table_args__ = (
+        Index("ix_ticket_orders_out_trade_no_purpose", "out_trade_no", "purpose"),
+        Index("ix_ticket_orders_ticket", "ticket_id"),
+    )
+
+    id: Mapped[int] = mapped_column(BigIntPK, primary_key=True, autoincrement=True)
+    ticket_id: Mapped[int] = mapped_column(BigInt, ForeignKey("tickets.id"), nullable=False)
+    purpose: Mapped[str] = mapped_column(String(20), nullable=False)
+    out_trade_no: Mapped[str] = mapped_column(String(64), nullable=False)
+    # Null when the order could not be verified (Sub2API admin key not configured).
+    sub2api_order_id: Mapped[int | None] = mapped_column(BigInt)
+    snapshot: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB(), "postgresql"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    ticket: Mapped[Ticket] = relationship(back_populates="orders")
 
 
 class TicketFormConfigVersion(Base):

@@ -5,6 +5,7 @@ import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/StatusBadge.vue'
 import FormDataView from '@/components/tickets/FormDataView.vue'
+import OrderTable from '@/components/tickets/OrderTable.vue'
 import { downloadAttachment } from '@/utils/attachments'
 import { formatDateTime, labelFor, type LabelOption } from '@/utils/display'
 
@@ -175,6 +176,11 @@ async function download(id: number, filename: string) {
 
       <div class="mt-3 border-t pt-3 space-y-3">
         <FormDataView :schema="ticket.form_schema" :data="ticket.form_data" />
+        <OrderTable
+          v-if="ticket.orders?.length"
+          :rows="ticket.orders.map((o: any) => ({ key: o.id, out_trade_no: o.out_trade_no, order: o.snapshot }))"
+          :show-invoice="ticket.orders[0].purpose === 'INVOICE'"
+        />
         <div v-if="ticket.description" class="text-sm whitespace-pre-wrap">{{ ticket.description }}</div>
       </div>
       <p class="text-xs muted mt-2">提交的内容不可修改，请通过回复补充信息。</p>

@@ -11,8 +11,10 @@ from app.common.enums import (
     TicketStatus,
 )
 from app.common.errors import AppError, bad_request, conflict, forbidden, not_found
-from app.db.models.ticket import Ticket, TicketAttachment, TicketEvent, TicketMessage
+from app.db.models.ticket import Ticket, TicketAttachment, TicketEvent, TicketMessage, TicketOrder
 from app.deps import CurrentUser
+from app.orders import service as orders
+from app.orders.sub2api import get_admin_client
 from app.tickets import form_config
 from app.tickets.form_schema import (
     LEGACY_FIELDS,
@@ -69,8 +71,11 @@ def add_event(
     return ev
 
 
-def _prepare_form(db: Session, data) -> dict:
-    """Validate a submission against the live form config; returns the ticket's form columns and texts."""
+def _prepare_form(db: Session, data) -> tuple[dict, str]:
+    """Validate a submission against the live form config.
+
+    Returns the ticket's form columns and texts, and the category kind that drives order checks.
+    """
     version, config = form_config.live_config(db)
     category = config.category(data.category)
     if not category or not category.enabled:
@@ -85,8 +90,9 @@ def _prepare_form(db: Session, data) -> dict:
         legacy = {f["key"]: getattr(data, f["key"]) for f in LEGACY_FIELDS}
         form_data = {k: (v.isoformat(timespec="minutes") if isinstance(v, datetime) else v)
                      for k, v in legacy.items() if v not in (None, "")}
-        return {"title": title, "description": description, "form_version": None,
+        form = {"title": title, "description": description, "form_version": None,
                 "form_schema": legacy_snapshot(category.key, category.label), "form_data": form_data, **legacy}
+        return form, "general"
 
     try:
         form_data = validate_form_data(category, data.form_data or {})
@@ -104,17 +110,23 @@ def _prepare_form(db: Session, data) -> dict:
         description = ""
     elif category.description_mode == "required" and not description:
         raise AppError(422, "描述不能为空", "TICKET_FORM_INVALID")
-    return {"title": title[:200], "description": description, "form_version": version,
+    form = {"title": title[:200], "description": description, "form_version": version,
             "form_schema": snapshot(category), "form_data": form_data}
+    return form, category.kind
 
 
 def create_ticket(db: Session, user: CurrentUser, data) -> Ticket:
     from sqlalchemy.exc import IntegrityError
 
-    form = _prepare_form(db, data)
+    form, kind = _prepare_form(db, data)
+    nos = orders.order_nos(kind, form["form_data"])
+    # Sub2API is called before the insert transaction so no lock is held during the network round trip.
+    order_rows = orders.verify_orders(user, kind, nos) if nos else []
     last_err: Exception | None = None
     for _attempt in range(8):
         try:
+            if nos:
+                orders.lock_and_check_duplicates(db, kind, nos)
             ticket = Ticket(
                 ticket_no=generate_ticket_no(db),
                 creator_user_id=user.id,
@@ -126,6 +138,7 @@ def create_ticket(db: Session, user: CurrentUser, data) -> Ticket:
             )
             db.add(ticket)
             db.flush()
+            orders.attach(db, ticket, kind, order_rows)
             if form["description"]:
                 # first message mirrors description
                 db.add(TicketMessage(
@@ -190,7 +203,8 @@ def list_user_tickets(
         q = q.where(Ticket.category == category)
     total = db.scalar(select(func.count()).select_from(q.subquery())) or 0
     items = db.scalars(
-        q.order_by(Ticket.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+        q.options(selectinload(Ticket.orders))
+        .order_by(Ticket.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
     ).all()
     return list(items), total
 
@@ -205,6 +219,7 @@ def list_admin_tickets(
     unclaimed: bool | None = None,
     creator_user_id: int | None = None,
     keyword: str | None = None,
+    active: bool | None = None,
     page: int = 1,
     page_size: int = 20,
 ) -> tuple[list[Ticket], int]:
@@ -221,12 +236,16 @@ def list_admin_tickets(
         q = q.where(Ticket.claimed_by_user_id.is_(None))
     if creator_user_id is not None:
         q = q.where(Ticket.creator_user_id == creator_user_id)
+    if active:
+        q = q.where(Ticket.status.not_in([TicketStatus.RESOLVED.value, TicketStatus.CLOSED.value]))
     if keyword:
         like = f"%{keyword}%"
-        q = q.where((Ticket.title.ilike(like)) | (Ticket.ticket_no.ilike(like)))
+        by_order = select(TicketOrder.ticket_id).where(TicketOrder.out_trade_no.ilike(like))
+        q = q.where(Ticket.title.ilike(like) | Ticket.ticket_no.ilike(like) | Ticket.id.in_(by_order))
     total = db.scalar(select(func.count()).select_from(q.subquery())) or 0
     items = db.scalars(
-        q.order_by(Ticket.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+        q.options(selectinload(Ticket.orders))
+        .order_by(Ticket.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
     ).all()
     return list(items), total
 
@@ -239,6 +258,7 @@ def load_ticket_detail(db: Session, ticket_id: int, *, include_internal: bool) -
             selectinload(Ticket.messages),
             selectinload(Ticket.attachments),
             selectinload(Ticket.events),
+            selectinload(Ticket.orders),
         )
     )
     if not ticket:
@@ -456,4 +476,5 @@ def meta_for_user(db: Session, *, is_admin: bool) -> dict:
     if not is_admin:
         priorities = [p for p in priorities if p["value"] == "P2"]
     statuses = [{"value": s.value, "label": s.value} for s in TicketStatus]
-    return {"form_version": version, "categories": cats, "priorities": priorities, "statuses": statuses}
+    return {"form_version": version, "categories": cats, "priorities": priorities, "statuses": statuses,
+            "order_lookup": get_admin_client() is not None}

@@ -20,6 +20,8 @@ async function load() {
   if (tab.value === 'WAITING_USER') params.status = 'WAITING_USER'
   if (tab.value === 'RESOLVED') params.status = 'RESOLVED'
   if (tab.value === 'CLOSED') params.status = 'CLOSED'
+  if (tab.value === 'refund') Object.assign(params, { category: 'REFUND', active: true })
+  if (tab.value === 'invoice') Object.assign(params, { category: 'INVOICE', active: true })
   const { data } = await api.get('/admin/tickets', { params })
   items.value = data.items
 }
@@ -33,6 +35,8 @@ const tabs = [
   { id: 'all', label: '全部' },
   { id: 'unclaimed', label: '未认领' },
   { id: 'mine', label: '我认领' },
+  { id: 'refund', label: '待退款' },
+  { id: 'invoice', label: '待开票' },
   { id: 'PROCESSING', label: '处理中' },
   { id: 'WAITING_USER', label: '等待用户' },
   { id: 'RESOLVED', label: '已解决' },
@@ -58,7 +62,7 @@ const tabs = [
       >{{ t.label }}</button>
     </div>
     <div class="filter-bar">
-      <input v-model="keyword" class="input sm:max-w-72" placeholder="搜索单号/标题" aria-label="搜索单号或标题" @keyup.enter="load" />
+      <input v-model="keyword" class="input sm:max-w-72" placeholder="搜索单号/标题/订单号" aria-label="搜索单号、标题或订单号" @keyup.enter="load" />
       <button class="btn-secondary" @click="load">搜索</button>
     </div>
     <div class="table-wrap"><table class="table">
@@ -67,6 +71,7 @@ const tabs = [
           <th class="p-2">单号</th>
           <th class="p-2">分类</th>
           <th class="p-2">标题</th>
+          <th class="p-2">订单号</th>
           <th class="p-2">优先级</th>
           <th class="p-2">状态</th>
           <th class="p-2">认领人</th>
@@ -80,12 +85,15 @@ const tabs = [
           </td>
           <td class="p-2 whitespace-nowrap">{{ labelFor(categories, t.category) }}</td>
           <td class="p-2">{{ t.title }}</td>
+          <td class="p-2 font-mono text-xs">
+            {{ t.order_nos?.[0] || '-' }}<span v-if="t.order_nos?.length > 1" class="muted"> 等 {{ t.order_nos.length }} 个</span>
+          </td>
           <td class="p-2">{{ t.priority }}</td>
           <td class="p-2"><StatusBadge :status="t.status" kind="ticket" /></td>
           <td class="p-2">{{ t.claimed_by_user_id || '-' }}</td>
           <td class="p-2">{{ formatDateTime(t.created_at) }}</td>
         </tr>
-        <tr v-if="!items.length"><td colspan="7" class="p-8 text-center muted">暂无工单</td></tr>
+        <tr v-if="!items.length"><td colspan="8" class="p-8 text-center muted">暂无工单</td></tr>
       </tbody>
     </table></div>
   </div>

@@ -5,6 +5,7 @@ import api from '@/api/client'
 import { useToast } from '@/composables/useToast'
 import StatusBadge from '@/components/StatusBadge.vue'
 import FormDataView from '@/components/tickets/FormDataView.vue'
+import OrderTable from '@/components/tickets/OrderTable.vue'
 import { downloadAttachment } from '@/utils/attachments'
 import { formatDateTime, labelFor } from '@/utils/display'
 
@@ -39,6 +40,28 @@ async function load() {
 }
 
 onMounted(load)
+
+// Current order state from Sub2API, keyed by ticket order id; undefined until refreshed.
+const live = ref<Record<number, any> | null>(null)
+const liveLoading = ref(false)
+const orderRows = computed(() => (ticket.value?.orders ?? []).map((o: any) => ({
+  key: o.id,
+  out_trade_no: o.out_trade_no,
+  order: o.snapshot,
+  live: live.value ? live.value[o.id] ?? null : undefined,
+})))
+
+async function refreshOrders() {
+  liveLoading.value = true
+  try {
+    const { data } = await api.get(`/admin/tickets/${route.params.id}/orders/live`)
+    live.value = Object.fromEntries(data.map((r: any) => [r.id, r.order]))
+  } catch (e: any) {
+    toast.error(errMsg(e, '查询订单失败'))
+  } finally {
+    liveLoading.value = false
+  }
+}
 
 function errMsg(e: any, fallback: string) {
   return e.response?.data?.detail?.detail || e.response?.data?.detail || fallback
@@ -201,6 +224,15 @@ async function download(id: number, filename: string) {
       </p>
       <div class="mt-3 border-t pt-3 space-y-3">
         <FormDataView :schema="ticket.form_schema" :data="ticket.form_data" />
+        <div v-if="orderRows.length" class="space-y-2">
+          <div class="flex items-center gap-3">
+            <h2 class="text-sm font-medium">关联订单</h2>
+            <button type="button" class="btn-secondary btn-sm" :disabled="liveLoading" @click="refreshOrders">
+              {{ liveLoading ? '查询中…' : '查询实时状态' }}
+            </button>
+          </div>
+          <OrderTable :rows="orderRows" :show-invoice="ticket.orders[0].purpose === 'INVOICE'" show-live />
+        </div>
         <div v-if="ticket.description" class="whitespace-pre-wrap text-sm">{{ ticket.description }}</div>
       </div>
 

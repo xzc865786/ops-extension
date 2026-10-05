@@ -104,6 +104,17 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://sub2api.example.com/ext/app/
 | 浏览器开发者工具 | Bootstrap 返回 302，后续业务页面 URL 不带 token，`ops_session` 的 Path 为 `/ext` 且 HTTPS 下为 Secure。 |
 | 服务端访问日志 | `/ext/auth/` 的原始查询参数不被记录；其他页面与 API 不出现 token。 |
 
+## 5.1 工单订单校验（可选）
+
+退款、开票、充值类工单可以在提交时到 Sub2API 校验订单，需要给 Ops 配置 Sub2API 的 Admin API Key：
+
+1. 在 Sub2API **系统设置**中生成 Admin API Key。
+2. 写入 Ops 服务器的环境变量 `SUB2API_ADMIN_API_KEY`（Compose 的 `.env` 或 `environment`），重启 `ops-backend`。不要提交进仓库，也不要发到聊天或工单里。
+3. 确认 Sub2API **第一个管理员账号**已完成“管理员合规确认”，否则管理端支付接口会返回 423。
+4. 用普通用户打开“新建工单 → 退款”，填一个自己的订单号点“查询订单”，能显示金额和状态即配置成功。
+
+这个 Key 拥有 Sub2API 的全部管理权限。Ops 只调用订单列表和订单详情接口，不会把 Key 返回给浏览器或写入日志。Key 失效或 Sub2API 不可达时，用户提交订单类工单会提示“订单校验服务暂时不可用”；管理员在工单详情点“查询实时状态”能看到具体原因。
+
 ## 6. 常见问题
 
 | 现象 | 检查方向 |
@@ -115,6 +126,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://sub2api.example.com/ext/app/
 | 打开后又回登录错误页 | HTTPS/Secure Cookie、浏览器 Cookie、是否误用不同域名或不同端口。 |
 | 管理员被退回工单页 | `/api/v1/auth/me` 返回的角色是否为 `admin`；重新进入菜单刷新快照。 |
 | 浅深色没有同步 | Sub2API 是否把 `theme` 参数传给 Bootstrap；`/ext/app/theme-init.js` 能否正常加载。 |
+| 订单校验服务暂时不可用 | 管理员在工单详情点“查询实时状态”查看原因：Key 无效、未完成管理员合规确认，或连不上 `SUB2API_BASE_URL`。 |
 | 附件上传返回 413 | Nginx 或更前面的代理上传大小限制；本例为 `25m`，应用文件限制为 20 MB。 |
 
 对接完成后，日常升级 Ops 只需更新独立服务栈；Sub2API 的四个自定义菜单继续指向相同的 `/ext/auth/bootstrap` 路径。

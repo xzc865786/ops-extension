@@ -7,6 +7,7 @@ from app.common.enums import TicketEventType, TicketStatus
 from app.db.models.ticket import TicketAttachment
 from app.db.session import get_db
 from app.deps import CurrentUser, require_admin, require_login
+from app.orders import service as orders
 from app.tickets import service
 from app.tickets.schemas import (
     TicketAdminPatch,
@@ -33,6 +34,17 @@ def _ticket_out(ticket, *, include_internal: bool) -> dict:
 @router.get("/tickets/meta")
 def tickets_meta(db: Session = Depends(get_db), user: CurrentUser = Depends(require_login)):
     return service.meta_for_user(db, is_admin=user.is_admin)
+
+
+@router.get("/tickets/orders/lookup")
+def lookup_order(
+    out_trade_no: str = Query(..., max_length=64),
+    kind: str = Query(...),
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_login),
+):
+    """Preview one of the current user's Sub2API orders before submitting a ticket."""
+    return orders.lookup(db, user, kind, out_trade_no)
 
 
 @router.get("/tickets")
@@ -163,6 +175,7 @@ def admin_list_tickets(
     unclaimed: bool | None = None,
     creator_user_id: int | None = None,
     keyword: str | None = None,
+    active: bool | None = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -177,6 +190,7 @@ def admin_list_tickets(
         unclaimed=unclaimed,
         creator_user_id=creator_user_id,
         keyword=keyword,
+        active=active,
         page=page,
         page_size=page_size,
     )
@@ -196,6 +210,12 @@ def admin_get_ticket(
 ):
     detail = service.load_ticket_detail(db, ticket_id, include_internal=True)
     return _ticket_out(detail, include_internal=True)
+
+
+@router.get("/admin/tickets/{ticket_id}/orders/live")
+def admin_live_orders(ticket_id: int, db: Session = Depends(get_db), admin: CurrentUser = Depends(require_admin)):
+    detail = service.load_ticket_detail(db, ticket_id, include_internal=True)
+    return orders.live_orders(db, detail)
 
 
 @router.post("/admin/tickets/{ticket_id}/claim")

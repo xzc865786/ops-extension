@@ -51,6 +51,7 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://ops:ops_change_me@ops-db:5432/huima_ops
       SUB2API_BASE_URL: http://sub2api:8080
+      SUB2API_ADMIN_API_KEY: ${SUB2API_ADMIN_API_KEY:-}
       SESSION_SECRET: change-me-to-a-long-random-string
       SESSION_TTL_HOURS: "2"
       SESSION_MAX_AGE_WITHOUT_BOOTSTRAP: "7200"
