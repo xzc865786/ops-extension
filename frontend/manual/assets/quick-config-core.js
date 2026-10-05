@@ -293,7 +293,7 @@ function Main {
     Write-Host ('未完成：' + ($failed -join '、') + '。其他软件已配置好，可以先使用。') -ForegroundColor Yellow
     return 1
   }
-  Write-Host '配置完成！打开软件，按手册“第 4 步”发一条消息测试。' -ForegroundColor Green
+  Write-Host '配置完成！打开软件，按手册“第 5 步”发一条消息测试。' -ForegroundColor Green
   Write-Host ''
   Write-Host '这个文件里有你的 API Key，不要发给别人。'
   if ((Read-Host '输入 Y 并回车，关闭窗口时自动删除本文件（推荐）') -match '^[Yy]$') { return 10 }

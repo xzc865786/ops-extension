@@ -466,7 +466,7 @@ function Main {
             Write-Host '  Codex 已改用命令行版，可以正常使用。' -ForegroundColor Yellow
         }
         Write-Host ''
-        Write-Host '下一步：回到使用手册，完成“第 3 步：一键配置”。' -ForegroundColor Cyan
+        Write-Host '下一步：回到使用手册，完成“4.2 一键配置”。' -ForegroundColor Cyan
         if ($allOk) { $code = 0 }
         else { Write-Host '有软件没装好：检查网络后重新双击本脚本即可，已装好的会自动跳过。' -ForegroundColor Yellow }
     } catch {
