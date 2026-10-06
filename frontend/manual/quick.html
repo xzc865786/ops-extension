@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="汇码新手路线：勾选软件下载一键安装脚本，粘贴 API Key 下载一键配置脚本，双击即可使用 Claude Code、Codex 桌面版和 WorkBuddy。国内网络无需科学上网。">
+  <meta name="description" content="汇码新手路线：Windows 下载一键安装和配置脚本双击运行，Mac 复制一行命令粘到终端，即可使用 Claude Code、Codex 桌面版和 WorkBuddy。国内网络无需科学上网。">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <title>新手一键安装和配置 · 汇码智能</title>
@@ -11,6 +11,7 @@
   <link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
   <link rel="stylesheet" href="assets/docs.css">
+  <script src="assets/os.js"></script>
   <script src="assets/docs.js" defer></script>
   <script type="module" src="assets/quick.js"></script>
 </head>
@@ -50,21 +51,23 @@
         <a href="index.html#troubleshooting">常见问题与报错</a>
         <a href="index.html#contact">联系客服</a>
       </nav>
-      <div class="sidebar-note">适用 Windows 10 / 11<br>苹果电脑请走<a href="cc-switch.html">进阶路线</a></div>
+      <div class="sidebar-note">适用 Windows 10 / 11<br>和 macOS 13.5 及以上</div>
     </aside>
     <main id="main-content" tabindex="-1">
       <p id="search-status" class="search-status" aria-live="polite" role="status" hidden></p>
 
-      <section class="doc-section hero-section" id="start" data-title="新手 小白 一键 安装 配置 Windows 不需要科学上网">
-        <p class="eyebrow">路线一 · 新手推荐 · Windows</p>
-        <h1>点几下按钮，双击两个文件，<br>就能开始用。</h1>
-        <p class="lead">不需要懂编程，也不需要科学上网。网页帮你生成两个小脚本：一个负责安装软件，一个负责把汇码的地址和 Key 填进软件。</p>
+      <section class="doc-section hero-section" id="start" data-title="新手 小白 一键 安装 配置 Windows Mac macOS 苹果 终端 不需要科学上网">
+        <p class="eyebrow">路线一 · 新手推荐 · Windows / Mac</p>
+        <h1><span data-os="windows">点几下按钮，双击两个文件，</span><span data-os="mac">点几下按钮，复制两行命令，</span><br>就能开始用。</h1>
+        <p class="lead" data-os="windows">不需要懂编程，也不需要科学上网。网页帮你生成两个小脚本：一个负责安装软件，一个负责把汇码的地址和 Key 填进软件。</p>
+        <p class="lead" data-os="mac">不需要懂编程，也不需要科学上网。网页帮你生成两行命令：一行负责安装软件，一行负责把汇码的地址和 Key 填进软件，粘到 Mac 的“终端”里回车就行。</p>
+        <div class="os-switch" role="group" aria-label="选择你的电脑系统"><span>你的电脑：</span><button type="button" data-os-choice="windows" aria-pressed="false">Windows</button><button type="button" data-os-choice="mac" aria-pressed="false">Mac（苹果电脑）</button></div>
         <div class="quick-path" aria-label="新手路线的步骤">
           <a href="#prepare"><span>01–03</span>确认有 Key</a><a href="#install"><span>4.1</span>一键安装</a><a href="#configure"><span>4.2</span>一键配置</a><a href="#verify"><span>05</span>发消息测试</a><a href="#faq"><span>?</span>遇到问题</a>
         </div>
         <div class="card-grid">
-          <article class="card"><p class="section-kicker">终端里的编程助手</p><h3>Claude Code</h3><p>在黑色命令窗口里对话，能读写你指定文件夹里的文件，适合写代码、改文档。</p></article>
-          <article class="card"><p class="section-kicker">有窗口的编程助手</p><h3>Codex 桌面版</h3><p>OpenAI 出品，像普通软件一样点开使用。装不上时脚本会自动改装命令行版。</p></article>
+          <article class="card"><p class="section-kicker">终端里的编程助手</p><h3>Claude Code</h3><p>在<span data-os="windows">黑色命令窗口</span><span data-os="mac">“终端”窗口</span>里对话，能读写你指定文件夹里的文件，适合写代码、改文档。</p></article>
+          <article class="card"><p class="section-kicker">有窗口的编程助手</p><h3>Codex 桌面版</h3><p>OpenAI 出品，像普通软件一样点开使用。<span data-os="windows">装不上时脚本会自动改装命令行版。</span><span data-os="mac">需要 Apple 芯片（M1 及更新）的 Mac；Intel 芯片会自动改装命令行版。</span></p></article>
           <article class="card"><p class="section-kicker">办公助手</p><h3>WorkBuddy</h3><p>腾讯出品的桌面 AI 助手，适合写作、整理资料等日常办公。</p></article>
         </div>
         <div class="notice"><strong>只想用其中一个？</strong>下面勾选时只选那一个就行，不需要全部安装。</div>
@@ -81,42 +84,63 @@
         <p>不确定也没关系：4.2 一键配置会自动检查 Key 能用哪些模型，不匹配会直接提示你。</p>
       </section>
 
-      <section class="doc-section" id="install" data-title="安装 下载 脚本 CMD 双击 Node winget 微软商店 Codex 桌面版 WorkBuddy Claude Code 国内镜像">
+      <section class="doc-section" id="install" data-title="安装 下载 脚本 CMD 双击 Node winget 微软商店 Codex 桌面版 WorkBuddy Claude Code 国内镜像 Mac 终端 命令 粘贴 Terminal">
         <p class="eyebrow">第 4.1 步 · 安装</p><h2>一键安装软件</h2>
         <p>已经装好的软件可以不勾。脚本只从国内能访问的官方渠道和镜像下载，已经装过的会自动跳过。</p>
         <div class="setup-panel">
           <fieldset class="target-fieldset"><legend class="field-label">勾选要安装的软件</legend>
             <div class="tool-pick">
               <label><input type="checkbox" name="install-tool" value="claude" checked><span>Claude Code<small>从国内 npm 镜像安装，会顺带装好 Node.js</small></span></label>
-              <label><input type="checkbox" name="install-tool" value="codex" checked><span>Codex 桌面版<small>从微软商店安装；不行就自动改装命令行版</small></span></label>
-              <label><input type="checkbox" name="install-tool" value="workbuddy" checked><span>WorkBuddy<small>腾讯官方安装包，约 <span data-cfg="install.workbuddy_size_mb">500</span> MB</small></span></label>
+              <label><input type="checkbox" name="install-tool" value="codex" checked><span>Codex 桌面版<small><span data-os="windows">从微软商店安装；不行就自动改装命令行版</span><span data-os="mac">OpenAI 官方安装包，约 750 MB；Intel 芯片改装命令行版</span></small></span></label>
+              <label><input type="checkbox" name="install-tool" value="workbuddy" checked><span>WorkBuddy<small><span data-os="windows">腾讯官方安装包，约 <span data-cfg="install.workbuddy_size_mb">500</span> MB</span><span data-os="mac">打开腾讯官网，由你点击下载安装</span></small></span></label>
             </div>
           </fieldset>
-          <div class="setup-actions"><button class="button primary" id="download-install" type="button">下载安装脚本</button></div>
-          <p class="setup-status" id="install-status" role="status" aria-live="polite">安装脚本里没有任何 Key，可以放心保存，以后重装还能再用。</p>
+          <div class="setup-actions"><button class="button primary" id="download-install" type="button" data-os="windows">下载安装脚本</button><button class="button primary" id="mac-install" type="button" data-os="mac">生成安装命令</button></div>
+          <div class="copy-row command-row" id="mac-install-row" data-os="mac" hidden><code class="copy-value" id="mac-install-command"></code><button class="copy-button" type="button" aria-label="复制安装命令">复制命令</button></div>
+          <p class="setup-status" id="install-status" role="status" aria-live="polite">安装用的脚本和命令里都没有 Key，可以放心保存，以后重装还能再用。</p>
         </div>
-        <noscript><div class="notice warning">浏览器没有开启 JavaScript。可以下载<a href="assets/downloads/huima-install.cmd" download>通用安装脚本</a>，运行后按窗口提示输入编号选择软件。</div></noscript>
+        <noscript><div class="notice warning">浏览器没有开启 JavaScript。Windows 可以下载<a href="assets/downloads/huima-install.cmd" download>通用安装脚本</a>；Mac 可以在终端里运行 <code>curl -fsSL https://api.tysy.top/docs/assets/downloads/huima-install.sh | bash</code>。运行后按提示输入编号选择软件。</div></noscript>
+        <div data-os="windows">
         <h3>下载以后怎么做</h3>
         <ol class="steps">
           <li class="step"><span class="step-number">1</span><div class="step-content"><h3>保留下载的文件</h3><p>Edge 会提示“huima-install.cmd 可能会损害你的设备。是否仍要保留？”。这是浏览器对所有脚本文件的通用提醒，点击“保留”即可。</p><figure class="figure narrow"><a href="assets/screenshots/quick-edge-keep.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Edge 下载面板提示 huima-install.cmd 可能会损害你的设备，下面有保留和删除两个按钮。"><img class="screenshot-frame" src="assets/screenshots/quick-edge-keep.jpg" width="392" height="200" loading="lazy" alt="Edge 下载面板提示 huima-install.cmd 可能会损害你的设备，下面有保留和删除两个按钮。"></a><figcaption class="caption">图 1 · 点“保留”。其他浏览器的文字可能略有不同。</figcaption></figure></div></li>
           <li class="step"><span class="step-number">2</span><div class="step-content"><h3>双击运行 huima-install.cmd</h3><p>打开浏览器的“下载”列表，点击 <code>huima-install.cmd</code>。Windows 可能弹出“打开文件 - 安全警告：无法验证发布者”，点“运行”；也可能是蓝色的“Windows 已保护你的电脑”，点“更多信息”→“仍要运行”。</p><figure class="figure narrow"><a href="assets/screenshots/quick-open-file-warning.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Windows 安全警告对话框：无法验证发布者，你确定要运行此软件吗？下面有运行和取消按钮。"><img class="screenshot-frame" src="assets/screenshots/quick-open-file-warning.jpg" width="466" height="370" loading="lazy" alt="Windows 安全警告对话框：无法验证发布者，你确定要运行此软件吗？下面有运行和取消按钮。"></a><figcaption class="caption">图 2 · 出现这个提示时点“运行”。</figcaption></figure></div></li>
           <li class="step"><span class="step-number">3</span><div class="step-content"><h3>需要授权时点“是”</h3><p>安装 Node.js 时屏幕会变暗，弹出授权窗口，标题写的是“Windows® 安装程序”，这就是在安装 Node.js。<strong>默认选中的是“否”</strong>，请用鼠标点“是”，不要直接按回车。其他时候不用操作，看着窗口里的进度等待即可，通常几分钟到半小时。</p><figure class="figure narrow"><a href="assets/screenshots/quick-uac-node.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：用户账户控制窗口：你要允许此应用对你的设备进行更改吗？Windows 安装程序，下面有是和否按钮，否为默认选中。"><img class="screenshot-frame" src="assets/screenshots/quick-uac-node.jpg" width="458" height="351" loading="lazy" alt="用户账户控制窗口：你要允许此应用对你的设备进行更改吗？Windows 安装程序，下面有是和否按钮，否为默认选中。"></a><figcaption class="caption">图 3 · 点“是”。这是在安装 Node.js。</figcaption></figure></div></li>
-          <li class="step"><span class="step-number">4</span><div class="step-content"><h3>看到“安装结果”就完成了</h3><p>每个软件后面显示“完成”就说明装好了。显示“失败”时，检查网络后重新双击脚本，已装好的会自动跳过。按任意键关闭窗口，继续第 3 步。</p><figure class="figure"><a href="assets/screenshots/quick-install-result.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：安装窗口最后显示安装结果：Claude Code、Codex 桌面版、WorkBuddy 均为完成，下面是下一步提示和日志文件夹位置。"><img class="screenshot-frame" src="assets/screenshots/quick-install-result.jpg" width="1000" height="553" loading="lazy" alt="安装窗口最后显示安装结果：Claude Code、Codex 桌面版、WorkBuddy 均为完成，下面是下一步提示和日志文件夹位置。"></a><figcaption class="caption">图 4 · 三个软件都显示“完成”。</figcaption></figure></div></li>
+          <li class="step"><span class="step-number">4</span><div class="step-content"><h3>看到“安装结果”就完成了</h3><p>每个软件后面显示“完成”就说明装好了。显示“失败”时，检查网络后重新双击脚本，已装好的会自动跳过。按任意键关闭窗口，继续 4.2 一键配置。</p><figure class="figure"><a href="assets/screenshots/quick-install-result.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：安装窗口最后显示安装结果：Claude Code、Codex 桌面版、WorkBuddy 均为完成，下面是下一步提示和日志文件夹位置。"><img class="screenshot-frame" src="assets/screenshots/quick-install-result.jpg" width="1000" height="553" loading="lazy" alt="安装窗口最后显示安装结果：Claude Code、Codex 桌面版、WorkBuddy 均为完成，下面是下一步提示和日志文件夹位置。"></a><figcaption class="caption">图 4 · 三个软件都显示“完成”。</figcaption></figure></div></li>
+        </div>
+        <div data-os="mac">
+        <h3>复制以后怎么做</h3>
+        <ol class="steps">
+          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>打开“终端”</h3><p>按键盘的 <kbd>⌘ Command</kbd> + <kbd>空格</kbd> 打开“聚焦搜索”，输入“终端”或 <code>Terminal</code>，按回车。会打开一个只有文字的窗口，这就是终端。</p></div></li>
+          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>粘贴命令，按回车</h3><p>在终端窗口里按 <kbd>⌘ Command</kbd> + <kbd>V</kbd> 粘贴刚才复制的命令，再按回车。整个过程<strong>不需要输入开机密码</strong>；如果终端要求输入密码，说明粘贴的不是本页的命令，按 <kbd>Control</kbd> + <kbd>C</kbd> 停止。</p></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>等它装完</h3><p>窗口里会依次显示每个软件的进度。Codex 桌面版的安装包约 750 MB，国内直连一般 5～15 分钟；中途断开了，重新粘贴同一行命令回车，会接着下载。勾选了 WorkBuddy 时会打开它的官网：点击下载，Apple 芯片选 ARM64 版，双击下载好的文件，把 WorkBuddy 拖进“应用程序”。</p></div></li>
+          <li class="step"><span class="step-number">4</span><div class="step-content"><h3>看到“安装结果”就完成了</h3><p>每个软件后面显示“完成”就说明装好了。显示“失败”时，检查网络后重新粘贴同一行命令，已装好的会自动跳过。然后<strong>关掉这个终端窗口</strong>（新装的 <code>claude</code> 命令要在新窗口里才能用），继续 4.2 一键配置。</p></div></li>
         </ol>
+        </div>
         <details><summary>脚本具体会做什么？</summary>
+          <div data-os="windows">
           <div class="table-wrap"><table class="field-table"><caption>每个软件的安装来源</caption><thead><tr><th scope="col">软件</th><th scope="col">怎么安装</th></tr></thead><tbody>
             <tr><th scope="row">Claude Code</th><td>先检查 Node.js，没有就从 npmmirror 国内镜像下载官方安装包并校验；再从国内镜像安装 <code data-cfg="install.claude_package">@anthropic-ai/claude-code</code>。</td></tr>
             <tr><th scope="row">Codex 桌面版</th><td>用 Windows 自带的 winget 从微软商店安装（商店编号 <span data-cfg="install.codex_store_id">9PLM9XGG6VKS</span>）。失败时打开商店页面，并从国内镜像安装 Codex 命令行版，配置方法相同。</td></tr>
             <tr><th scope="row">WorkBuddy</th><td>用 winget 安装腾讯官方安装包 <span data-cfg="install.workbuddy_winget_id">Tencent.WorkBuddy</span>。失败时打开 WorkBuddy 官网，由你点击下载安装。</td></tr>
           </tbody></table></div>
           <p>脚本不会关闭杀毒软件，不会修改系统安全设置，也不会读取你的文件。安装日志保存在 <code>%LOCALAPPDATA%\HuimaSetup\logs</code>，出问题时可以发给客服。</p>
+          </div>
+          <div data-os="mac">
+          <div class="table-wrap"><table class="field-table"><caption>Mac 上每个软件的安装来源</caption><thead><tr><th scope="col">软件</th><th scope="col">怎么安装</th></tr></thead><tbody>
+            <tr><th scope="row">Claude Code</th><td>先检查 Node.js，没有就从 npmmirror 国内镜像下载官方压缩包并校验，解压到 <code>~/.huima/node</code>；再从国内镜像安装 <code data-cfg="install.claude_package">@anthropic-ai/claude-code</code> 到 <code>~/.huima/npm-global</code>，并把命令路径写进 <code>~/.zprofile</code>。全部装在你的用户目录里，所以不需要开机密码。</td></tr>
+            <tr><th scope="row">Codex 桌面版</th><td>Apple 芯片：从 OpenAI 官方地址下载安装包（Codex 已并入 ChatGPT 桌面版），核对 OpenAI 的开发者签名后装进“应用程序”。Intel 芯片、系统版本太旧或下载失败时，从国内镜像安装 Codex 命令行版，配置方法相同。</td></tr>
+            <tr><th scope="row">WorkBuddy</th><td>打开 WorkBuddy 官网，由你点击下载安装。</td></tr>
+          </tbody></table></div>
+          <p>脚本放在本手册网站上，可以在浏览器里直接打开查看全部内容。它不会修改系统安全设置，也不会读取你的文件。安装日志保存在 <code>~/Library/Logs/HuimaSetup</code>，出问题时可以发给客服。</p>
+          </div>
         </details>
         <div class="notice"><strong>WorkBuddy 装好后</strong>需要用它自己的账号登录（按软件提示操作），这和汇码账号是分开的。</div>
       </section>
 
-      <section class="doc-section" id="configure" data-title="配置 一键配置 脚本 API Key 模型 读取 下载 Claude Code Codex WorkBuddy settings.json config.toml models.json">
+      <section class="doc-section" id="configure" data-title="配置 一键配置 脚本 命令 终端 API Key 模型 读取 下载 Claude Code Codex WorkBuddy settings.json config.toml models.json">
         <p class="eyebrow">第 4.2 步 · 配置</p><h2>一键配置：把 Key 填进软件</h2>
-        <p>勾选要用的软件，给每个软件粘贴对应的 Key、选好模型，下载配置脚本并双击运行，软件就会连上汇码。默认只勾选了 Claude Code，要用 Codex 或 WorkBuddy 时再勾上。</p>
+        <p>勾选要用的软件，给每个软件粘贴对应的 Key、选好模型，<span data-os="windows">下载配置脚本并双击运行</span><span data-os="mac">生成一行配置命令，粘到终端里运行</span>，软件就会连上汇码。默认只勾选了 Claude Code，要用 Codex 或 WorkBuddy 时再勾上。</p>
         <div class="setup-panel">
           <fieldset class="target-fieldset"><legend class="field-label">1. 勾选要配置的软件</legend>
             <div class="tool-pick">
@@ -147,25 +171,36 @@
             <p class="tool-status" id="status-workbuddy" role="status" aria-live="polite"></p>
           </div>
           <div class="model-load-actions"><button class="button secondary" id="load-models" type="button">读取可用模型</button></div>
-          <label class="check-row"><input type="checkbox" id="config-consent"><span>我知道下载的配置脚本里有我的完整 Key，只在自己的电脑上运行，不发给别人。</span></label>
-          <div class="setup-actions"><button class="button primary" id="download-config" type="button">下载配置脚本</button><button class="button secondary" id="clear-config" type="button">清空页面上的 Key</button></div>
+          <label class="check-row"><input type="checkbox" id="config-consent"><span>我知道<span data-os="windows">下载的配置脚本</span><span data-os="mac">生成的配置命令</span>里有我的完整 Key，只在自己的电脑上运行，不发给别人。</span></label>
+          <div class="setup-actions"><button class="button primary" id="download-config" type="button" data-os="windows">下载配置脚本</button><button class="button primary" id="mac-config" type="button" data-os="mac">生成配置命令</button><button class="button secondary" id="clear-config" type="button">清空页面上的 Key</button></div>
+          <div class="copy-row command-row" id="mac-config-row" data-os="mac" hidden><code class="copy-value" id="mac-config-command"></code><button class="copy-button" id="mac-config-copy" type="button" aria-label="复制配置命令">复制命令</button></div>
           <p class="setup-status" id="config-status" role="status" aria-live="polite">粘贴 Key 后，点击“读取可用模型”。</p>
         </div>
         <noscript><div class="notice warning">浏览器没有开启 JavaScript，无法生成配置脚本。请改走<a href="cc-switch.html">进阶路线</a>手动配置。</div></noscript>
         <p class="caption">点“读取可用模型”时，页面会用你的 Key 向汇码查询模型列表，这一步不产生费用。Key 不会被保存，离开页面自动清空。</p>
+        <div data-os="windows">
         <h3>下载以后怎么做</h3>
         <ol class="steps">
           <li class="step"><span class="step-number">1</span><div class="step-content"><h3>先关掉要配置的软件</h3><p>关闭 Claude Code 的命令窗口、Codex 和 WorkBuddy，避免它们覆盖新配置。</p></div></li>
           <li class="step"><span class="step-number">2</span><div class="step-content"><h3>双击 huima-config.cmd</h3><p>和安装脚本一样，提示时选“保留”“更多信息 → 仍要运行”。窗口里会列出要配置的软件，确认后输入 <code>Y</code> 并回车。</p></div></li>
           <li class="step"><span class="step-number">3</span><div class="step-content"><h3>看到“配置完成”</h3><p>每个软件后面显示“完成”就好了。Claude Code 下面还会列出各角色对应的模型。最后会问是否删除这个脚本：输入 <code>Y</code> 回车，关闭窗口时它会自动删除，Key 不会留在下载文件夹里。</p><figure class="figure"><a href="assets/screenshots/quick-config-result.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：配置窗口显示 Claude Code、Codex、WorkBuddy 都已写入配置，最后询问是否自动删除本文件。"><img class="screenshot-frame" src="assets/screenshots/quick-config-result.jpg" width="1000" height="558" loading="lazy" alt="配置窗口显示 Claude Code、Codex、WorkBuddy 都已写入配置，最后询问是否自动删除本文件。"></a><figcaption class="caption">图 5 · 配置完成，输入 Y 删除脚本。</figcaption></figure></div></li>
         </ol>
+        </div>
+        <div data-os="mac">
+        <h3>复制以后怎么做</h3>
+        <ol class="steps">
+          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>先关掉要配置的软件</h3><p>正在运行 Claude Code 的终端窗口按 <kbd>Control</kbd> + <kbd>C</kbd> 退出；ChatGPT（Codex）和 WorkBuddy 按 <kbd>⌘ Command</kbd> + <kbd>Q</kbd> 完全退出，避免它们覆盖新配置。</p></div></li>
+          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>粘贴命令，按回车</h3><p>打开终端，按 <kbd>⌘ Command</kbd> + <kbd>V</kbd> 粘贴刚才复制的配置命令，再按回车。窗口里会列出要配置的软件，确认后输入 <code>Y</code> 并回车。</p></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>看到“配置完成”</h3><p>每个软件后面显示“完成”就好了。命令里有你的 Key：<strong>不要把终端截图或这条命令发给别人</strong>，配置完可以直接关掉终端窗口。</p></div></li>
+        </ol>
+        </div>
         <details><summary>配置脚本会改哪些文件？</summary>
           <div class="table-wrap"><table class="field-table"><caption>写入位置（%USERPROFILE% 是你的用户文件夹）</caption><thead><tr><th scope="col">软件</th><th scope="col">写入的文件和内容</th></tr></thead><tbody>
             <tr><th scope="row">Claude Code</th><td><code>.claude\settings.json</code>：汇码地址、Key、主模型，以及 Fable / Opus / Sonnet / Haiku / 子代理各角色对应的模型；<code>.claude.json</code>：标记已完成首次引导，打开时不再要求登录 Anthropic 账号。其他设置保持不变。</td></tr>
             <tr><th scope="row">Codex</th><td><code>.codex\config.toml</code>：添加“汇码”服务商并设为默认；<code>.codex\auth.json</code>：保存 Key（原来的登录信息会先备份）。</td></tr>
             <tr><th scope="row">WorkBuddy</th><td><code>.workbuddy\models.json</code>：添加汇码自定义模型，保留你已有的其他自定义模型。</td></tr>
           </tbody></table></div>
-          <p>修改前，原文件会备份到 <code>%USERPROFILE%\.huima\backups</code>。随时可以用<a href="#rollback">恢复脚本</a>还原。备份里可能有你以前的 Key，不要发给别人。</p>
+          <p>修改前，原文件会备份到 <code><span data-os="windows">%USERPROFILE%\.huima\backups</span><span data-os="mac">~/.huima/backups</span></code>。随时可以用<a href="#rollback">恢复功能</a>还原。备份里可能有你以前的 Key，不要发给别人。Mac 上的文件位置相同，只是用户文件夹写作 <code>~</code>，例如 <code>~/.claude/settings.json</code>。</p>
         </details>
       </section>
 
@@ -175,14 +210,17 @@
         <div class="copy-row"><span class="copy-value">请只回复四个字：连接成功。</span><button class="copy-button" type="button" aria-label="复制测试消息">复制测试消息</button></div>
         <h3>Claude Code</h3>
         <ol class="steps">
-          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>建一个练习文件夹</h3><p>在桌面新建文件夹，名字用英文，例如 <code>ai-test</code>，不要放重要文件。Claude Code 能读写这个文件夹里的内容。</p></div></li>
-          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>在文件夹里打开命令窗口</h3><p>打开 <code>ai-test</code> 文件夹，点击窗口顶部的地址栏，输入 <code>cmd</code> 并回车，会弹出一个黑色的命令窗口，位置就在这个文件夹里。</p><figure class="figure medium"><a href="assets/screenshots/quick-address-cmd.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：文件资源管理器打开 ai-test 文件夹，地址栏中输入了 cmd。"><img class="screenshot-frame" src="assets/screenshots/quick-address-cmd.jpg" width="785" height="590" loading="lazy" alt="文件资源管理器打开 ai-test 文件夹，地址栏中输入了 cmd。"></a><figcaption class="caption">图 6 · 在地址栏输入 cmd，再按回车。</figcaption></figure></div></li>
+          <li class="step" data-os="mac"><span class="step-number">1</span><div class="step-content"><h3>打开一个新的终端窗口</h3><p>按 <kbd>⌘ Command</kbd> + <kbd>空格</kbd>，输入“终端”回车。一定要用安装完成之后新开的窗口。</p></div></li>
+          <li class="step" data-os="mac"><span class="step-number">2</span><div class="step-content"><h3>建一个练习文件夹并进入</h3><p>粘贴下面这行并回车：它会在桌面建一个 <code>ai-test</code> 文件夹，并让终端进入这个文件夹。不要在里面放重要文件，Claude Code 能读写这个文件夹里的内容。</p><div class="copy-row"><code class="copy-value">mkdir -p ~/Desktop/ai-test &amp;&amp; cd ~/Desktop/ai-test</code><button class="copy-button" type="button" aria-label="复制建文件夹的命令">复制</button></div></div></li>
+          <li class="step" data-os="windows"><span class="step-number">1</span><div class="step-content"><h3>建一个练习文件夹</h3><p>在桌面新建文件夹，名字用英文，例如 <code>ai-test</code>，不要放重要文件。Claude Code 能读写这个文件夹里的内容。</p></div></li>
+          <li class="step" data-os="windows"><span class="step-number">2</span><div class="step-content"><h3>在文件夹里打开命令窗口</h3><p>打开 <code>ai-test</code> 文件夹，点击窗口顶部的地址栏，输入 <code>cmd</code> 并回车，会弹出一个黑色的命令窗口，位置就在这个文件夹里。</p><figure class="figure medium"><a href="assets/screenshots/quick-address-cmd.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：文件资源管理器打开 ai-test 文件夹，地址栏中输入了 cmd。"><img class="screenshot-frame" src="assets/screenshots/quick-address-cmd.jpg" width="785" height="590" loading="lazy" alt="文件资源管理器打开 ai-test 文件夹，地址栏中输入了 cmd。"></a><figcaption class="caption">图 6 · 在地址栏输入 cmd，再按回车。</figcaption></figure></div></li>
           <li class="step"><span class="step-number">3</span><div class="step-content"><h3>输入 claude 并回车，信任这个文件夹</h3><p>第一次会问是否信任这个文件夹（界面是英文）。<strong>默认选中的是“No, exit”（退出）</strong>，请先按键盘的 <kbd>↓</kbd> 选到“Yes, I trust this folder”（是，我信任这个文件夹），再按回车。</p><figure class="figure"><a href="assets/screenshots/quick-claude-trust.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Claude Code 询问是否信任 ai-test 文件夹，选项为 No, exit 和 Yes, I trust this folder，当前选中 No。"><img class="screenshot-frame" src="assets/screenshots/quick-claude-trust.jpg" width="1000" height="423" loading="lazy" alt="Claude Code 询问是否信任 ai-test 文件夹，选项为 No, exit 和 Yes, I trust this folder，当前选中 No。"></a><figcaption class="caption">图 7 · 按 ↓ 选到“Yes, I trust this folder”，再按回车。</figcaption></figure></div></li>
           <li class="step"><span class="step-number">4</span><div class="step-content"><h3>发送测试消息</h3><p>粘贴测试消息并回车，收到“连接成功”就好了。顶部会显示当前模型和“API Usage Billing”（按汇码用量计费）。</p><figure class="figure"><a href="assets/screenshots/quick-claude-reply.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Claude Code 界面顶部显示 Sonnet 5.5 和 API Usage Billing，发送的测试消息收到回复：连接成功。"><img class="screenshot-frame" src="assets/screenshots/quick-claude-reply.jpg" width="1000" height="450" loading="lazy" alt="Claude Code 界面顶部显示 Sonnet 5.5 和 API Usage Billing，发送的测试消息收到回复：连接成功。"></a><figcaption class="caption">图 8 · Claude Code 用汇码的模型回复了“连接成功”。</figcaption></figure><p>Claude Code 默认使用“自动模式”：它会自己判断操作的风险，低风险的操作直接执行，不再逐条询问。所以练习文件夹里不要放重要文件。</p><details><summary>想换模型？输入 /model</summary><p>在 Claude Code 里输入 <code>/model</code> 回车，可以看到 Opus、Fable、Sonnet、Haiku 各角色对应的汇码模型，用 <kbd>↑</kbd><kbd>↓</kbd> 选择、回车确认。分组里没有的角色会自动用相近的模型代替，所以可能出现两个相同的名称。</p><figure class="figure"><a href="assets/screenshots/quick-claude-model.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Claude Code 的 /model 菜单，列出 Default、Opus 5.5、Fable（对应 claude-opus-5-5）、Sonnet 5.5（当前选中）、Haiku 4.5。"><img class="screenshot-frame" src="assets/screenshots/quick-claude-model.jpg" width="1000" height="522" loading="lazy" alt="Claude Code 的 /model 菜单，列出 Default、Opus 5.5、Fable（对应 claude-opus-5-5）、Sonnet 5.5（当前选中）、Haiku 4.5。"></a><figcaption class="caption">图 9 · /model 菜单。“Custom … model”后面括号里是实际调用的汇码模型。</figcaption></figure></details></div></li>
         </ol>
         <h3>Codex 桌面版</h3>
-        <p>在开始菜单搜索“Codex”打开，窗口标题显示“ChatGPT Work”，这就是 Codex 桌面版。左下角显示“汇码”、输入框右边显示“6.1 Sol”，说明已经连上汇码，不需要登录 ChatGPT 账号。点“Choose project”选练习文件夹，在输入框粘贴测试消息发送。如果安装时改装成了命令行版，按上面 Claude Code 的方法打开命令窗口，输入 <code>codex</code> 回车即可。</p><figure class="figure"><a href="assets/screenshots/quick-codex-desktop.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Codex 桌面版窗口，标题 ChatGPT Work，左下角显示汇码，输入框右侧显示 6.1 Sol Light。"><img class="screenshot-frame" src="assets/screenshots/quick-codex-desktop.jpg" width="1000" height="554" loading="lazy" alt="Codex 桌面版窗口，标题 ChatGPT Work，左下角显示汇码，输入框右侧显示 6.1 Sol Light。"></a><figcaption class="caption">图 10 · 左下角“汇码”、模型“6.1 Sol”说明配置生效。“Light”是推理强度，可以点开调整。</figcaption></figure>
-        <div class="notice warning">如果 Codex 桌面版打开后仍要求登录 ChatGPT 账号，先关掉它，改用命令窗口里的 <code>codex</code>，并<a href="index.html#contact">告诉客服</a>你的 Codex 版本。这种情况不要为了登录去购买 ChatGPT 订阅。</div>
+        <p data-os="mac">在启动台或“应用程序”里打开 <strong>ChatGPT</strong>（Codex 已并入 ChatGPT 桌面版）。左下角显示“汇码”、输入框右边显示模型名称，就说明已经连上汇码，不需要登录 ChatGPT 账号。选好练习文件夹，在输入框粘贴测试消息发送。下图是 Windows 版，Mac 版布局基本一致。如果安装时改装成了命令行版，在终端里进入练习文件夹，输入 <code>codex</code> 回车即可。</p>
+        <p data-os="windows">在开始菜单搜索“Codex”打开，窗口标题显示“ChatGPT Work”，这就是 Codex 桌面版。左下角显示“汇码”、输入框右边显示“6.1 Sol”，说明已经连上汇码，不需要登录 ChatGPT 账号。点“Choose project”选练习文件夹，在输入框粘贴测试消息发送。如果安装时改装成了命令行版，按上面 Claude Code 的方法打开命令窗口，输入 <code>codex</code> 回车即可。</p><figure class="figure"><a href="assets/screenshots/quick-codex-desktop.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Codex 桌面版窗口，标题 ChatGPT Work，左下角显示汇码，输入框右侧显示 6.1 Sol Light。"><img class="screenshot-frame" src="assets/screenshots/quick-codex-desktop.jpg" width="1000" height="554" loading="lazy" alt="Codex 桌面版窗口，标题 ChatGPT Work，左下角显示汇码，输入框右侧显示 6.1 Sol Light。"></a><figcaption class="caption">图 10 · 左下角“汇码”、模型“6.1 Sol”说明配置生效。“Light”是推理强度，可以点开调整。</figcaption></figure>
+        <div class="notice warning">如果 Codex 桌面版打开后仍要求登录 ChatGPT 账号，先关掉它，改用<span data-os="windows">命令窗口</span><span data-os="mac">终端</span>里的 <code>codex</code>，并<a href="index.html#contact">告诉客服</a>你的 Codex 版本。这种情况不要为了登录去购买 ChatGPT 订阅。</div>
         <h3>WorkBuddy</h3>
         <p>打开 WorkBuddy 并登录。点输入框右下角的“<strong>快速</strong>”按钮打开模型列表，滚到最底部，在“自定义模型”里选中刚才配置的模型（例如 <code>gpt-6.1-sol</code>），粘贴测试消息发送。</p><figure class="figure medium"><a href="assets/screenshots/quick-workbuddy-model.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：WorkBuddy 模型列表，最底部的自定义模型分组里有 gpt-6.1-sol，下方是配置自定义模型入口。"><img class="screenshot-frame" src="assets/screenshots/quick-workbuddy-model.jpg" width="800" height="420" loading="lazy" alt="WorkBuddy 模型列表，最底部的自定义模型分组里有 gpt-6.1-sol，下方是配置自定义模型入口。"></a><figcaption class="caption">图 11 · 汇码的模型在列表最底部的“自定义模型”里。</figcaption></figure><figure class="figure"><a href="assets/screenshots/quick-workbuddy-reply.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：WorkBuddy 对话中收到回复连接成功，回复下方显示使用的模型 gpt-6.1-sol。"><img class="screenshot-frame" src="assets/screenshots/quick-workbuddy-reply.jpg" width="936" height="320" loading="lazy" alt="WorkBuddy 对话中收到回复连接成功，回复下方显示使用的模型 gpt-6.1-sol。"></a><figcaption class="caption">图 12 · 回复下方会显示使用的模型。</figcaption></figure>
         <div class="notice">在模型列表里没找到汇码的模型？先完全退出 WorkBuddy 再打开。还是没有的话，按<a href="cc-switch.html#workbuddy">进阶路线的 WorkBuddy 步骤</a>在设置里手动添加，只需填三项。</div>
@@ -197,29 +235,37 @@
 
       <section class="doc-section" id="rollback" data-title="恢复 回退 还原 撤销 备份 原来的配置">
         <p class="eyebrow">以后会用到</p><h2>恢复原来的配置</h2>
-        <p>想撤销汇码的配置，回到运行配置脚本之前的样子，下载恢复脚本并双击运行。它会还原最近一次配置前的文件；再运行一次，可以继续还原更早的一次。</p>
-        <div class="setup-actions"><button class="button secondary" id="download-rollback" type="button">下载恢复脚本</button></div>
-        <p class="setup-status" id="rollback-status" role="status" aria-live="polite">恢复脚本里没有 Key，可以放心保存。</p>
+        <p>想撤销汇码的配置，回到运行配置之前的样子：<span data-os="windows">下载恢复脚本并双击运行</span><span data-os="mac">复制下面的恢复命令，粘到终端里回车，按提示输入 Y</span>。它会还原最近一次配置前的文件；再运行一次，可以继续还原更早的一次。</p>
+        <div class="setup-actions" data-os="windows"><button class="button secondary" id="download-rollback" type="button">下载恢复脚本</button></div>
+        <div class="copy-row command-row" data-os="mac"><code class="copy-value" id="mac-restore-command">curl -fsSL 'https://api.tysy.top/docs/assets/downloads/huima-config.sh' | bash -s -- '--restore'</code><button class="copy-button" type="button" aria-label="复制恢复命令">复制命令</button></div>
+        <p class="setup-status" id="rollback-status" role="status" aria-live="polite">恢复用的脚本和命令里没有 Key，可以放心保存。</p>
         <p>恢复只影响本机软件的设置，不会删除汇码账号里的 Key。要彻底停用某把 Key，请到汇码 <a href="https://api.tysy.top/keys" data-cfg-href="/keys">API 密钥页面</a>禁用。</p>
       </section>
 
-      <section class="doc-section" id="faq" data-title="常见问题 报错 有害 SmartScreen 一闪而过 授权 winget 微软商店 不是内部或外部命令 登录 401 403 404 杀毒">
+      <section class="doc-section" id="faq" data-title="常见问题 报错 有害 SmartScreen 一闪而过 授权 winget 微软商店 不是内部或外部命令 登录 401 403 404 杀毒 Mac 终端 command not found zsh curl Intel 芯片 密码">
         <p class="eyebrow">遇到问题</p><h2>新手路线常见问题</h2>
         <div class="table-wrap"><table class="field-table"><caption>按出现的现象查找</caption><thead><tr><th scope="col">看到什么</th><th scope="col">怎么处理</th></tr></thead><tbody>
-          <tr><th scope="row">浏览器说文件可能有害</th><td>在下载列表点“保留”。脚本来自本手册页面，内容可以用记事本打开查看。</td></tr>
-          <tr><th scope="row">“Windows 已保护你的电脑”</th><td>点击“更多信息”，再点“仍要运行”。</td></tr>
-          <tr><th scope="row">窗口一闪就没了</th><td>确认下载的是 <code>.cmd</code> 文件，而不是 <code>.txt</code>。请直接双击运行，不要选“以管理员身份运行”，否则配置可能写到别的账户里。仍然闪退时联系客服。</td></tr>
-          <tr><th scope="row">杀毒软件拦截</th><td>选择“允许”或“信任”这个文件，不需要关闭杀毒软件。拿不准时把截图发给客服。</td></tr>
-          <tr><th scope="row">提示没有 winget</th><td>Windows 10 较老的版本可能没有。在微软商店搜索“应用安装程序”并更新，再重新运行安装脚本。Claude Code 不受影响。</td></tr>
-          <tr><th scope="row">Codex 桌面版装不上</th><td>脚本会自动改装命令行版，可以正常使用。想要桌面版，可在打开的微软商店页面点“获取”。</td></tr>
-          <tr><th scope="row">“claude 不是内部或外部命令”</th><td>关闭所有命令窗口，重新打开再试。仍然不行就重新运行安装脚本，查看“安装结果”。</td></tr>
-          <tr><th scope="row">“无法加载文件 claude.ps1，因为在此系统上禁止运行脚本”</th><td>在 PowerShell 窗口里会遇到。改用 <code>cmd</code> 打开命令窗口再输入 <code>claude</code>；或者重新运行一次安装脚本，它会修复这个问题，之后 PowerShell 也能用。不需要修改系统的脚本执行策略。</td></tr>
-          <tr><th scope="row">Claude Code 仍要求登录</th><td>确认已运行配置脚本并显示“完成”，然后关闭命令窗口重新打开。还不行把配置脚本窗口的截图发给客服（先遮住 Key）。</td></tr>
-          <tr><th scope="row">401 / Key 无效</th><td>Key 可能复制不完整或已被禁用。到汇码重新复制，回到 4.2 一键配置重新生成配置脚本。</td></tr>
+          <tr data-os="windows"><th scope="row">浏览器说文件可能有害</th><td>在下载列表点“保留”。脚本来自本手册页面，内容可以用记事本打开查看。</td></tr>
+          <tr data-os="windows"><th scope="row">“Windows 已保护你的电脑”</th><td>点击“更多信息”，再点“仍要运行”。</td></tr>
+          <tr data-os="windows"><th scope="row">窗口一闪就没了</th><td>确认下载的是 <code>.cmd</code> 文件，而不是 <code>.txt</code>。请直接双击运行，不要选“以管理员身份运行”，否则配置可能写到别的账户里。仍然闪退时联系客服。</td></tr>
+          <tr data-os="windows"><th scope="row">杀毒软件拦截</th><td>选择“允许”或“信任”这个文件，不需要关闭杀毒软件。拿不准时把截图发给客服。</td></tr>
+          <tr data-os="windows"><th scope="row">提示没有 winget</th><td>Windows 10 较老的版本可能没有。在微软商店搜索“应用安装程序”并更新，再重新运行安装脚本。Claude Code 不受影响。</td></tr>
+          <tr data-os="windows"><th scope="row">Codex 桌面版装不上</th><td>脚本会自动改装命令行版，可以正常使用。想要桌面版，可在打开的微软商店页面点“获取”。</td></tr>
+          <tr data-os="windows"><th scope="row">“claude 不是内部或外部命令”</th><td>关闭所有命令窗口，重新打开再试。仍然不行就重新运行安装脚本，查看“安装结果”。</td></tr>
+          <tr data-os="windows"><th scope="row">“无法加载文件 claude.ps1，因为在此系统上禁止运行脚本”</th><td>在 PowerShell 窗口里会遇到。改用 <code>cmd</code> 打开命令窗口再输入 <code>claude</code>；或者重新运行一次安装脚本，它会修复这个问题，之后 PowerShell 也能用。不需要修改系统的脚本执行策略。</td></tr>
+          <tr data-os="mac"><th scope="row">“zsh: command not found: claude”</th><td>关掉终端窗口，重新打开一个再试。仍然不行就重新运行安装命令，查看“安装结果”。</td></tr>
+          <tr data-os="mac"><th scope="row">终端要求输入密码</th><td>本页的命令都不需要开机密码。按 <kbd>Control</kbd> + <kbd>C</kbd> 停止，回到本页重新点“复制命令”再粘贴。</td></tr>
+          <tr data-os="mac"><th scope="row">粘贴后出现 <code>quote&gt;</code> 或一直没反应</th><td>命令没有复制完整。按 <kbd>Control</kbd> + <kbd>C</kbd> 退出，回到本页点“复制命令”，不要手动选中文字复制。</td></tr>
+          <tr data-os="mac"><th scope="row">“Could not resolve host”或下载超时</th><td>检查网络。开着代理软件时先关掉再试，或者换一个网络；重新运行同一行命令即可。</td></tr>
+          <tr data-os="mac"><th scope="row">Codex 桌面版下载很慢或中断</th><td>重新粘贴同一行安装命令回车，会接着之前的进度下载。</td></tr>
+          <tr data-os="mac"><th scope="row">Intel 芯片的 Mac</th><td>Codex 桌面版只支持 Apple 芯片，脚本会自动改装命令行版。查看芯片：点左上角苹果菜单 →“关于本机”，“芯片”写着 Apple M 开头的就是 Apple 芯片。</td></tr>
+          <tr data-os="mac"><th scope="row">提示需要 macOS 13.5 或更新版本</th><td>打开“系统设置 → 通用 → 软件更新”升级系统后再运行。</td></tr>
+          <tr><th scope="row">Claude Code 仍要求登录</th><td>确认已运行配置<span data-os="windows">脚本</span><span data-os="mac">命令</span>并显示“完成”，然后关闭<span data-os="windows">命令窗口</span><span data-os="mac">终端窗口</span>重新打开。还不行把配置脚本窗口的截图发给客服（先遮住 Key）。</td></tr>
+          <tr><th scope="row">401 / Key 无效</th><td>Key 可能复制不完整或已被禁用。到汇码重新复制，回到 4.2 一键配置重新生成配置脚本或命令。</td></tr>
           <tr><th scope="row">403 / 模型不存在</th><td>Key 的分组不支持这个模型。回到 4.2 一键配置点“读取可用模型”，从列表里重新选。</td></tr>
           <tr><th scope="row">余额不足 / 429</th><td>查看账户余额和 Key 的额度限制，暂停反复重试。详见<a href="index.html#troubleshooting">手册首页的排查表</a>。</td></tr>
         </tbody></table></div>
-        <p>还没解决？按<a href="index.html#contact">求助模板</a>联系客服，附上脚本窗口截图或日志文件夹。截图前遮住 Key。</p>
+        <p>还没解决？按<a href="index.html#contact">求助模板</a>联系客服，附上脚本窗口（或终端）截图和日志文件夹。截图前遮住 Key。</p>
       </section>
 
       <footer class="site-footer"><span>汇码智能 · 新手路线</span><a href="index.html">返回手册首页</a><a href="cc-switch.html">进阶路线</a><a href="#start">回到顶部 ↑</a></footer>

@@ -1,2 +1,4 @@
 # Windows command scripts must keep CRLF in checkouts and release archives.
 *.cmd text eol=crlf
+# macOS shell scripts are piped into bash and must keep LF.
+*.sh text eol=lf

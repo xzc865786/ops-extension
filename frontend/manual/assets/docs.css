@@ -122,6 +122,15 @@ label.field-hint { display:block; }
 html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-height) + 26px); }
 body { margin: 0; color: var(--ink); background: var(--canvas); font-size: 16px; line-height: 1.85; }
 [hidden] { display: none !important; }
+/* Windows / Mac steps: os.js sets html[data-os]; without JavaScript both systems stay visible. */
+html[data-os="mac"] [data-os="windows"], html[data-os="windows"] [data-os="mac"] { display: none !important; }
+.os-switch { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 22px 0 6px; }
+.os-switch > span { color: var(--muted); font-size: 14px; }
+.os-switch button { min-height: 38px; padding: 7px 16px; border: 1px solid #c5ccd4; border-radius: 999px; color: var(--ink); background: white; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.os-switch button:hover { border-color: var(--accent); }
+.os-switch button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-strong); background: var(--accent-soft); }
+.os-switch button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.command-row .copy-value { font-size: 13px; }
 button, input, select, textarea { font: inherit; }
 button, input { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }

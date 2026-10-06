@@ -1,6 +1,7 @@
 import {parseAvailableModels, recommendModel, validateApiKey} from './ccswitch-setup-core.js';
 import {fillRoleSelects, readRoleSelects, resetRoleSelects} from './claude-roles.js';
 import {TOOLS, buildConfigCmd, buildRollbackCmd} from './quick-config-core.js';
+import {buildMacConfigCommand, buildMacInstallCommand, buildMacRestoreCommand} from './mac-command-core.js';
 import {download, downloadUrl, guardClick} from './ui.js';
 import {manualConfigReady} from './manual-config.js';
 
@@ -63,7 +64,7 @@ function syncToolBlocks() {
   for (const tool of toolNames) byId(`tool-${tool}`).hidden = !configBoxes.find(box => box.value === tool).checked;
 }
 
-// --- Step 2: install script -------------------------------------------------
+// --- 4.1: install script (Windows) -------------------------------------------
 // Install sources from the configuration become `set` lines that huima-install.cmd reads (and re-validates).
 function installSettingLines(config) {
   const install = config.install;
@@ -110,7 +111,7 @@ guardClick(byId('download-install'), async () => {
   }
 });
 
-// --- Step 3: configuration script -------------------------------------------
+// --- 4.2: configuration script (Windows) -------------------------------------
 configBoxes.forEach(box => box.addEventListener('change', syncToolBlocks));
 syncToolBlocks();
 
@@ -211,19 +212,24 @@ loadButton.addEventListener('click', async () => {
   }
 });
 
+function configInput(what) {
+  const tools = checked(configBoxes);
+  if (!tools.length) throw new Error('请至少勾选一个要配置的软件。');
+  const input = {};
+  for (const tool of tools) {
+    const model = byId(`model-${tool}`).value;
+    if (!model) throw new Error(`请先读取 ${TOOLS[tool].label} 的可用模型。`);
+    input[tool] = {apiKey: keyOf(tool), model};
+    if (tool === 'claude') input.claude.roles = readRoleSelects('role-claude-');
+  }
+  if (!consent.checked) throw new Error(`请先勾选确认：${what}里有你的 Key。`);
+  if (!cfg) throw new Error(CONFIG_ERROR);
+  return input;
+}
+
 guardClick(byId('download-config'), () => {
   try {
-    const tools = checked(configBoxes);
-    if (!tools.length) throw new Error('请至少勾选一个要配置的软件。');
-    const input = {};
-    for (const tool of tools) {
-      const model = byId(`model-${tool}`).value;
-      if (!model) throw new Error(`请先读取 ${TOOLS[tool].label} 的可用模型。`);
-      input[tool] = {apiKey: keyOf(tool), model};
-      if (tool === 'claude') input.claude.roles = readRoleSelects('role-claude-');
-    }
-    if (!consent.checked) throw new Error('请先勾选确认：配置脚本里有你的 Key。');
-    if (!cfg) throw new Error(CONFIG_ERROR);
+    const input = configInput('配置脚本');
     download(buildConfigCmd(input, cfg), 'huima-config.cmd');
     clearKeys();
     resetAll();
@@ -234,10 +240,51 @@ guardClick(byId('download-config'), () => {
   }
 });
 
+// --- Mac: one-line Terminal commands ----------------------------------------
+// The command embeds the key, so the page shows a masked copy and only the copy button holds it.
+function clearMacConfig() {
+  byId('mac-config-row').hidden = true;
+  byId('mac-config-command').textContent = '';
+  delete byId('mac-config-copy').dataset.copy;
+}
+
+function showCommand(rowId, codeId, text) {
+  byId(codeId).textContent = text;
+  byId(rowId).hidden = false;
+}
+
+guardClick(byId('mac-install'), () => {
+  try {
+    if (!cfg) throw new Error(CONFIG_ERROR);
+    showCommand('mac-install-row', 'mac-install-command', buildMacInstallCommand(checked(installBoxes), cfg, location.href));
+    status('install-status', '安装命令已生成：点“复制命令”，再打开“终端”粘贴并回车。命令里没有 Key。');
+  } catch (error) {
+    status('install-status', error.message, true);
+    return false;
+  }
+}, 500);
+
+guardClick(byId('mac-config'), () => {
+  try {
+    const {command, preview} = buildMacConfigCommand(configInput('配置命令'), cfg, location.href);
+    showCommand('mac-config-row', 'mac-config-command', preview);
+    byId('mac-config-copy').dataset.copy = command;
+    clearKeys();
+    resetAll();
+    status('config-status', '配置命令已生成，页面上的 Key 已清空。点“复制命令”，再到终端粘贴并回车。');
+  } catch (error) {
+    status('config-status', error.message, true);
+    return false;
+  }
+});
+
+try { byId('mac-restore-command').textContent = buildMacRestoreCommand(location.href); } catch { /* keep the default text */ }
+
 byId('clear-config').addEventListener('click', () => {
   clearKeys();
   resetAll();
-  status('config-status', '页面上的 Key 已清空。已经下载的脚本不会被删除。');
+  clearMacConfig();
+  status('config-status', '页面上的 Key 和生成的命令已清空。已经下载的脚本不会被删除。');
 });
 
 guardClick(byId('download-rollback'), () => {
@@ -246,5 +293,5 @@ guardClick(byId('download-rollback'), () => {
 });
 
 resetAll();
-window.addEventListener('pagehide', () => { clearKeys(); resetAll(); });
+window.addEventListener('pagehide', () => { clearKeys(); resetAll(); clearMacConfig(); });
 window.addEventListener('pageshow', event => { if (event.persisted) resetAll(); });

@@ -1,0 +1,95 @@
+# Runs the manual's Mac beginner scripts on fresh GitHub-hosted Macs (Apple silicon and Intel).
+# Covers install, configure and restore. GitHub's Macs are outside China, so domestic network speed is not tested here.
+# Optional repository secrets for a real request: HUIMA_TEST_CLAUDE_KEY / HUIMA_TEST_CODEX_KEY
+# (plus HUIMA_TEST_CLAUDE_MODEL / HUIMA_TEST_CODEX_MODEL when the defaults are not in the key's group).
+name: Manual Mac scripts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/manual/assets/downloads/*.sh'
+      - 'frontend/manual/assets/mac-command-core.js'
+      - 'frontend/manual/assets/quick-config-core.js'
+      - 'frontend/tests/manual/mac-ci.mjs'
+      - '.github/workflows/manual-macos.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      HUIMA_ASSUME_YES: '1'
+      HUIMA_TEST_CLAUDE_KEY: ${{ secrets.HUIMA_TEST_CLAUDE_KEY }}
+      HUIMA_TEST_CODEX_KEY: ${{ secrets.HUIMA_TEST_CODEX_KEY }}
+      HUIMA_TEST_CLAUDE_MODEL: ${{ secrets.HUIMA_TEST_CLAUDE_MODEL }}
+      HUIMA_TEST_CODEX_MODEL: ${{ secrets.HUIMA_TEST_CODEX_MODEL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Claude Code and Codex like a new Mac (no Node on PATH)
+        run: |
+          env -i HOME="$HOME" USER="$USER" PATH=/usr/bin:/bin:/usr/sbin:/sbin CI=1 HUIMA_ASSUME_YES=1 \
+            bash -c "curl -fsSL 'file://$PWD/frontend/manual/assets/downloads/huima-install.sh' | bash -s -- claude,codex"
+
+      - name: Check what was installed
+        run: |
+          ls ~/.huima ~/.huima/node
+          ~/.huima/npm-global/bin/claude --version
+          grep -A1 '^# >>> huima >>>$' ~/.zprofile
+          if [ "$(sysctl -n hw.optional.arm64)" = 1 ]; then
+            app=$(ls -d /Applications/ChatGPT.app /Applications/Codex.app 2>/dev/null | head -1)
+            test -n "$app"
+            codesign -dvv "$app" 2>&1 | grep -E '^(Identifier|Authority|TeamIdentifier)='
+            defaults read "$app/Contents/Info.plist" CFBundleIdentifier
+            defaults read "$app/Contents/Info.plist" LSMinimumSystemVersion || true
+          else
+            ~/.huima/npm-global/bin/codex --version
+          fi
+
+      - name: Running the install again skips everything
+        run: |
+          env -i HOME="$HOME" USER="$USER" PATH=/usr/bin:/bin:/usr/sbin:/sbin CI=1 HUIMA_ASSUME_YES=1 \
+            bash -c "curl -fsSL 'file://$PWD/frontend/manual/assets/downloads/huima-install.sh' | bash -s -- claude,codex" | tee second-run.txt
+          grep -q '跳过' second-run.txt
+
+      - name: Configure with the command the page generates
+        run: |
+          node frontend/tests/manual/mac-ci.mjs seed
+          bash -c "$(node frontend/tests/manual/mac-ci.mjs config-command)"
+          node frontend/tests/manual/mac-ci.mjs verify
+
+      - name: Real request through Claude Code (only with a test key)
+        if: env.HUIMA_TEST_CLAUDE_KEY != ''
+        run: |
+          mkdir -p ~/ai-test && cd ~/ai-test
+          zsh -lc 'claude -p "请只回复四个字：连接成功。"' | tee reply.txt
+          grep -q '连接成功' reply.txt
+
+      - name: Real request through Codex CLI (only with a test key, Intel runner)
+        if: env.HUIMA_TEST_CODEX_KEY != '' && matrix.runner == 'macos-15-intel'
+        run: |
+          mkdir -p ~/ai-test && cd ~/ai-test
+          zsh -lc 'codex exec --skip-git-repo-check "请只回复四个字：连接成功。"' | tee reply.txt
+          grep -q '连接成功' reply.txt
+
+      - name: Restore puts every file back
+        run: |
+          bash -c "$(node frontend/tests/manual/mac-ci.mjs restore-command)"
+          node frontend/tests/manual/mac-ci.mjs verify-restored
+
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: huima-logs-${{ matrix.runner }}
+          path: ~/Library/Logs/HuimaSetup
+          if-no-files-found: ignore

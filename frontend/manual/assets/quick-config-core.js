@@ -29,7 +29,7 @@ export function validateConfigInput(input = {}) {
   return tools;
 }
 
-function base64Utf8(value) {
+export function base64Utf8(value) {
   let binary = '';
   for (const byte of new TextEncoder().encode(value)) binary += String.fromCharCode(byte);
   return btoa(binary);
@@ -362,7 +362,7 @@ if not "%HUIMA_EXIT%"=="10" exit /b %HUIMA_EXIT%
 }
 
 // Settings the generated script needs from the manual configuration (all re-validated before use).
-function scriptSettings(cfg) {
+export function scriptSettings(cfg) {
   if (!isSafeConfig(cfg)) throw new Error('手册配置异常，请刷新页面后重试。');
   const {site, endpoints} = derive(cfg);
   const wb = cfg.workbuddy;
