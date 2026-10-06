@@ -179,8 +179,10 @@ test('install script picks the newest LTS tarball from index.json, not the laggi
     {version: 'v24.9.0', files: ['osx-arm64-tar'], lts: 'Krypton'},
   ]);
   const sums = `${'a'.repeat(64)}  node-v24.21.0-darwin-arm64.tar.gz\n${'b'.repeat(64)}  node-v24.21.0-darwin-x64.tar.gz\n`;
+  // Stub curl, not download: the real download() runs and its progress messages must not leak into the result.
   const script = `${load} WORK_DIR=$(mktemp -d); ARCH=arm64;
-    download() { case "$1" in */index.json) printf '%s' '${index}' > "$2" ;; */SHASUMS256.txt) printf '${sums.replace(/\n/g, '\\n')}' > "$2" ;; *) return 1 ;; esac; };
-    find_node_release https://mirror.example`;
-  assert.equal(bash(script).trim().split('\n').pop(), `https://mirror.example v24.21.0 ${'a'.repeat(64)}`);
+    curl() { local out='' url='' prev=''; for a in "$@"; do [ "$prev" = -o ] && out="$a"; prev="$a"; url="$a"; done;
+      case "$url" in */index.json) printf '%s' '${index}' > "$out" ;; */SHASUMS256.txt) printf '${sums.replace(/\n/g, '\\n')}' > "$out" ;; *) return 1 ;; esac; };
+    find_node_release https://mirror.example 2>/dev/null`;
+  assert.equal(bash(script), `https://mirror.example v24.21.0 ${'a'.repeat(64)}\n`);
 });

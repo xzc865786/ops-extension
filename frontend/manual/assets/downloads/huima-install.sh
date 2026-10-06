@@ -73,10 +73,11 @@ ask() {
 
 download() {
   # download URL FILE [MAX_SECONDS]; tries the system proxy first, then a direct connection.
+  # Messages go to stderr: callers such as find_node_release capture stdout as their result.
   local url="$1" file="$2" max="${3:-600}"
-  info "下载：$url"
+  info "下载：$url" >&2
   if curl -fL --retry 2 --connect-timeout 20 --max-time "$max" -sS -o "$file" "$url"; then return 0; fi
-  warn '常规下载失败，尝试直连（不修改现有代理设置）。'
+  warn '常规下载失败，尝试直连（不修改现有代理设置）。' >&2
   curl -fL --retry 2 --connect-timeout 20 --max-time "$max" -sS --noproxy '*' -o "$file" "$url"
 }
 
@@ -265,6 +266,7 @@ install_codex_desktop() {
   minimum=$(defaults read "$app/Contents/Info.plist" LSMinimumSystemVersion 2>/dev/null)
   if [ -n "$minimum" ] && ! version_ge "$MACOS" "$minimum"; then
     hdiutil detach "$mount" -quiet
+    rm -f "$dmg"
     warn "Codex 桌面版需要 macOS $minimum 或更新版本，这台 Mac 是 $MACOS。先改装命令行版。"
     record 'Codex 桌面版' skip
     install_codex_cli
@@ -279,6 +281,8 @@ install_codex_desktop() {
     record 'Codex 桌面版' ok
   else
     hdiutil detach "$mount" -quiet
+    # A complete file left behind would make the next run's resumed download fail.
+    rm -f "$dmg"
     fail "复制到 $target 失败。先改装命令行版。"
     record 'Codex 桌面版' fail
     install_codex_cli

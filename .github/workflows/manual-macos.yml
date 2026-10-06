@@ -35,56 +35,70 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Each step also appends its output to ci.txt; on failure the tail becomes a public annotation,
+      # because step logs on GitHub need a signed-in account to read.
       - name: Install Claude Code and Codex like a new Mac (no Node on PATH)
         run: |
-          env -i HOME="$HOME" USER="$USER" PATH=/usr/bin:/bin:/usr/sbin:/sbin CI=1 HUIMA_ASSUME_YES=1 \
-            bash -c "curl -fsSL 'file://$PWD/frontend/manual/assets/downloads/huima-install.sh' | bash -s -- claude,codex"
+          env -i HOME="$HOME" USER="$USER" PATH=/usr/bin:/bin:/usr/sbin:/sbin CI=1 HUIMA_ASSUME_YES=1             bash -c "curl -fsSL 'file://$PWD/frontend/manual/assets/downloads/huima-install.sh' | bash -s -- claude,codex" 2>&1             | tee -a "$RUNNER_TEMP/ci.txt"
 
       - name: Check what was installed
         run: |
-          ls ~/.huima ~/.huima/node
-          ~/.huima/npm-global/bin/claude --version
-          grep -A1 '^# >>> huima >>>$' ~/.zprofile
-          if [ "$(sysctl -n hw.optional.arm64)" = 1 ]; then
-            app=$(ls -d /Applications/ChatGPT.app /Applications/Codex.app 2>/dev/null | head -1)
-            test -n "$app"
-            codesign -dvv "$app" 2>&1 | grep -E '^(Identifier|Authority|TeamIdentifier)='
-            defaults read "$app/Contents/Info.plist" CFBundleIdentifier
-            defaults read "$app/Contents/Info.plist" LSMinimumSystemVersion || true
-          else
-            ~/.huima/npm-global/bin/codex --version
-          fi
+          {
+            ls ~/.huima ~/.huima/node
+            ~/.huima/npm-global/bin/claude --version
+            grep -A1 '^# >>> huima >>>$' ~/.zprofile
+            if [ "$(sysctl -n hw.optional.arm64)" = 1 ]; then
+              app=$(ls -d /Applications/ChatGPT.app /Applications/Codex.app 2>/dev/null | head -1)
+              test -n "$app"
+              codesign -dvv "$app" 2>&1 | grep -E '^(Identifier|Authority|TeamIdentifier)='
+              defaults read "$app/Contents/Info.plist" CFBundleIdentifier
+              defaults read "$app/Contents/Info.plist" LSMinimumSystemVersion || true
+            else
+              ~/.huima/npm-global/bin/codex --version
+            fi
+          } 2>&1 | tee -a "$RUNNER_TEMP/ci.txt"
 
       - name: Running the install again skips everything
         run: |
-          env -i HOME="$HOME" USER="$USER" PATH=/usr/bin:/bin:/usr/sbin:/sbin CI=1 HUIMA_ASSUME_YES=1 \
-            bash -c "curl -fsSL 'file://$PWD/frontend/manual/assets/downloads/huima-install.sh' | bash -s -- claude,codex" | tee second-run.txt
+          env -i HOME="$HOME" USER="$USER" PATH=/usr/bin:/bin:/usr/sbin:/sbin CI=1 HUIMA_ASSUME_YES=1             bash -c "curl -fsSL 'file://$PWD/frontend/manual/assets/downloads/huima-install.sh' | bash -s -- claude,codex" 2>&1             | tee second-run.txt | tee -a "$RUNNER_TEMP/ci.txt"
           grep -q '跳过' second-run.txt
 
       - name: Configure with the command the page generates
         run: |
-          node frontend/tests/manual/mac-ci.mjs seed
-          bash -c "$(node frontend/tests/manual/mac-ci.mjs config-command)"
-          node frontend/tests/manual/mac-ci.mjs verify
+          {
+            node frontend/tests/manual/mac-ci.mjs seed
+            bash -c "$(node frontend/tests/manual/mac-ci.mjs config-command)"
+            node frontend/tests/manual/mac-ci.mjs verify
+          } 2>&1 | tee -a "$RUNNER_TEMP/ci.txt"
 
       - name: Real request through Claude Code (only with a test key)
         if: env.HUIMA_TEST_CLAUDE_KEY != ''
         run: |
           mkdir -p ~/ai-test && cd ~/ai-test
-          zsh -lc 'claude -p "请只回复四个字：连接成功。"' | tee reply.txt
+          zsh -lc 'claude -p "请只回复四个字：连接成功。"' 2>&1 | tee reply.txt | tee -a "$RUNNER_TEMP/ci.txt"
           grep -q '连接成功' reply.txt
 
       - name: Real request through Codex CLI (only with a test key, Intel runner)
         if: env.HUIMA_TEST_CODEX_KEY != '' && matrix.runner == 'macos-15-intel'
         run: |
           mkdir -p ~/ai-test && cd ~/ai-test
-          zsh -lc 'codex exec --skip-git-repo-check "请只回复四个字：连接成功。"' | tee reply.txt
+          zsh -lc 'codex exec --skip-git-repo-check "请只回复四个字：连接成功。"' 2>&1 | tee reply.txt | tee -a "$RUNNER_TEMP/ci.txt"
           grep -q '连接成功' reply.txt
 
       - name: Restore puts every file back
         run: |
-          bash -c "$(node frontend/tests/manual/mac-ci.mjs restore-command)"
-          node frontend/tests/manual/mac-ci.mjs verify-restored
+          {
+            bash -c "$(node frontend/tests/manual/mac-ci.mjs restore-command)"
+            node frontend/tests/manual/mac-ci.mjs verify-restored
+          } 2>&1 | tee -a "$RUNNER_TEMP/ci.txt"
+
+      - name: Publish the output tail (readable without signing in)
+        if: failure()
+        run: |
+          [ -f "$RUNNER_TEMP/ci.txt" ] || exit 0
+          tail -n 80 "$RUNNER_TEMP/ci.txt" | perl -pe 's/\e\[[0-9;]*[A-Za-z]//g; s/\r//g' > tail.txt
+          { echo '### Output tail'; echo '```'; cat tail.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error title=output tail (${{ matrix.runner }})::$(sed -e 's/%/%25/g' tail.txt | awk '{printf "%s%%0A", $0}')"
 
       - name: Keep the logs
         if: always()
