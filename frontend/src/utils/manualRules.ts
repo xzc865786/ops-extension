@@ -95,7 +95,7 @@ export const FIELD_LABELS: Record<string, string> = {
   'claude_roles': 'Claude 角色',
   updated_on: '手册更新时间',
   'site.url': '站点地址',
-  'contact.qq': '客服 QQ',
+  'contact.qq': '客服 QQ 群',
   'announcement.enabled': '公告开关',
   'announcement.level': '公告样式',
   'announcement.text': '公告内容',

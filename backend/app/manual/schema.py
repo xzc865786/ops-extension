@@ -69,7 +69,7 @@ class Contact(Strict):
     def check_qq(cls, value: str) -> str:
         value = value.strip()
         if not QQ_RE.match(value):
-            raise ValueError("客服 QQ 只能是 5 到 12 位数字，或留空")
+            raise ValueError("客服 QQ 群号只能是 5 到 12 位数字，或留空")
         return value
 
 

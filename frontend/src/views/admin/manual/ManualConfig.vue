@@ -281,8 +281,8 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
           <h2 class="font-semibold">联系方式与更新时间</h2>
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
-              <label class="input-label" for="qq">客服 QQ（留空则不显示）</label>
-              <input id="qq" v-model.trim="form.contact.qq" class="input" inputmode="numeric" placeholder="569229275" />
+              <label class="input-label" for="qq">客服 QQ 群（留空则不显示）</label>
+              <input id="qq" v-model.trim="form.contact.qq" class="input" inputmode="numeric" placeholder="1045113768" />
             </div>
             <div>
               <label class="input-label" for="updated-on">手册更新时间</label>
