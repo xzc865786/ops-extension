@@ -30,6 +30,7 @@
         <a href="#account">注册与登录</a>
         <a href="#balance">额度与充值</a>
         <a href="#api-key">创建 API Key</a>
+        <a href="groups.html">选择分组</a>
         <p class="nav-label">安装和配置（二选一）</p>
         <a class="nav-route" href="quick.html">新手路线 · 一键安装配置</a>
         <a class="nav-route" href="cc-switch.html">进阶路线 · CC Switch</a>
@@ -114,7 +115,7 @@
         <p>密钥就像软件连接服务的钥匙，可以消耗账户额度。请自己保管，不要发布到群聊、截图或公开代码里。</p>
         <ol class="steps">
           <li class="step"><span class="step-number" aria-hidden="true">1</span><div class="step-content"><h3>进入“API 密钥”</h3><p>在用户菜单点击<a href="https://api.tysy.top/keys" data-cfg-href="/keys">API 密钥</a>，再点击“创建密钥”。手机屏幕较小时，先点左上角菜单按钮。</p></div></li>
-          <li class="step"><span class="step-number" aria-hidden="true">2</span><div class="step-content"><h3>填写名称，选择风格和分组</h3><p>名称可写“我的电脑”。弹窗里的“厂商”一栏就是用来选 Key 的风格：选 Anthropic 是 Anthropic 风格，选 OpenAI 是 OpenAI 风格。风格和分组决定这把 Key 能用哪些模型、哪些软件，见下方对照表。分组也会影响计费，不确定时先问客服。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">2</span><div class="step-content"><h3>填写名称，选择风格和分组</h3><p>名称可写“我的电脑”。弹窗里的“厂商”一栏就是用来选 Key 的风格：选 Anthropic 是 Anthropic 风格，选 OpenAI 是 OpenAI 风格。风格和分组决定这把 Key 能用哪些模型、哪些软件，见下方对照表。分组也会影响计费，各分组适用的软件和倍率见<a href="groups.html">分组说明</a>，不确定时先问客服。</p></div></li>
           <li class="step"><span class="step-number" aria-hidden="true">3</span><div class="step-content"><h3>按预算设置限额</h3><p>向下滚动弹窗，可以查看“额度限制”和“密钥有效期”。不需要时，不要开启自定义密钥或随意填写 IP 限制。</p></div></li>
           <li class="step"><span class="step-number" aria-hidden="true">4</span><div class="step-content"><h3>创建后复制完整密钥</h3><p>检查风格、分组和限额，再点击“创建”。回到密钥列表，点击密钥旁的<strong>复制图标</strong>，把完整密钥填入可信客户端的 API Key 栏。</p></div></li>
         </ol>
@@ -165,7 +166,7 @@
           <tr><th scope="row">网站打不开 / 很慢</th><td>检查网址拼写和网络，看看其他网站是否正常。如果浏览器提示证书不安全，停止访问并联系网站方，不要强行绕过。</td></tr>
           <tr><th scope="row">收不到验证邮件</th><td>核对邮箱，检查垃圾邮件和全部邮件，使用最新验证码。等倒计时结束后再发送。</td></tr>
           <tr><th scope="row">401 / 密钥无效</th><td>从网站重新复制完整密钥；检查前后空格、填写位置，确认密钥没有被禁用或过期。</td></tr>
-          <tr><th scope="row">403 / 无权限</th><td>核对密钥风格、分组、目标模型、有效期以及 IP 限制。不确定时联系客服。</td></tr>
+          <tr><th scope="row">403 / 无权限</th><td>核对密钥风格、分组、目标模型、有效期以及 IP 限制，分组能用哪些模型见<a href="groups.html">分组说明</a>。不确定时联系客服。</td></tr>
           <tr><th scope="row">404 / 模型不存在</th><td>核对接口类型、Base URL、完整模型 ID，尤其检查是否重复添加 /v1。</td></tr>
           <tr><th scope="row">余额不足 / 额度耗尽</th><td>同时检查账户余额、密钥额度和有效期。账户有余额，也可能是单把密钥达到限制。</td></tr>
           <tr><th scope="row">429 / 请求过多</th><td>停止连续重试，减少同时运行的任务并按提示等待。也可能是容量或配额限制，不要直接认定需要充值。</td></tr>

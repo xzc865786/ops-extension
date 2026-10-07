@@ -1,7 +1,7 @@
 // Loads the manual configuration (admin-editable in the Ops console) and fills it into the page.
 // Falls back to the bundled defaults when the API is unreachable or returns something unsafe,
 // so the manual always works. Values feed scripts that run on users' PCs, hence the re-validation.
-import {derive, isSafeConfig} from './manual-config-core.js';
+import {derive, isSafeConfig, isSafeGroups} from './manual-config-core.js';
 
 const API_URL = '/ext/api/v1/public/manual-config';
 const DEFAULT_URL = 'assets/manual-config.default.json';
@@ -17,7 +17,12 @@ async function fetchJson(url) {
 async function load() {
   try {
     const payload = await fetchJson(API_URL);
-    if (isSafeConfig(payload?.config)) return {config: payload.config, version: payload.version, source: 'api'};
+    if (isSafeConfig(payload?.config)) {
+      const config = payload.config;
+      // The group page is text only and never reaches scripts; a bad copy of it only replaces itself.
+      if (!isSafeGroups(config.groups)) config.groups = (await fetchJson(DEFAULT_URL).catch(() => null))?.groups ?? null;
+      return {config, version: payload.version, source: 'api'};
+    }
   } catch { /* Fall through to the bundled defaults. */ }
   const config = await fetchJson(DEFAULT_URL);
   return {config, version: 0, source: 'default'};

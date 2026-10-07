@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="汇码智能分组说明：创建 API Key 前看懂各分组适用的软件、倍率和主要模型，选对分组。">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>选择分组 · 汇码智能</title>
+  <link rel="icon" href="assets/brand/favicon.ico" sizes="any">
+  <link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+  <link rel="stylesheet" href="assets/docs.css">
+  <script src="assets/docs.js" defer></script>
+  <script type="module" src="assets/groups.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="汇码智能使用手册首页"><img class="brand-logo" src="assets/brand/logo-horizontal.svg" width="168" height="51" alt="汇码智能"><span class="brand-subtitle">使用手册</span></a>
+    <div class="search-box"><label class="sr-only" for="doc-search">搜索本页</label><input id="doc-search" type="search" placeholder="搜索本页：倍率、Codex、模型" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore></div>
+    <div class="topbar-links"><a href="https://api.tysy.top/dashboard" data-cfg-href="/dashboard">进入控制台 ↗</a></div>
+    <button id="menu-toggle" type="button" aria-controls="docs-sidebar" aria-expanded="false" aria-label="展开目录">目录</button>
+  </header>
+  <div class="docs-layout">
+    <aside id="docs-sidebar" aria-label="文档目录">
+      <nav aria-label="手册章节">
+        <a class="nav-home" href="index.html#start">手册首页</a>
+        <p class="nav-label">准备账号</p>
+        <a href="index.html#account">注册与登录</a>
+        <a href="index.html#balance">额度与充值</a>
+        <a href="index.html#api-key">创建 API Key</a>
+        <a class="nav-route is-open" href="#start">选择分组</a>
+        <div class="nav-sub">
+          <a href="#groups">分组一览</a>
+          <a href="#create">按分组创建 Key</a>
+          <a href="#faq">分组常见问题</a>
+        </div>
+        <p class="nav-label">安装和配置（二选一）</p>
+        <a class="nav-route" href="quick.html">新手路线 · 一键安装配置</a>
+        <a class="nav-route" href="cc-switch.html">进阶路线 · CC Switch</a>
+        <p class="nav-label">日常使用</p>
+        <a href="index.html#usage">查看用量与控制消费</a>
+        <a href="index.html#security">安全使用须知</a>
+        <p class="nav-label">遇到问题</p>
+        <a href="index.html#troubleshooting">常见问题与报错</a>
+        <a href="index.html#contact">联系客服</a>
+      </nav>
+      <div class="sidebar-note">先定要用的软件<br>再挑适用它的分组</div>
+    </aside>
+    <main id="main-content" tabindex="-1">
+      <p id="search-status" class="search-status" aria-live="polite" role="status" hidden></p>
+
+      <section class="doc-section hero-section" id="start" data-title="分组 选择 倍率 计费 风格 厂商 Anthropic OpenAI Claude Code Codex WorkBuddy">
+        <p class="eyebrow">第 3 步 · 创建 Key 前看一看</p>
+        <h1>选对分组，再创建 Key。</h1>
+        <p class="lead group-intro" data-groups="intro">创建 API Key 时要选一个分组。分组决定这把 Key 能用哪些模型、适合哪个软件，以及按什么倍率扣费。先确定要用的软件，再从下面挑一个合适的分组。</p>
+        <div id="groups-notice" class="notice warning group-intro" role="status" hidden></div>
+        <ol class="steps">
+          <li class="step"><span class="step-number" aria-hidden="true">1</span><div class="step-content"><h3>先确定要用的软件</h3><p>Claude Code 用 Anthropic 风格的 Key；Codex 和 WorkBuddy 用 OpenAI 风格的 Key。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">2</span><div class="step-content"><h3>找到适用这个软件的分组</h3><p>在下方<a href="#groups">分组一览</a>点软件名筛选，对比倍率、适用场景和主要模型。</p></div></li>
+          <li class="step"><span class="step-number" aria-hidden="true">3</span><div class="step-content"><h3>创建 Key 时选同名分组</h3><p>在网站<a href="https://api.tysy.top/keys" data-cfg-href="/keys">API 密钥</a>页创建密钥，“厂商”选对应风格，“分组”选和这里同名的分组。</p></div></li>
+        </ol>
+      </section>
+
+      <section class="doc-section" id="groups" data-title="分组一览 倍率 模型 适合 推荐 稳定 实惠 筛选">
+        <p class="eyebrow">分组一览</p><h2>现在可以选的分组</h2>
+        <div id="group-filter" class="os-switch group-filter" role="group" aria-label="按软件筛选分组" hidden><span>我要用：</span><button type="button" data-group-filter="all" aria-pressed="true">全部</button><button type="button" data-group-filter="claude" aria-pressed="false">Claude Code</button><button type="button" data-group-filter="codex" aria-pressed="false">Codex</button><button type="button" data-group-filter="workbuddy" aria-pressed="false">WorkBuddy</button></div>
+        <p id="group-count" class="field-hint" aria-live="polite"></p>
+        <div id="group-list" class="group-list"><p class="notice">正在读取分组信息…如果一直没有显示，请联系客服确认要选的分组。</p></div>
+        <p class="field-hint">倍率越低，同样的用量扣费越少；实际扣费还和所用模型、输入输出的 Token 数量有关。分组以网站创建密钥时能选到的为准。</p>
+      </section>
+
+      <section class="doc-section" id="create" data-title="创建 Key 密钥 分组 厂商 风格 下拉框 选错 403 模型不存在">
+        <p class="eyebrow">选好以后</p><h2>按分组创建 Key</h2>
+        <p>回到手册首页的<a href="index.html#api-key">创建 API Key</a>，在弹窗里先选“厂商”（Key 的风格），再从“分组”下拉框选好分组，其余步骤不变。</p>
+        <div class="notice"><strong>同时要用几个分组？</strong>一把 Key 只属于一个分组，要用几个分组就分别创建几把 Key，给每把起个好认的名称，例如“Claude 日常”“Codex 实惠”。</div>
+        <p>软件报 403 或“模型不存在”，多半是 Key 的分组不支持当前模型：在一键配置或 CC Switch 页面点“读取可用模型”，从列表里重新选；仍不行就换一个适用的分组重新创建 Key。</p>
+      </section>
+
+      <section class="doc-section" id="faq" data-title="常见问题 倍率 分组 选错 下拉框 专属">
+        <p class="eyebrow">遇到问题</p><h2>分组常见问题</h2>
+        <div id="group-faq">
+          <details><summary>倍率是什么意思？</summary><p class="group-answer">倍率是在模型基础价格上乘的系数：倍率越低，同样的用量扣费越少。实际扣费还和所用模型、输入输出的 Token 数量有关，倍率不能直接换算成人民币价格。</p></details>
+          <details><summary>一把 Key 能同时用几个分组？</summary><p class="group-answer">一把 Key 只属于一个分组。要用不同分组的模型，就分别创建几把 Key。</p></details>
+          <details><summary>选错了分组怎么办？</summary><p class="group-answer">重新创建一把 Key，选对分组，再把新 Key 填进软件。旧 Key 不用了，在密钥列表里禁用即可。</p></details>
+          <details><summary>为什么下拉框里没有某个分组？</summary><p class="group-answer">创建 Key 时先选的“厂商”（Key 的风格）会筛掉其他风格的分组；部分分组是专属分组，需要开通后才能看到。不确定时联系客服。</p></details>
+        </div>
+        <div class="notice">还是拿不准？按<a href="index.html#contact">求助模板</a>告诉客服要用的软件和大致用量，客服会帮你推荐分组。</div>
+      </section>
+
+      <footer class="site-footer"><span>汇码智能 · 分组说明</span><a href="index.html">返回手册首页</a><a href="index.html#api-key">创建 API Key</a><a href="#start">回到顶部 ↑</a></footer>
+    </main>
+  </div>
+</body>
+</html>

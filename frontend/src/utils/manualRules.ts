@@ -85,6 +85,18 @@ export function diffConfig(before: unknown, after: unknown, path = ''): { path: 
       diffConfig((before as any)[key], (after as any)[key], path ? `${path}.${key}` : key),
     )
   }
+  // Lists of objects (groups, FAQ) are compared entry by entry; lists of model IDs stay one row.
+  const objList = (v: unknown) => Array.isArray(v) && v.every(isObj)
+  if (objList(before) && objList(after)) {
+    const a = before as any[], b = after as any[]
+    // An added or removed entry is shown by its name (group) or question (FAQ), not as raw JSON.
+    const brief = (v: any) => (v === undefined ? '（无）' : String(v.name ?? v.q ?? JSON.stringify(v)))
+    return Array.from({ length: Math.max(a.length, b.length) }, (_, i) =>
+      a[i] === undefined || b[i] === undefined
+        ? [{ path: `${path}.${i}`, before: brief(a[i]), after: brief(b[i]) }]
+        : diffConfig(a[i], b[i], `${path}.${i}`),
+    ).flat()
+  }
   return JSON.stringify(before) === JSON.stringify(after) ? [] : [{ path, before: show(before), after: show(after) }]
 }
 
@@ -135,3 +147,145 @@ export const FIELD_LABELS: Record<string, string> = {
   'ccswitch.windows.url': 'CC Switch 下载地址',
   'ccswitch.releases_url': 'CC Switch 发布页',
 }
+
+const GROUP_FIELD_LABELS: Record<string, string> = {
+  name: '名称',
+  sub2api_id: 'Sub2API 编号',
+  visible: '在手册显示',
+  platform: 'Key 风格',
+  clients: '适用软件',
+  badge: '标签',
+  rate_multiplier: '倍率',
+  billing_note: '倍率说明',
+  summary: '一句话介绍',
+  suitable_for: '适合',
+  models: '主要模型',
+  notes: '注意事项',
+  q: '问题',
+  a: '回答',
+}
+
+FIELD_LABELS.groups = '分组说明'
+FIELD_LABELS['groups.intro'] = '分组页开头说明'
+FIELD_LABELS['groups.notice'] = '分组页提示'
+FIELD_LABELS['groups.items'] = '分组列表'
+FIELD_LABELS['groups.faq'] = '分组常见问题'
+
+// Chinese name for a config path, including list entries such as groups.items.2.models.0.
+export function fieldLabel(path: string): string | undefined {
+  const entry = path.match(/^groups\.(items|faq)\.(\d+)(?:\.([a-z_]+))?/)
+  if (entry) {
+    const owner = entry[1] === 'items' ? `第 ${Number(entry[2]) + 1} 个分组` : `第 ${Number(entry[2]) + 1} 条常见问题`
+    return entry[3] ? `${owner} · ${GROUP_FIELD_LABELS[entry[3]] || entry[3]}` : owner
+  }
+  return FIELD_LABELS[path.replace(/\.\d+$/, '')]
+}
+
+// ---- Groups ----------------------------------------------------------------
+
+export type GroupClient = Client
+export type GroupBadge = '' | 'recommended' | 'stable' | 'value' | 'limited' | 'exclusive'
+
+export interface GroupInfo {
+  name: string
+  sub2api_id: number | null
+  visible: boolean
+  platform: string
+  clients: GroupClient[]
+  badge: GroupBadge
+  rate_multiplier: number | null
+  billing_note: string
+  summary: string
+  suitable_for: string[]
+  models: string[]
+  notes: string
+}
+
+export interface GroupsConfig {
+  intro: string
+  notice: string
+  items: GroupInfo[]
+  faq: { q: string; a: string }[]
+}
+
+export interface Sub2APIGroup {
+  id: number
+  name: string
+  description: string
+  platform: string
+  status: string
+  rate_multiplier: number | null
+  is_exclusive: boolean
+  subscription_type: string
+  allow_messages_dispatch: boolean
+  claude_code_only: boolean
+  peak: { start: string; end: string; multiplier: number } | null
+  models: string[]
+}
+
+export const GROUP_BADGES: { key: GroupBadge; label: string }[] = [
+  { key: '', label: '无' },
+  { key: 'recommended', label: '推荐' },
+  { key: 'stable', label: '稳定' },
+  { key: 'value', label: '实惠' },
+  { key: 'limited', label: '限时' },
+  { key: 'exclusive', label: '专属' },
+]
+
+export const PLATFORM_LABELS: Record<string, string> = { anthropic: 'Anthropic', openai: 'OpenAI', gemini: 'Gemini' }
+
+export function emptyGroup(): GroupInfo {
+  return {
+    name: '', sub2api_id: null, visible: true, platform: '', clients: [], badge: '', rate_multiplier: null,
+    billing_note: '', summary: '', suitable_for: [], models: [], notes: '',
+  }
+}
+
+export function clientsForPlatform(group: Pick<Sub2APIGroup, 'platform' | 'claude_code_only'>): GroupClient[] {
+  if (group.claude_code_only || group.platform === 'anthropic') return ['claude']
+  if (group.platform === 'openai') return ['codex', 'workbuddy']
+  return []
+}
+
+export function groupFromSub2API(group: Sub2APIGroup): GroupInfo {
+  const peak = group.peak ? `高峰时段 ${group.peak.start}–${group.peak.end} 倍率 ${group.peak.multiplier}×` : ''
+  return {
+    ...emptyGroup(),
+    name: group.name,
+    sub2api_id: group.id,
+    platform: /^[a-z0-9_]{1,32}$/.test(group.platform) ? group.platform : '',
+    clients: clientsForPlatform(group),
+    badge: group.is_exclusive ? 'exclusive' : '',
+    rate_multiplier: group.rate_multiplier,
+    billing_note: peak,
+    summary: group.description.slice(0, 200),
+    models: group.models.filter((m) => PATTERN_RE.test(m)).slice(0, 30),
+  }
+}
+
+// The manual entry for a Sub2API group: same id, or same name for entries typed in by hand.
+export function findGroup(items: GroupInfo[], group: Sub2APIGroup): GroupInfo | undefined {
+  return items.find((item) => item.sub2api_id === group.id) || items.find((item) => !item.sub2api_id && item.name === group.name)
+}
+
+// What would change if the manual entry were synced with Sub2API; empty when it is up to date.
+export function groupChanges(item: GroupInfo, group: Sub2APIGroup): string[] {
+  const changes: string[] = []
+  if (item.name !== group.name) changes.push(`名称 ${item.name} → ${group.name}`)
+  if (item.rate_multiplier !== group.rate_multiplier) {
+    changes.push(`倍率 ${item.rate_multiplier ?? '未填'} → ${group.rate_multiplier ?? '未填'}`)
+  }
+  if (group.platform && item.platform !== group.platform) changes.push(`风格 ${item.platform || '未填'} → ${group.platform}`)
+  if (item.sub2api_id !== group.id) changes.push('关联 Sub2API 分组')
+  return changes
+}
+
+// Sync keeps everything the admin wrote; only the facts Sub2API owns are overwritten.
+export function syncGroup(item: GroupInfo, group: Sub2APIGroup): void {
+  item.name = group.name
+  item.sub2api_id = group.id
+  item.rate_multiplier = group.rate_multiplier
+  if (/^[a-z0-9_]{1,32}$/.test(group.platform)) item.platform = group.platform
+  if (!item.models.length) item.models = group.models.filter((m) => PATTERN_RE.test(m)).slice(0, 30)
+}
+

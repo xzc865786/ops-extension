@@ -9,7 +9,7 @@
 | Auth Bridge | Bootstrap 用 Sub2API `GET /api/v1/auth/me`（字段 `data.id`）签发 HttpOnly Session（`Path=/ext`） |
 | 工单 | 用户按分类填写对应表单建单（固定 P2）/回复/关单/附件；管理员认领·释放·接管·内部备注·改状态/分类/优先级；**工单表单配置**（仅 admin）可在后台调整各分类的字段、必填、提示和显示条件，带版本历史与回滚 |
 | 报账 | 仅 admin；供应商/成本中心/付款账户；公司直付 vs 个人垫付；允许申请人=审批人；分次付款、完整发票信息和附件 |
-| 手册配置 | 仅 admin；在后台修改使用手册的推荐模型与过滤规则、Claude 角色映射、安装来源、WorkBuddy 参数、CC Switch 下载（含安装包上传）、站点地址、客服 QQ 群、公告；保存即生效，带版本历史、对比与回滚 |
+| 手册配置 | 仅 admin；在后台修改使用手册的推荐模型与过滤规则、Claude 角色映射、安装来源、WorkBuddy 参数、CC Switch 下载（含安装包上传）、站点地址、客服 QQ 群、公告、分组说明页（可从 Sub2API 同步分组和倍率）；保存即生效，带版本历史、对比与回滚 |
 | 报表 | 按费用发生日期区间筛选（本月/上月/本季度/上季度/本年/上年/近 12 个月快捷选项或自选区间）；按币种分别展示月度、分类/供应商/成本中心、付款和发票统计；明细与汇总 CSV/Excel |
 
 ## 站点首页
@@ -136,7 +136,7 @@ V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留�
 
 | 变量 | 说明 |
 |------|------|
-| `SUB2API_ADMIN_API_KEY` | 可选；Sub2API 系统设置里的 Admin API Key，用于工单订单校验（退款、开票、充值类工单）。拥有 Sub2API 全部管理权限，只放在服务器环境变量里。留空则不校验订单，只按订单号查重 |
+| `SUB2API_ADMIN_API_KEY` | 可选；Sub2API 系统设置里的 Admin API Key，用于工单订单校验（退款、开票、充值类工单）。拥有 Sub2API 全部管理权限，只放在服务器环境变量里。留空则不校验订单，只按订单号查重；手册配置的“从 Sub2API 同步”分组也需要它 |
 | `SESSION_TTL_HOURS` | Session / Cookie 绝对 TTL，默认 `2` |
 | `SESSION_MAX_AGE_WITHOUT_BOOTSTRAP` | 距上次 Bootstrap 的最大秒数，超时 401 强制重登，默认 `7200` |
 | `MINIO_ENDPOINT` | 后端访问 MinIO（可为 compose 内网 `minio:9000`） |

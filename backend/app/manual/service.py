@@ -15,7 +15,8 @@ from app.common.errors import AppError, bad_request, conflict, not_found
 from app.config import get_settings
 from app.db.models.manual import ManualConfigVersion, ManualFile
 from app.deps import CurrentUser
-from app.manual.schema import ManualConfig, load_default_config
+from app.manual.schema import MODEL_PATTERN_RE, Groups, ManualConfig, load_default_config
+from app.orders.sub2api import Sub2APIError, Sub2APIUnavailable, admin_reason, get_admin_client
 
 # The manual is read in China; "today" for the update date follows Beijing time.
 CHINA_TZ = timezone(timedelta(hours=8))
@@ -208,11 +209,69 @@ def get_public_file(db: Session, file_id: int, file_name: str) -> ManualFile:
     return record
 
 
+# ---- Sub2API groups --------------------------------------------------------
+
+def _number(value) -> float | None:
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def _sub2api_group(raw: dict) -> dict | None:
+    """Only the fields the group page can use; profit control, routing and accounts never leave here."""
+    group_id, name = raw.get("id"), str(raw.get("name") or "").strip()
+    if not isinstance(group_id, int) or group_id <= 0 or not name:
+        return None
+    allowlist = raw.get("model_allowlist") or {}
+    models = []
+    if isinstance(allowlist, dict) and allowlist.get("enabled"):
+        models = [m for m in allowlist.get("models") or [] if isinstance(m, str) and MODEL_PATTERN_RE.match(m)][:30]
+    peak = None
+    if raw.get("peak_rate_enabled") and _number(raw.get("peak_rate_multiplier")) is not None:
+        peak = {"start": str(raw.get("peak_start") or "")[:5], "end": str(raw.get("peak_end") or "")[:5],
+                "multiplier": _number(raw.get("peak_rate_multiplier"))}
+    return {
+        "id": group_id,
+        "name": name[:64],
+        "description": str(raw.get("description") or "").strip()[:200],
+        "platform": str(raw.get("platform") or "")[:32],
+        "status": str(raw.get("status") or "")[:16],
+        "rate_multiplier": _number(raw.get("rate_multiplier")),
+        "is_exclusive": bool(raw.get("is_exclusive")),
+        "subscription_type": str(raw.get("subscription_type") or "")[:32],
+        "allow_messages_dispatch": bool(raw.get("allow_messages_dispatch")),
+        "claude_code_only": bool(raw.get("claude_code_only")),
+        "peak": peak,
+        "models": models,
+    }
+
+
+def list_sub2api_groups() -> list[dict]:
+    client = get_admin_client()
+    if not client:
+        raise AppError(503, "Ops 未配置 SUB2API_ADMIN_API_KEY，无法从 Sub2API 读取分组", "SUB2API_NOT_CONFIGURED")
+    try:
+        raw_groups = client.list_groups()
+    except (Sub2APIError, Sub2APIUnavailable) as exc:
+        raise AppError(502, admin_reason(exc), "SUB2API_GROUPS_UNAVAILABLE") from exc
+    return [group for group in map(_sub2api_group, raw_groups) if group]
+
+
 # ---- public payload --------------------------------------------------------
+
+def normalized_config(config: dict) -> dict:
+    """The stored config with sections added since it was saved filled in with their defaults."""
+    try:
+        return ManualConfig.model_validate(config).dump()
+    except ValidationError:
+        return dict(config)
+
 
 def public_payload(db: Session) -> dict:
     live = get_live(db)
-    config = dict(live.config)
+    config = normalized_config(live.config)
+    try:
+        config["groups"] = Groups.model_validate(config.get("groups") or {}).public()
+    except ValidationError:
+        config["groups"] = load_default_config().groups.public()
     windows = dict(config["ccswitch"]["windows"])
     if windows["source"] == "file" and windows.get("file_id"):
         record = db.get(ManualFile, windows["file_id"])

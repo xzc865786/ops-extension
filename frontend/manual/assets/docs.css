@@ -92,7 +92,30 @@ label.field-hint { display:block; }
 .config-preview dd { margin:0; overflow-wrap:anywhere; font-family:Consolas,monospace; }
 .source-note { font-size:13px; color:var(--muted); margin-top:24px; }
 .page-toc { display:flex; flex-wrap:wrap; gap:8px 18px; margin:20px 0; padding-bottom:20px; border-bottom:1px solid var(--line); }
-@media (max-width:700px) { .route-cards,.tool-pick,.role-grid{grid-template-columns:1fr} }
+/* Group page: cards filled in from the manual configuration (plain text, may contain line breaks). */
+.group-intro { white-space:pre-line; }
+.group-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:14px 0 18px; }
+.group-list > .notice { grid-column:1 / -1; margin:0; }
+.group-list > .card + .card { margin-top:0; }
+.group-card { display:flex; flex-direction:column; gap:10px; border-top:3px solid var(--brand-teal); }
+.group-head { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.group-head h3 { margin:0; overflow-wrap:anywhere; }
+.group-badge.limited { color:#785925; background:var(--warning-soft); }
+.group-badge.exclusive { color:#4a4f57; background:#eef0f3; }
+.card p.group-summary { color:var(--ink); }
+.group-meta { display:grid; gap:6px; margin:0; padding:12px 14px; border-radius:10px; background:#f6f8fa; font-size:14px; line-height:1.7; }
+.group-meta > div { display:grid; grid-template-columns:5em minmax(0,1fr); gap:8px; }
+.group-meta dt { color:var(--muted); }
+.group-meta dd { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; margin:0; min-width:0; }
+.group-rate { color:var(--accent-strong); font-size:17px; }
+.group-billing { color:var(--muted); }
+.card p.group-label { margin:2px 0 -6px; color:var(--muted); font-size:12px; font-weight:650; letter-spacing:.06em; }
+.group-uses { margin:0; padding-left:1.2em; color:var(--muted); font-size:14px; line-height:1.8; }
+.group-models { display:flex; flex-wrap:wrap; gap:6px; }
+.group-models code { font-size:12.5px; }
+.card p.group-notes, .group-answer { white-space:pre-line; }
+.card p.group-notes { padding-top:10px; border-top:1px dashed var(--line); font-size:13px; }
+@media (max-width:700px) { .route-cards,.tool-pick,.role-grid,.group-list{grid-template-columns:1fr} }
 @media (max-width:600px) { .tool-grid{grid-template-columns:1fr}.tool-card,.setup-panel{padding:20px}.setup-actions{flex-direction:column}.setup-actions .button{width:100%;justify-content:center}.route-nav{grid-template-columns:1fr}.route-nav a + a{border-left:0;border-top:1px solid var(--line)}.import-summary{grid-template-columns:1fr;gap:8px}.import-summary strong,.import-summary code{display:inline;margin-left:6px} }
 :root {
   color-scheme: light;

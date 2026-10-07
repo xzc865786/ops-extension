@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import api from '@/api/client'
+import ManualGroupsEditor from '@/components/ManualGroupsEditor.vue'
 import PatternList from '@/components/PatternList.vue'
 import { useToast } from '@/composables/useToast'
 import { formatDateTime } from '@/utils/display'
 import {
-  CLIENTS, FIELD_LABELS, ROLES, diffConfig, filterModels, recommend, suggestRoles,
+  CLIENTS, ROLES, diffConfig, fieldLabel, filterModels, recommend, suggestRoles,
   type Client, type Role,
 } from '@/utils/manualRules'
 
-type Tab = 'basic' | 'models' | 'roles' | 'clients' | 'ccswitch' | 'preview' | 'history'
+type Tab = 'basic' | 'models' | 'roles' | 'clients' | 'ccswitch' | 'groups' | 'preview' | 'history'
 const TABS: { key: Tab; label: string }[] = [
   { key: 'basic', label: '基本信息' },
   { key: 'models', label: '推荐模型' },
   { key: 'roles', label: 'Claude 角色' },
   { key: 'clients', label: '安装与客户端' },
   { key: 'ccswitch', label: 'CC Switch 下载' },
+  { key: 'groups', label: '分组说明' },
   { key: 'preview', label: '预览' },
   { key: 'history', label: '版本历史' },
 ]
@@ -48,8 +50,8 @@ function errMsg(e: any, fallback: string) {
   // Validation errors come back as "path：message"; show the field's Chinese name instead of the path.
   return message.split('；').map((part) => {
     const [path, ...rest] = part.split('：')
-    const field = path.replace(/^config\./, '').replace(/\.\d+$/, '')
-    return rest.length && FIELD_LABELS[field] ? `${FIELD_LABELS[field]}：${rest.join('：')}` : part
+    const label = fieldLabel(path.replace(/^config\./, ''))
+    return rest.length && label ? `${label}：${rest.join('：')}` : part
   }).join('；')
 }
 
@@ -103,8 +105,8 @@ function discard() {
 }
 
 function loadDefaults() {
-  if (!confirm('把所有配置改回初始默认值？需要点“保存”才会生效。')) return
-  form.value = { ...clone(defaults.value), updated_on: form.value.updated_on }
+  if (!confirm('把分组说明以外的配置改回初始默认值？需要点“保存”才会生效。')) return
+  form.value = { ...clone(defaults.value), updated_on: form.value.updated_on, groups: form.value.groups }
   toast.push('已载入默认值，确认无误后点“保存”')
 }
 
@@ -246,7 +248,7 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
         </p>
       </div>
       <div class="page-toolbar-actions">
-        <a class="btn-secondary btn-sm" href="/docs/" target="_blank" rel="noopener">打开手册 ↗</a>
+        <a class="btn-secondary btn-sm" :href="tab === 'groups' ? '/docs/groups.html' : '/docs/'" target="_blank" rel="noopener">{{ tab === 'groups' ? '打开分组页' : '打开手册' }} ↗</a>
         <button type="button" class="btn-ghost btn-sm" :disabled="!form" @click="loadDefaults">恢复默认值</button>
       </div>
     </div>
@@ -443,6 +445,9 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
         </section>
       </div>
 
+      <!-- 分组说明 -->
+      <ManualGroupsEditor v-if="tab === 'groups'" v-model="form.groups" :err-msg="errMsg" />
+
       <!-- 预览 -->
       <div v-if="tab === 'preview'" class="space-y-4">
         <section class="card p-5 sm:p-6 space-y-4">
@@ -510,7 +515,7 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
               <thead><tr><th>配置项</th><th>版本 {{ compare.version }}</th><th>当前</th></tr></thead>
               <tbody>
                 <tr v-for="row in compare.rows" :key="row.path">
-                  <td class="text-sm">{{ FIELD_LABELS[row.path] || row.path }}</td>
+                  <td class="text-sm">{{ fieldLabel(row.path) || row.path }}</td>
                   <td class="break-all text-sm"><code>{{ row.before }}</code></td>
                   <td class="break-all text-sm"><code>{{ row.after }}</code></td>
                 </tr>

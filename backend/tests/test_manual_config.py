@@ -4,9 +4,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 
 from app.manual.schema import DEFAULT_CONFIG_PATH, load_default_config
+from app.orders.sub2api import Sub2APIAdminClient
 from tests.conftest import login_as, make_user
 
 MANUAL_DEFAULT = Path(__file__).resolve().parents[2] / "frontend" / "manual" / "assets" / "manual-config.default.json"
@@ -110,6 +112,18 @@ def test_stale_base_version_is_rejected(client, db):
     (("ccswitch", "windows"), {"source": "file", "file_id": None, "url": ""}),
     (("workbuddy", "max_input_tokens"), 10),
     (("unknown_section",), {"a": 1}),
+    (("groups", "items"), [{"name": "A"}, {"name": "A"}]),
+    (("groups", "items"), [{"name": ""}]),
+    (("groups", "items"), [{"name": "two\nlines"}]),
+    (("groups", "items"), [{"name": "A", "models": ['gpt"; calc']}]),
+    (("groups", "items"), [{"name": "A", "clients": ["cursor"]}]),
+    (("groups", "items"), [{"name": "A", "badge": "<b>hot</b>"}]),
+    (("groups", "items"), [{"name": "A", "platform": "Open AI"}]),
+    (("groups", "items"), [{"name": "A", "rate_multiplier": -1}]),
+    (("groups", "items"), [{"name": "A", "summary": "bad\x07bell"}]),
+    (("groups", "items"), [{"name": "A", "unknown": 1}]),
+    (("groups", "faq"), [{"q": "问题", "a": " "}]),
+    (("groups", "intro"), "x" * 501),
 ])
 def test_unsafe_or_invalid_values_are_rejected(client, db, path, value):
     admin_client(client, db)
@@ -209,3 +223,95 @@ def test_referencing_unknown_file_is_rejected(client, db):
     res = save(client, config, current["version"])
     assert res.status_code == 400
     assert res.json()["code"] == "MANUAL_FILE_MISSING"
+
+
+GROUP = {
+    "name": "Claude 稳定", "sub2api_id": 3, "visible": True, "platform": "anthropic", "clients": ["claude"],
+    "badge": "recommended", "rate_multiplier": 0.8, "billing_note": "性价比高", "summary": "日常编码首选",
+    "suitable_for": ["日常写代码", "长对话"], "models": ["claude-sonnet-5-5", "claude-opus-*"], "notes": "高峰期可能排队",
+}
+
+
+def test_groups_are_saved_and_hidden_groups_stay_private(client, db):
+    admin_client(client, db)
+    current = live(client)
+    config = copy.deepcopy(current["config"])
+    hidden = {**GROUP, "name": "内部测试", "sub2api_id": 9, "visible": False}
+    config["groups"]["items"] = [GROUP, hidden]
+    config["groups"]["notice"] = "新分组上线"
+    res = save(client, config, current["version"])
+    assert res.status_code == 200, res.text
+    assert [g["name"] for g in live(client)["config"]["groups"]["items"]] == ["Claude 稳定", "内部测试"]
+    public = client.get("/ext/api/v1/public/manual-config").json()["config"]["groups"]
+    assert public["notice"] == "新分组上线"
+    assert [g["name"] for g in public["items"]] == ["Claude 稳定"]
+    assert "sub2api_id" not in public["items"][0] and "visible" not in public["items"][0]
+    assert public["items"][0]["rate_multiplier"] == 0.8
+
+
+def test_versions_saved_before_groups_existed_still_work(client, db):
+    from app.db.models.manual import ManualConfigVersion
+
+    old = load_default_config().dump()
+    del old["groups"]
+    db.add(ManualConfigVersion(version=1, config=old, note="旧版本"))
+    db.commit()
+    public = client.get("/ext/api/v1/public/manual-config").json()
+    assert public["config"]["groups"]["faq"] == load_default_config().groups.public()["faq"]
+    admin_client(client, db)
+    current = live(client)
+    assert current["config"]["groups"]["items"] == []
+    assert save(client, current["config"], 1).status_code == 200
+    res = client.post("/ext/api/v1/admin/manual/versions/1/restore", json={"base_version": 2})
+    assert res.status_code == 200, res.text
+
+
+SUB2API_GROUPS = [
+    {"id": 3, "name": "Claude 稳定", "description": "官方直连", "platform": "anthropic", "rate_multiplier": 0.8,
+     "is_exclusive": False, "status": "active", "subscription_type": "standard", "peak_rate_enabled": True,
+     "peak_start": "09:00", "peak_end": "18:00", "peak_rate_multiplier": 1.2,
+     "model_allowlist": {"enabled": True, "models": ["claude-sonnet-5-5", "bad model"]},
+     "profit_control_enabled": True, "profit_min_margin": 0.3, "model_routing": {"x": [1]}},
+    {"id": 4, "name": "GPT", "platform": "openai", "rate_multiplier": 1, "allow_messages_dispatch": True,
+     "model_allowlist": {"enabled": False, "models": ["gpt-6.1-sol"]}},
+    {"id": 0, "name": "broken"},
+]
+
+
+def _fake_sub2api(monkeypatch, handler):
+    fake = Sub2APIAdminClient("http://sub2api.test", "admin-key", transport=httpx.MockTransport(handler))
+    monkeypatch.setattr("app.manual.service.get_admin_client", lambda: fake)
+
+
+def test_sub2api_groups_are_listed_without_internal_fields(client, db, monkeypatch):
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json={"code": 0, "message": "success", "data": SUB2API_GROUPS})
+
+    _fake_sub2api(monkeypatch, handler)
+    assert client.get("/ext/api/v1/admin/manual/sub2api-groups").status_code == 401
+    admin_client(client, db)
+    res = client.get("/ext/api/v1/admin/manual/sub2api-groups")
+    assert res.status_code == 200, res.text
+    assert seen[-1].url.path == "/api/v1/admin/groups/all"
+    assert seen[-1].headers["x-api-key"] == "admin-key"
+    groups = res.json()
+    assert [g["id"] for g in groups] == [3, 4]
+    assert groups[0]["models"] == ["claude-sonnet-5-5"]
+    assert groups[0]["peak"] == {"start": "09:00", "end": "18:00", "multiplier": 1.2}
+    assert groups[1]["models"] == [] and groups[1]["allow_messages_dispatch"] is True
+    assert not {"profit_control_enabled", "profit_min_margin", "model_routing"} & set(groups[0])
+
+
+def test_sub2api_groups_report_missing_key_and_upstream_errors(client, db, monkeypatch):
+    admin_client(client, db)
+    monkeypatch.setattr("app.manual.service.get_admin_client", lambda: None)
+    res = client.get("/ext/api/v1/admin/manual/sub2api-groups")
+    assert res.status_code == 503
+    assert res.json()["code"] == "SUB2API_NOT_CONFIGURED"
+    _fake_sub2api(monkeypatch, lambda request: httpx.Response(401, json={"code": 401, "message": "bad key"}))
+    res = client.get("/ext/api/v1/admin/manual/sub2api-groups")
+    assert res.status_code == 502
+    assert "SUB2API_ADMIN_API_KEY" in res.json()["detail"]

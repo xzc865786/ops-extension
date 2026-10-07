@@ -1,7 +1,7 @@
-"""Sub2API admin payment API, called with the Admin API Key.
+"""Sub2API admin API, called with the Admin API Key.
 
 The key carries full Sub2API admin power, so this client exposes only the few endpoints the ticket
-flows need and never logs the key, request headers or response bodies.
+flows and the manual's group import need, and never logs the key, request headers or response bodies.
 """
 from __future__ import annotations
 
@@ -115,6 +115,11 @@ class Sub2APIAdminClient:
         """Ask the gateway about a REFUND_PENDING order and finalise it in Sub2API."""
         data = self._request("POST", f"/api/v1/admin/payment/orders/{int(order_id)}/refund/query")
         return data or {}
+
+    def list_groups(self) -> list[dict]:
+        """All active groups, including fields the caller must not pass on unfiltered."""
+        data = self._request("GET", "/api/v1/admin/groups/all")
+        return [group for group in data or [] if isinstance(group, dict)]
 
 
 def get_admin_client() -> Sub2APIAdminClient | None:

@@ -30,6 +30,7 @@
         <a href="index.html#account">注册与登录</a>
         <a href="index.html#balance">额度与充值</a>
         <a href="index.html#api-key">创建 API Key</a>
+        <a href="groups.html">选择分组</a>
         <p class="nav-label">安装和配置（二选一）</p>
         <a class="nav-route" href="quick.html">新手路线 · 一键安装配置</a>
         <a class="nav-route is-open" href="#start">进阶路线 · CC Switch</a>
@@ -221,7 +222,7 @@ requires_openai_auth = true</code></pre>
         <p class="eyebrow">遇到问题</p><h2>进阶路线常见问题</h2>
         <details><summary>点“在 CC Switch 中导入”没反应？</summary><p>确认 CC Switch 已安装并至少打开过一次；免安装 ZIP 版可能没有登记导入链接，换用 MSI 安装版或手动配置。</p></details>
         <details><summary>配置成功了，Claude Code 仍要求登录？</summary><p>检查汇码卡片是否是蓝色高亮（已启用）、面板是否选对、Key 是否完整。第一次打开时出现的“选文字样式”“安全提示”是正常的引导页，按回车即可，不是登录页。</p></details>
-        <details><summary>出现 401、403 或模型不存在？</summary><p>401 多为 Key 不完整、失效；403 可能是分组无权限；模型不存在时，用上方“读取可用模型”核对完整 ID。</p></details>
+        <details><summary>出现 401、403 或模型不存在？</summary><p>401 多为 Key 不完整、失效；403 可能是分组无权限，各分组适用的软件见<a href="groups.html">分组说明</a>；模型不存在时，用上方“读取可用模型”核对完整 ID。</p></details>
         <details><summary>提示环境变量冲突？</summary><p>只检查与你以前配置的网关有关的项，保留备份后再改，不要全删。警告详情可能显示 Key，截图时遮住。</p></details>
         <details><summary>Claude 桌面版、VS Code 扩展能照这个配吗？</summary><p>不能直接照搬，它们的凭据检查方式不同。参考<a href="https://code.claude.com/docs/en/llm-gateway-connect" target="_blank" rel="noopener noreferrer">官方按客户端区分的接入说明</a>。</p></details>
         <div class="notice">仍未解决？按<a href="index.html#contact">求助模板</a>提供系统、CC Switch 与客户端版本、分组、报错时间和截图（遮住 Key）。不要发送完整 Key 或含 Key 的导入链接。</div>

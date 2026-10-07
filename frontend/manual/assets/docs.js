@@ -41,7 +41,8 @@
     const index = sections.map(section => ({
       section,
       title: section.dataset.title || section.querySelector('h1, h2, h3')?.textContent || section.id,
-      text: `${section.dataset.title || ''} ${section.textContent || ''}`.replace(/\s+/g, ' ').toLocaleLowerCase(),
+      // Read on every search: some sections are filled in from the manual configuration after load.
+      get text() { return `${section.dataset.title || ''} ${section.textContent || ''}`.replace(/\s+/g, ' ').toLocaleLowerCase(); },
       links: navLinks.filter(link => targetId(link) === section.id),
     }));
 

@@ -46,3 +46,55 @@ export function derive(cfg) {
     ccswitchDownload: cfg.ccswitch.windows.download_url ?? cfg.ccswitch.windows.url,
   };
 }
+
+// ---- Group page --------------------------------------------------------------
+// Plain text only (rendered with textContent); mirrors the limits in backend GroupInfo / Groups.
+
+export const GROUP_CLIENTS = [
+  {key: 'claude', label: 'Claude Code'},
+  {key: 'codex', label: 'Codex'},
+  {key: 'workbuddy', label: 'WorkBuddy'},
+];
+export const GROUP_BADGES = {recommended: '推荐', stable: '稳定', value: '实惠', limited: '限时', exclusive: '专属'};
+const PLATFORM_LABELS = {anthropic: 'Anthropic', openai: 'OpenAI', gemini: 'Gemini'};
+const CONTROL = /[\x00-\x09\x0b-\x1f\x7f]/;
+
+const text = (value, max, multiline = true) => typeof value === 'string' && value.length <= max
+  && !CONTROL.test(value) && (multiline || !value.includes('\n'));
+
+function isSafeGroup(item) {
+  return item && typeof item === 'object' && text(item.name, 64, false) && item.name.length > 0
+    && text(item.platform ?? '', 32) && /^[a-z0-9_]*$/.test(item.platform ?? '')
+    && Array.isArray(item.clients) && item.clients.every(client => GROUP_CLIENTS.some(c => c.key === client))
+    && (item.badge === '' || item.badge === undefined || Object.prototype.hasOwnProperty.call(GROUP_BADGES, item.badge))
+    && (item.rate_multiplier === null || item.rate_multiplier === undefined
+      || (typeof item.rate_multiplier === 'number' && Number.isFinite(item.rate_multiplier) && item.rate_multiplier >= 0 && item.rate_multiplier <= 1000))
+    && text(item.billing_note ?? '', 200) && text(item.summary ?? '', 200) && text(item.notes ?? '', 500)
+    && Array.isArray(item.suitable_for) && item.suitable_for.length <= 8 && item.suitable_for.every(entry => text(entry, 80, false))
+    && patterns(item.models) && item.models.length <= 30;
+}
+
+export function isSafeGroups(groups) {
+  try {
+    return text(groups.intro, 500) && text(groups.notice, 300)
+      && Array.isArray(groups.items) && groups.items.length <= 30 && groups.items.every(isSafeGroup)
+      && Array.isArray(groups.faq) && groups.faq.length <= 20
+      && groups.faq.every(entry => text(entry.q, 100) && text(entry.a, 500) && entry.q && entry.a);
+  } catch {
+    return false;
+  }
+}
+
+export function platformLabel(platform) {
+  return PLATFORM_LABELS[platform] || platform || '';
+}
+
+// 0.8 -> "0.8×", 1 -> "1×", 0.125 -> "0.125×"; null when the admin chose not to show a number.
+export function formatRate(multiplier) {
+  if (typeof multiplier !== 'number' || !Number.isFinite(multiplier)) return null;
+  return `${Number(multiplier.toFixed(4))}×`;
+}
+
+export function groupsForClient(items, client) {
+  return client === 'all' ? items : items.filter(item => item.clients.includes(client));
+}

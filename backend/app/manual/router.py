@@ -85,7 +85,9 @@ def public_manual_file(file_id: int, file_name: str, db: Session = Depends(get_d
 @admin_router.get("/config")
 def admin_get_config(db: Session = Depends(get_db), _admin: CurrentUser = Depends(require_admin)):
     live = service.get_live(db)
-    return {**_version_out(live, with_config=True), "defaults": load_default_config().dump()}
+    out = _version_out(live, with_config=True)
+    out["config"] = service.normalized_config(live.config)
+    return {**out, "defaults": load_default_config().dump()}
 
 
 @admin_router.put("/config")
@@ -110,6 +112,11 @@ def admin_restore(version: int, body: RestoreBody, db: Session = Depends(get_db)
                   admin: CurrentUser = Depends(require_admin)):
     row = service.restore(db, user=admin, version=version, base_version=body.base_version)
     return _version_out(row, with_config=True)
+
+
+@admin_router.get("/sub2api-groups")
+def admin_sub2api_groups(_admin: CurrentUser = Depends(require_admin)):
+    return service.list_sub2api_groups()
 
 
 @admin_router.get("/files")

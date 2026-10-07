@@ -52,6 +52,13 @@ def _https(value: str, field: str, pattern: re.Pattern[str] = HTTPS_URL_RE) -> s
     return value
 
 
+def _text(value: str, field: str) -> str:
+    value = value.strip()
+    if CONTROL_CHARS_RE.search(value):
+        raise ValueError(f"{field}不能包含控制字符")
+    return value
+
+
 class Site(Strict):
     url: str
 
@@ -81,10 +88,7 @@ class Announcement(Strict):
     @field_validator("text")
     @classmethod
     def check_text(cls, value: str) -> str:
-        value = value.strip()
-        if CONTROL_CHARS_RE.search(value):
-            raise ValueError("公告不能包含控制字符")
-        return value
+        return _text(value, "公告")
 
     @model_validator(mode="after")
     def need_text_when_enabled(self) -> "Announcement":
@@ -218,6 +222,109 @@ class CCSwitch(Strict):
         return _https(value, "GitHub 发布页地址")
 
 
+class GroupInfo(Strict):
+    """One Sub2API group as described on the public "选择分组" page. Plain text only."""
+
+    name: str = Field(min_length=1, max_length=64)
+    sub2api_id: int | None = Field(default=None, ge=1)
+    visible: bool = True
+    platform: str = Field(default="", max_length=32)
+    clients: list[Literal["claude", "codex", "workbuddy"]] = Field(default_factory=list, max_length=3)
+    badge: Literal["", "recommended", "stable", "value", "limited", "exclusive"] = ""
+    rate_multiplier: float | None = Field(default=None, ge=0, le=1000)
+    billing_note: str = Field(default="", max_length=200)
+    summary: str = Field(default="", max_length=200)
+    suitable_for: list[str] = Field(default_factory=list, max_length=8)
+    models: list[str] = Field(default_factory=list, max_length=30)
+    notes: str = Field(default="", max_length=500)
+
+    @field_validator("name", "billing_note", "summary", "notes")
+    @classmethod
+    def check_text(cls, value: str) -> str:
+        return _text(value, "分组说明")
+
+    @field_validator("name")
+    @classmethod
+    def check_name(cls, value: str) -> str:
+        if not value or "\n" in value:
+            raise ValueError("分组名称不能为空，也不能换行")
+        return value
+
+    @field_validator("platform")
+    @classmethod
+    def check_platform(cls, value: str) -> str:
+        value = value.strip()
+        if value and not re.fullmatch(r"[a-z0-9_]{1,32}", value):
+            raise ValueError("平台只能是小写字母、数字和下划线")
+        return value
+
+    @field_validator("clients")
+    @classmethod
+    def unique_clients(cls, values: list[str]) -> list[str]:
+        return list(dict.fromkeys(values))
+
+    @field_validator("suitable_for")
+    @classmethod
+    def check_items(cls, values: list[str]) -> list[str]:
+        cleaned = []
+        for value in values:
+            value = _text(value, "适用场景")
+            if "\n" in value or len(value) > 80:
+                raise ValueError("每条适用场景最多 80 字，不能换行")
+            if value:
+                cleaned.append(value)
+        return cleaned
+
+    @field_validator("models")
+    @classmethod
+    def check_models(cls, values: list[str]) -> list[str]:
+        return _patterns(values, "models")
+
+
+class GroupFaq(Strict):
+    q: str = Field(min_length=1, max_length=100)
+    a: str = Field(min_length=1, max_length=500)
+
+    @field_validator("q", "a")
+    @classmethod
+    def check_text(cls, value: str) -> str:
+        value = _text(value, "常见问题")
+        if not value:
+            raise ValueError("问题和回答都不能为空")
+        return value
+
+
+class Groups(Strict):
+    intro: str = Field(default="", max_length=500)
+    notice: str = Field(default="", max_length=300)
+    items: list[GroupInfo] = Field(default_factory=list, max_length=30)
+    faq: list[GroupFaq] = Field(default_factory=list, max_length=20)
+
+    @field_validator("intro", "notice")
+    @classmethod
+    def check_text(cls, value: str) -> str:
+        return _text(value, "分组页说明")
+
+    @model_validator(mode="after")
+    def unique_names(self) -> "Groups":
+        names = [item.name for item in self.items]
+        duplicates = sorted({name for name in names if names.count(name) > 1})
+        if duplicates:
+            raise ValueError(f"分组名称重复：{'、'.join(duplicates)}")
+        return self
+
+    def public(self) -> dict:
+        """What the manual may show: hidden groups and Sub2API ids stay in the admin console."""
+        data = self.model_dump(mode="json")
+        data["items"] = [{k: v for k, v in item.items() if k not in ("visible", "sub2api_id")}
+                         for item in data["items"] if item["visible"]]
+        return data
+
+
+def _default_groups() -> Groups:
+    return Groups.model_validate(json.loads(DEFAULT_CONFIG_PATH.read_text(encoding="utf-8"))["groups"])
+
+
 class ManualConfig(Strict):
     schema_: int = Field(1, alias="schema")
     updated_on: date
@@ -229,6 +336,8 @@ class ManualConfig(Strict):
     workbuddy: WorkBuddy
     install: Install
     ccswitch: CCSwitch
+    # Added after the first release; versions saved before it get the bundled intro and FAQ.
+    groups: Groups = Field(default_factory=_default_groups)
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 

@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
 
-import {derive, isSafeConfig} from '../../manual/assets/manual-config-core.js';
+import {
+  derive, formatRate, groupsForClient, isSafeConfig, isSafeGroups, platformLabel,
+} from '../../manual/assets/manual-config-core.js';
 import {
   buildImportUrl, parseAvailableModels, recommendModel, suggestClaudeRoles, wildcard,
 } from '../../manual/assets/ccswitch-setup-core.js';
@@ -99,4 +101,52 @@ test('CC Switch import link and config script use the configured site address', 
 
   cfg.site.url = 'https://evil.example/"&calc';
   assert.throws(() => buildConfigCmd({workbuddy: {apiKey: 'sk-test', model: 'gpt-6.1-sol'}}, cfg));
+});
+
+const GROUP = {
+  name: 'Claude 稳定', platform: 'anthropic', clients: ['claude'], badge: 'recommended', rate_multiplier: 0.8,
+  billing_note: '性价比高', summary: '日常编码首选', suitable_for: ['日常写代码'], models: ['claude-sonnet-5-5', 'claude-opus-*'],
+  notes: '第一行\n第二行',
+};
+
+test('bundled group page and admin-shaped groups are safe', () => {
+  assert.equal(isSafeGroups(DEFAULTS.groups), true);
+  const groups = {...structuredClone(DEFAULTS.groups), items: [GROUP, {...GROUP, name: 'GPT', clients: ['codex', 'workbuddy'], badge: '', rate_multiplier: null}]};
+  assert.equal(isSafeGroups(groups), true);
+});
+
+test('malformed groups are rejected without touching the rest of the configuration', () => {
+  const cases = [
+    groups => { groups.items = [{...GROUP, name: ''}]; },
+    groups => { groups.items = [{...GROUP, name: 'a\nb'}]; },
+    groups => { groups.items = [{...GROUP, clients: ['cursor']}]; },
+    groups => { groups.items = [{...GROUP, badge: 'toString'}]; },
+    groups => { groups.items = [{...GROUP, rate_multiplier: '0.8'}]; },
+    groups => { groups.items = [{...GROUP, rate_multiplier: -1}]; },
+    groups => { groups.items = [{...GROUP, models: ['gpt"; calc']}]; },
+    groups => { groups.items = [{...GROUP, summary: 'bad\x07bell'}]; },
+    groups => { groups.items = [{...GROUP, platform: 'Open AI'}]; },
+    groups => { groups.faq = [{q: '问题', a: ''}]; },
+    groups => { groups.intro = 'x'.repeat(501); },
+    groups => { delete groups.items; },
+  ];
+  for (const mutate of cases) {
+    const cfg = clone();
+    mutate(cfg.groups);
+    assert.equal(isSafeGroups(cfg.groups), false, mutate.toString());
+    assert.equal(isSafeConfig(cfg), true);
+  }
+  assert.equal(isSafeGroups(undefined), false);
+});
+
+test('group helpers format rates, platforms and the software filter', () => {
+  assert.equal(formatRate(0.8), '0.8×');
+  assert.equal(formatRate(1), '1×');
+  assert.equal(formatRate(0.123456), '0.1235×');
+  assert.equal(formatRate(null), null);
+  assert.equal(platformLabel('openai'), 'OpenAI');
+  assert.equal(platformLabel('kimi'), 'kimi');
+  const items = [GROUP, {...GROUP, name: 'GPT', clients: ['codex', 'workbuddy']}];
+  assert.deepEqual(groupsForClient(items, 'all').map(g => g.name), ['Claude 稳定', 'GPT']);
+  assert.deepEqual(groupsForClient(items, 'workbuddy').map(g => g.name), ['GPT']);
 });
