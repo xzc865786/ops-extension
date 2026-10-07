@@ -60,7 +60,7 @@ const SITE = {
     contact: '/docs/#contact',      // 页脚「联系客服」
     monitor: '/monitor'             // 页脚「渠道状态」（需登录，未登录会先跳到登录页）
   },
-  contactQQ: '569229275'            // 页脚客服 QQ，留空不显示
+  contactQQ: '1045113768'           // 页脚客服 QQ 群号，留空不显示
 };
 ```
 
