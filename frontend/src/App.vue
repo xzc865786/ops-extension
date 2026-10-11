@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter, RouterLink, RouterView } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ToastHost from '@/components/ToastHost.vue'
+import { installChunkRecovery, isChunkLoadError } from '@/utils/chunkRecovery'
 
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
+const reloadRequired = ref(false)
+const stopRecovery = installChunkRecovery(window, () => { reloadRequired.value = true })
+const stopRouterError = router.onError(error => {
+  if (isChunkLoadError(error)) reloadRequired.value = true
+})
+onUnmounted(() => { stopRecovery(); stopRouterError() })
+function reloadPage() { window.location.reload() }
 // The bootstrap cookie persists when the page is opened in a new tab.
 // Check the frame as well so the standalone view keeps its navigation.
 const embedded = computed(() => window.self !== window.top)
@@ -51,6 +59,10 @@ async function handleLogout() {
       </div>
     </header>
     <main class="app-main">
+      <div v-if="reloadRequired" class="alert-warning mb-4 flex flex-wrap items-center gap-3" role="alert">
+        <span>页面已更新或网络连接中断。请先记录未保存的内容，再刷新页面重试。</span>
+        <button class="btn-secondary" type="button" @click="reloadPage">刷新页面</button>
+      </div>
       <RouterView v-if="auth.me || route.path === '/auth/error'" :key="route.fullPath" />
     </main>
     <ToastHost />

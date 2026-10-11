@@ -80,6 +80,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        PREVIOUS_FRONTEND_IMAGE: ${OPS_PREVIOUS_FRONTEND_IMAGE:-nginx:1.27-alpine}
     ports:
       - "8088:80"
     depends_on:

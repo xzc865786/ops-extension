@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:manual": "node --test \"tests/manual/*.test.mjs\"",
-    "test:expenses": "node --test \"tests/expenses/*.test.mjs\""
+    "test:expenses": "node --test \"tests/expenses/*.test.mjs\"",
+    "test:release": "node tests/expenses/release-browser.mjs"
   },
   "dependencies": {
     "@vuepic/vue-datepicker": "^14.0.0",
