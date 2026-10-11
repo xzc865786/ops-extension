@@ -2,8 +2,8 @@
 // Only synthetic GET responses are served; any API write makes the test fail.
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
-import { readFileSync, existsSync } from 'node:fs'
-import { resolve, sep } from 'node:path'
+import { readFileSync, existsSync, mkdirSync } from 'node:fs'
+import { resolve, sep, dirname } from 'node:path'
 import { createRequire } from 'node:module'
 const { chromium } = createRequire(import.meta.url)('playwright')
 const current = resolve('dist'), previous = process.env.OPS_RELEASE_PREVIOUS_DIST
@@ -12,10 +12,14 @@ let version = 'current', preserve = false, blocked = null, writes = 0
 const requests = []
 const record = { id: 99001, title: '加载验收记录', expense_date: '2026-10-11', category: 'OTHER', category_label: '其他', payer: '验收付款人', merchant: '', currency: 'CNY', amount: '20.00', rmb_amount: '20.00', amount_mode: 'AUTO', needs_reimbursement: false, active: true, status: 'NOT_REQUIRED', version: 1, notes: '', attachments: [], reimbursements: [], events: [] }
 const legacy = { id: 99002, claim_no: 'E-CACHE-TEST', expense_date: '2026-10-11', category: 'OTHER', currency: 'CNY', amount_tax_included: '20.00', pay_type: 'PERSONAL_ADVANCE', status: 'PAID', description: '旧单加载验收', remaining_amount: '0', items: [], payments: [], attachments: [], events: [] }
-const meta = { categories: [{ value: 'OTHER', label: '其他' }], payers: [], merchants: [], pay_types: [], currencies: ['CNY', 'USD'] }
+const meta = { categories: [{ value: 'CLOUD_SERVER', label: '云服务器' }, { value: 'OTHER', label: '其他' }], payers: [], merchants: [], pay_types: [], currencies: ['CNY', 'USD'] }
 const server = createServer((req, res) => {
   const path = new URL(req.url, 'http://localhost').pathname
-  const send = (status, type, body) => { requests.push({ path, status, type }); res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(body) }
+  const send = (status, type, body) => {
+    requests.push({ path, status, type })
+    const cache = version === 'previous' && type === 'text/html' && path.startsWith('/ext/app/') ? 'public, max-age=3600' : 'no-store'
+    res.writeHead(status, { 'Content-Type': type, 'Cache-Control': cache }); res.end(body)
+  }
   if (path.startsWith('/ext/api/')) {
     if (req.method !== 'GET') { writes++; return send(405, 'application/json', '{}') }
     let data
@@ -30,6 +34,7 @@ const server = createServer((req, res) => {
     return send(200, 'application/json', JSON.stringify(data))
   }
   if (path === '/test-frame') return send(200, 'text/html', '<iframe title="Ops" src="/ext/app/admin/expenses" style="width:100%;height:850px;border:0"></iframe>')
+  if (path === '/test-frame-fresh') return send(200, 'text/html', `<iframe title="Ops" src="/ext/app/admin/expenses?_ops_entry=entry-${requests.length}" style="width:100%;height:850px;border:0"></iframe>`)
   const root = version === 'previous' ? resolve(previous) : current
   const relative = path.replace(/^\/ext\/app\//, '')
   const candidates = [resolve(root, relative)]
@@ -79,6 +84,22 @@ try {
     assert.deepEqual(errors, [])
     await oldCtx.close()
     console.log('Passed: an already-open old iframe can open new/detail routes with retained original chunks.')
+
+    version = 'previous'
+    const cachedCtx = await context(), cached = await cachedCtx.newPage()
+    await cached.goto(base + '/test-frame')
+    const cachedFrame = cached.frameLocator('iframe')
+    await cachedFrame.getByRole('heading', { name: '报账管理', exact: true }).waitFor()
+    version = 'current'
+    await cached.goto(base + '/test-frame?return=1')
+    await cachedFrame.getByRole('heading', { name: '报账管理', exact: true }).waitFor()
+    await cached.goto(base + '/test-frame-fresh')
+    await cachedFrame.getByRole('heading', { name: '支出记录', exact: true }).waitFor()
+    await cachedFrame.getByRole('link', { name: '记一笔', exact: true }).click()
+    await cachedFrame.getByRole('button', { name: '保存支出', exact: true }).waitFor()
+    assert.equal(await cachedFrame.getByRole('button', { name: '保存草稿', exact: true }).count(), 0)
+    await cachedCtx.close()
+    console.log('Passed: unchanged iframe URL reuses cached old HTML; a fresh entry query loads the current create form.')
   }
 
   version = 'current'; preserve = true
@@ -88,6 +109,10 @@ try {
   const frame = fresh.frameLocator('iframe')
   await frame.getByRole('link', { name: '记一笔', exact: true }).click()
   await frame.locator('#expense-title').waitFor()
+  if (process.env.OPS_RELEASE_SCREENSHOT) {
+    mkdirSync(dirname(resolve(process.env.OPS_RELEASE_SCREENSHOT)), { recursive: true })
+    await fresh.screenshot({ path: resolve(process.env.OPS_RELEASE_SCREENSHOT), fullPage: true })
+  }
   await frame.getByRole('link', { name: /返回支出记录/ }).click()
   await frame.getByRole('link', { name: '详情', exact: true }).click()
   await frame.getByRole('heading', { name: record.title, exact: true }).waitFor()

@@ -1,5 +1,6 @@
 import logging
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import RedirectResponse
@@ -30,6 +31,16 @@ def _sanitize_next(next_path: str | None) -> str:
     if not next_path.startswith("/ext/app"):
         return default
     return next_path
+
+
+def _fresh_entry_target(next_path: str | None) -> str:
+    # no-store cannot invalidate HTML cached by releases that lacked that header.
+    # A fresh URL on each authenticated menu entry also avoids that old cache.
+    target = urlparse(_sanitize_next(next_path))
+    query = [(key, value) for key, value in parse_qsl(target.query, keep_blank_values=True)
+             if key != "_ops_entry"]
+    query.append(("_ops_entry", uuid4().hex))
+    return target._replace(query=urlencode(query)).geturl()
 
 
 @router.get("/ext/auth/bootstrap")
@@ -86,7 +97,7 @@ def bootstrap(
     ua = request.headers.get("user-agent")
     sess = create_session(db, user, ip=client_ip, user_agent=ua)
 
-    dest = _sanitize_next(next)
+    dest = _fresh_entry_target(next)
     redirect = RedirectResponse(url=dest, status_code=302, headers=headers)
     redirect.set_cookie(
         key=settings.cookie_name,

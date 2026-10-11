@@ -64,6 +64,46 @@ def test_auth_me(client, db):
     assert r.json()["sub2api_role"] == "admin"
 
 
+def test_bootstrap_fresh_entry_bypasses_pre_release_html_cache(client):
+    from urllib.parse import parse_qs, urlparse
+
+    fake = Sub2APIUser(id=99003, username="cache", email="cache@example.test", role="admin", status="active")
+    menu = "/ext/app/admin/expenses?copy=7&empty=&_ops_entry=old#proof"
+    with patch("app.auth.bridge.get_identity_provider") as gp:
+        gp.return_value.verify_and_get_user.return_value = fake
+        responses = [client.get("/ext/auth/bootstrap", params={"token": "never-persist", "next": menu},
+                                follow_redirects=False) for _ in range(2)]
+    entries = []
+    for response in responses:
+        assert response.status_code == 302
+        assert response.headers["cache-control"] == "no-store"
+        target = urlparse(response.headers["location"])
+        assert target.path == "/ext/app/admin/expenses"
+        assert target.fragment == "proof"
+        query = parse_qs(target.query, keep_blank_values=True)
+        assert query["copy"] == ["7"] and query["empty"] == [""]
+        assert len(query["_ops_entry"]) == 1 and len(query["_ops_entry"][0]) == 32
+        assert "never-persist" not in response.headers["location"]
+        assert "ops_session" in response.cookies
+        entries.append(query["_ops_entry"][0])
+    assert entries[0] != entries[1] and "old" not in entries
+
+
+def test_fresh_entry_preserves_safe_destination_and_rejects_external_redirects(client):
+    from urllib.parse import parse_qs, urlparse
+    from app.auth.bridge import _fresh_entry_target
+
+    for invalid in [None, "https://example.test/", "//example.test/", "/ext/app/\\evil", "/admin/expenses"]:
+        target = urlparse(_fresh_entry_target(invalid))
+        assert target.path == "/ext/app/tickets"
+        assert set(parse_qs(target.query)) == {"_ops_entry"}
+        assert not target.netloc and not target.scheme
+    target = urlparse(_fresh_entry_target("/ext/app/admin/reports?month=2026-09"))
+    assert target.path == "/ext/app/admin/reports" and parse_qs(target.query)["month"] == ["2026-09"]
+    response = client.get("/ext/auth/bootstrap", params={"next": "/ext/app/admin/expenses"}, follow_redirects=False)
+    assert response.status_code == 401 and "location" not in response.headers
+
+
 def test_resolve_public_minio_unset_by_default(monkeypatch):
     from app.attachments.minio_client import resolve_public_minio_target
     from app.config import get_settings
