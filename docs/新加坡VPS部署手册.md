@@ -2,7 +2,7 @@
 
 本手册适用于已安装 Docker 和 Docker Compose 插件的 Linux VPS。Ops Extension 与 Sub2API 分别部署、分别更新；此仓库当前的交付单元是**独立 Docker Compose 服务栈**，不是单个容器：`ops-frontend`（Nginx 静态页面）、`ops-backend`（FastAPI）、`ops-db`（PostgreSQL）、`minio`（附件存储），以及运行完即退出的 `createbuckets` 初始化容器。Sub2API 不使用 Ops 的数据库或对象存储。
 
-本手册只部署 Ops 服务。将它接入现有 Sub2API 域名和自定义菜单，请接着阅读 [Sub2API 对接手册](./Sub2API对接手册.md)。下文以已有 HTTPS 域名 `https://sub2api.example.com`、宿主机 Nginx 为例；域名、容器名和端口均须按实际环境替换。没有执行远程 VPS 部署。
+本手册只部署 Ops 服务。将它接入现有 Sub2API 域名和自定义菜单，请接着阅读 [Sub2API 对接手册](./Sub2API对接手册.md)。下文以已有 HTTPS 域名 `https://sub2api.example.com`、宿主机 Nginx 为例；域名、容器名和端口均须按实际环境替换。2026-10-11 的授权生产更新记录见 [支出台账迁移与验证说明](./支出台账迁移与验证说明.md#授权生产发布记录2026-10-11)；实际线上使用独立生产 Compose 和 Caddy，不应把本文示例配置覆盖到线上。
 
 ## 1. 部署前确认
 
