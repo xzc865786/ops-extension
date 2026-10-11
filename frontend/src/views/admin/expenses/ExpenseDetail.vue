@@ -1,215 +1,61 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import api from '@/api/client'
-import { useToast } from '@/composables/useToast'
-import StatusBadge from '@/components/StatusBadge.vue'
+import { ledgerPath, errorText, statusLabels, uploadProof } from '@/api/ledger'
 import { downloadAttachment } from '@/utils/attachments'
-import { formatDateTime, labelFor, type LabelOption } from '@/utils/display'
-
-const route = useRoute()
-const toast = useToast()
-const claim = ref<any>(null)
-const accounts = ref<any[]>([])
-const categories = ref<LabelOption[]>([])
-const rejectReason = ref('')
-const busy = ref(false)
-const payment = reactive<any>({ amount: 0, payment_account_id: null, paid_at: '', reference_no: '', notes: '' })
-const invoice = reactive<any>({})
-const attachmentType = ref('INVOICE')
-const selectedFile = ref<File | null>(null)
-const fileInput = ref<HTMLInputElement | null>(null)
-const attachmentTypes = [
-  { value: 'INVOICE', label: '发票' }, { value: 'RECEIPT', label: '收据' },
-  { value: 'CONTRACT', label: '合同' }, { value: 'PAYMENT_SCREENSHOT', label: '付款截图' },
-  { value: 'BANK_SLIP', label: '银行回单' }, { value: 'OTHER', label: '其他' },
-]
-const payTypeLabel: Record<string, string> = {
-  COMPANY_DIRECT: '公司直付',
-  PERSONAL_ADVANCE: '个人垫付',
+import ReimbursementForm from '@/components/expenses/ReimbursementForm.vue'
+const route = useRoute(), record = ref<any>(null), error = ref(''), busy = ref(false), reimbursing = ref(false)
+const eventLabels: Record<string,string> = { CREATED:'创建支出', HISTORY_CONFIRMED:'确认历史单据', UPDATED:'编辑支出', VOIDED:'作废支出', REIMBURSED:'登记报销', REIMBURSEMENT_REVOKED:'撤销报销', ATTACHMENT_ADDED:'上传凭证' }
+function auditRows(value: Record<string, unknown> | null) {
+  const labels: Record<string,string> = { id:'记录编号', title:'购买内容', expense_date:'支出日期', category:'分类', payer:'付款人', merchant:'商家', currency:'币种', amount:'原币金额', rmb_amount:'人民币记账额', amount_mode:'金额模式', reference_rate:'参考汇率（1美元兑人民币）', rate_date:'汇率有效日期', rate_fetched_at:'汇率获取时间', rate_source:'汇率来源', needs_reimbursement:'需要报销', active:'有效记录', notes:'备注', legacy_claim_id:'历史原单编号', status:'报销状态', actual_amount:'实际报销分配额', difference:'差额', reason:'原因', file_name:'凭证文件名' }
+  return Object.entries(value || {}).filter(([key]) => labels[key]).map(([key, value]) => {
+    let display = value == null ? '—' : typeof value === 'boolean' ? (value ? '是' : '否') : String(value)
+    if (key === 'status') display = statusLabels[display] || display
+    if (key === 'amount_mode') display = value === 'MANUAL' ? '已手动调整' : '自动'
+    if (key === 'category') display = record.value?.category === value ? record.value.category_label : display
+    return { key, label: labels[key], display }
+  })
 }
-const invoiceFields = ['invoice_status', 'invoice_type', 'invoice_number', 'invoice_date',
-  'seller_name', 'seller_tax_no', 'buyer_name', 'buyer_tax_no',
-  'amount_tax_excluded', 'tax_rate', 'tax_amount', 'deductible']
-
-function message(e: any, fallback: string) {
-  return e.response?.data?.detail?.detail || e.response?.data?.detail || fallback
+async function load() { try { record.value = (await api.get(`${ledgerPath}/${route.params.id}`)).data } catch (e) { error.value = errorText(e) } }
+onMounted(load)
+async function revoke(batch: any) {
+  const ids = batch.items.map((i: any) => '#' + i.record_id).join('、')
+  const reason = window.prompt(`将撤销整个批次 #${batch.id}，影响支出 ${ids}，恢复待报销。仅更正登记，不退回资金。请填写原因：`)
+  if (!reason?.trim() || busy.value) return
+  try { busy.value = true; await api.post(`/admin/reimbursements/${batch.id}/revoke`, { version: batch.version, reason }); await load() } catch (e) { error.value = errorText(e) } finally { busy.value = false }
 }
-
-async function load() {
-  const { data } = await api.get(`/admin/expenses/${route.params.id}`)
-  claim.value = data
-  payment.amount = Number(data.remaining_amount)
-  payment.payment_account_id = data.payment_account_id
-  for (const key of invoiceFields) invoice[key] = data[key] ?? (key === 'invoice_status' ? 'NONE' : null)
+async function download(a: any) { try { await downloadAttachment(a.id, a.file_name, a.source) } catch (e) { error.value = errorText(e) } }
+async function voidRecord() {
+  const reason = window.prompt('填写作废原因，原记录与凭证会保留')
+  if (!reason?.trim() || busy.value) return
+  try { busy.value = true; await api.post(`${ledgerPath}/${record.value.id}/void`, { version: record.value.version, reason }); await load() } catch (e) { error.value = errorText(e) } finally { busy.value = false }
 }
-
-onMounted(async () => {
-  void api.get('/admin/expenses/meta').then(({ data }) => { categories.value = data.categories }).catch(() => {})
-  try {
-    const [, accountResponse] = await Promise.all([load(), api.get('/admin/payment-accounts')])
-    accounts.value = accountResponse.data
-  } catch (e: any) { toast.error(message(e, '报账详情加载失败')) }
-})
-
-async function act(path: string, body?: any) {
-  try {
-    await api.post(`/admin/expenses/${route.params.id}/${path}`, body)
-    await load()
-    toast.success('操作成功')
-  } catch (e: any) { toast.error(message(e, '操作失败')) }
+async function upload(event: Event, batchId?: number) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file || busy.value) return
+  try { busy.value = true; await uploadProof(batchId ? `/admin/reimbursements/${batchId}` : `${ledgerPath}/${record.value.id}`, file); await load() } catch (e) { error.value = errorText(e) } finally { busy.value = false }
 }
-
-async function addPayment() {
-  if (busy.value) return
-  busy.value = true
-  try {
-    const body = {
-      ...payment,
-      payment_account_id: payment.payment_account_id || null,
-      paid_at: payment.paid_at ? new Date(payment.paid_at).toISOString() : null,
-    }
-    await api.post(`/admin/expenses/${route.params.id}/payments`, body)
-    await load()
-    payment.reference_no = ''
-    payment.notes = ''
-    payment.paid_at = ''
-    toast.success('付款已登记')
-  } catch (e: any) { toast.error(message(e, '付款登记失败')) }
-  finally { busy.value = false }
-}
-
-async function saveInvoice() {
-  try {
-    const body: any = {}
-    for (const key of invoiceFields) body[key] = invoice[key] === '' ? null : invoice[key]
-    await api.put(`/admin/expenses/${route.params.id}/invoice`, body)
-    await load()
-    toast.success('发票信息已保存')
-  } catch (e: any) { toast.error(message(e, '发票保存失败')) }
-}
-
-function chooseFile(event: Event) {
-  selectedFile.value = (event.target as HTMLInputElement).files?.[0] || null
-}
-
-async function uploadAttachment() {
-  if (!selectedFile.value || busy.value) return
-  busy.value = true
-  try {
-    const form = new FormData()
-    form.append('file', selectedFile.value)
-    await api.post(`/admin/expenses/${route.params.id}/attachments`, form, {
-      params: { attachment_type: attachmentType.value },
-    })
-    selectedFile.value = null
-    if (fileInput.value) fileInput.value.value = ''
-    await load()
-    toast.success('附件已上传')
-  } catch (e: any) { toast.error(message(e, '附件上传失败')) }
-  finally { busy.value = false }
-}
-
-async function download(id: number, filename: string) {
-  try {
-    await downloadAttachment(id, filename, 'expense')
-  } catch (e: any) {
-    toast.error(e.message || '附件下载失败')
-  }
-}
+async function done() { reimbursing.value = false; await load() }
 </script>
-
 <template>
-  <div v-if="claim" class="space-y-4">
-    <RouterLink to="/admin/expenses" class="link inline-block text-sm">← 返回报账管理</RouterLink>
-    <div class="card p-5 sm:p-6">
-      <div class="flex flex-wrap justify-between gap-3">
-        <h1 class="page-title">{{ claim.claim_no }}</h1>
-        <RouterLink v-if="['DRAFT', 'REJECTED'].includes(claim.status)"
-          :to="`/admin/expenses/${claim.id}/edit`" class="btn-secondary">编辑</RouterLink>
+  <div class="space-y-5 max-w-5xl">
+    <RouterLink to="/admin/expenses" class="link">← 返回支出记录</RouterLink><p v-if="error" class="alert-error" role="alert">{{ error }}</p>
+    <template v-if="record">
+      <div class="card card-body space-y-4"><h1 class="page-title">{{ record.title }}</h1><div class="flex flex-wrap gap-3"><span class="badge-primary">{{ statusLabels[record.status] }}</span><RouterLink v-if="record.active" :to="`/admin/expenses/${record.id}/edit`" class="btn-secondary">编辑</RouterLink><RouterLink :to="`/admin/expenses/new?copy=${record.id}`" class="btn-secondary">复制一笔</RouterLink><button v-if="record.status === 'PENDING'" class="btn-primary" @click="reimbursing = true">登记报销</button><button v-if="record.active && record.status !== 'REIMBURSED'" class="btn-danger" :disabled="busy" @click="voidRecord">作废</button></div>
+        <p v-if="record.status === 'REIMBURSED'" class="alert-warning">已报销记录的金额、付款人、日期等更正，请先撤销整个报销批次。</p>
+        <dl class="grid sm:grid-cols-2 gap-3"><div>支出日期：{{ record.expense_date }}</div><div>分类：{{ record.category_label }}</div><div>付款人：{{ record.payer }}</div><div>商家：{{ record.merchant || '—' }}</div><div>原币金额：{{ record.currency }} {{ record.amount }}</div><div class="font-bold">人民币记账额：¥ {{ record.rmb_amount }}</div></dl>
+        <p v-if="record.currency === 'USD'" class="text-sm muted">{{ record.amount_mode === 'MANUAL' ? '已手动调整' : '自动换算' }} · {{ record.reference_rate ? `1 美元 = ${record.reference_rate} 人民币；有效日期 ${record.rate_date}；获取时间 ${record.rate_fetched_at}；来源 ${record.rate_source}` : '人工填写，无外部参考汇率' }}</p>
+        <p class="whitespace-pre-wrap">备注：{{ record.notes || '—' }}</p><RouterLink v-if="record.legacy_claim_id" :to="`/admin/expenses/history?claim=${record.legacy_claim_id}`" class="link">查看原历史单据 #{{ record.legacy_claim_id }}</RouterLink>
+        <h2 class="section-title">付款凭证</h2><div v-for="a in record.attachments" :key="a.source + a.id"><button class="link" @click="download(a)">{{ a.file_name }}</button></div><label class="input-label">补传付款凭证<input type="file" :disabled="busy" accept="image/*,.pdf,.txt,.log" @change="upload($event)" /></label>
       </div>
-      <p class="text-sm muted mt-2"><StatusBadge :status="claim.status" kind="expense" /> · {{ labelFor(categories, claim.category) }} · {{ payTypeLabel[claim.pay_type] || claim.pay_type }} ·
-        {{ claim.currency }} {{ claim.amount_tax_included }}</p>
-      <p class="text-sm mt-2">{{ claim.description }}</p>
-      <ul class="text-sm mt-2 list-disc pl-5">
-        <li v-for="it in claim.items" :key="it.id">{{ it.description }} × {{ it.quantity }} = {{ it.amount }}</li>
-      </ul>
-      <div class="flex flex-wrap gap-2 mt-3 text-sm">
-        <button v-if="['DRAFT','REJECTED'].includes(claim.status)" class="btn-secondary btn-sm" @click="act('submit')">提交</button>
-        <button v-if="claim.status==='SUBMITTED'" class="btn-secondary btn-sm" @click="act('approve')">审批通过</button>
-        <button v-if="claim.status==='SUBMITTED'" class="btn-secondary btn-sm" @click="act('reject', { reason: rejectReason || '驳回' })">驳回</button>
-        <button v-if="['DRAFT','SUBMITTED'].includes(claim.status)" class="btn-secondary btn-sm" @click="act('cancel')">取消</button>
+      <ReimbursementForm v-if="reimbursing" :records="[record]" @done="done" @cancel="reimbursing = false" />
+      <div v-for="b in record.reimbursements" :key="b.id" class="card card-body space-y-3"><h2 class="section-title">报销批次 #{{ b.id }} · {{ b.active ? '有效' : '已撤销' }}</h2><p>付款人 {{ b.payer }} · 报销日期 {{ b.reimbursement_date }} · 实际总额 ¥ {{ b.actual_amount }}</p><p>差额说明：{{ b.difference_reason || '无差额' }}；备注：{{ b.notes || '—' }}</p>
+        <div class="table-wrap"><table class="table"><thead><tr><th>支出编号</th><th>应报销</th><th>实报分配</th><th>差额</th></tr></thead><tbody><tr v-for="i in b.items" :key="i.id"><td><RouterLink class="link" :to="`/admin/expenses/${i.record_id}`">#{{ i.record_id }}</RouterLink></td><td>{{ i.expected_amount }}</td><td>{{ i.actual_amount }}</td><td>{{ i.difference }}</td></tr></tbody></table></div>
+        <div v-for="a in b.attachments" :key="a.id"><button class="link" @click="download(a)">{{ a.file_name }}</button></div><label class="input-label">补传批次转账凭证<input type="file" :disabled="busy" accept="image/*,.pdf,.txt,.log" @change="upload($event, b.id)" /></label>
+        <button v-if="b.active" class="btn-danger" :disabled="busy" @click="revoke(b)">撤销整个批次（影响 {{ b.items.length }} 笔）</button><p v-else class="muted">撤销原因：{{ b.revoke_reason }} · 操作人 #{{ b.revoked_by }} · {{ b.revoked_at }}</p>
       </div>
-      <input v-if="claim.status==='SUBMITTED'" v-model="rejectReason" class="input mt-2" placeholder="驳回原因" />
-    </div>
-
-    <div class="card p-5 sm:p-6 text-sm space-y-3">
-      <h2 class="section-title">付款</h2>
-      <p>累计已付 {{ claim.currency }} {{ claim.paid_total }} · 剩余应付 {{ claim.currency }} {{ claim.remaining_amount }}</p>
-      <p v-if="claim.payment_reconciliation_required" class="alert-warning">历史付款记录存在异常，须先核对后用于财务验收。</p>
-      <div v-if="claim.status==='APPROVED'" class="grid grid-cols-1 md:grid-cols-3 gap-2">
-        <input v-model.number="payment.amount" type="number" min="0.01" step="0.01" class="input" aria-label="付款金额" />
-        <input v-model="payment.paid_at" type="datetime-local" class="input" aria-label="付款时间" />
-        <select v-model="payment.payment_account_id" class="input" aria-label="付款账户">
-          <option :value="null">未指定账户</option>
-          <option v-for="a in accounts" :key="a.id" :value="a.id">{{ a.name }}</option>
-        </select>
-        <input v-model="payment.reference_no" class="input" placeholder="交易号" />
-        <input v-model="payment.notes" class="input" placeholder="备注" />
-        <button class="btn-primary" :disabled="busy" @click="addPayment">登记付款</button>
-      </div>
-      <div v-if="claim.payments?.length" class="table-wrap"><table class="table">
-        <thead><tr><th>时间</th><th>金额</th><th>账户</th><th>交易号</th><th>备注</th></tr></thead>
-        <tbody><tr v-for="p in claim.payments" :key="p.id">
-          <td>{{ formatDateTime(p.paid_at) }}</td><td>{{ p.currency }} {{ p.amount }}</td>
-          <td>{{ accounts.find(a => a.id === p.payment_account_id)?.name || '未指定' }}</td>
-          <td>{{ p.reference_no || '—' }}</td><td>{{ p.notes || '—' }}</td>
-        </tr></tbody>
-      </table></div>
-    </div>
-
-    <div class="card p-5 sm:p-6 text-sm space-y-3">
-      <h2 class="section-title">发票信息</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-        <label>状态<select v-model="invoice.invoice_status" class="input">
-          <option>NONE</option><option>PENDING</option><option>RECEIVED</option><option>NOT_REQUIRED</option>
-        </select></label>
-        <label>类型<select v-model="invoice.invoice_type" class="input">
-          <option :value="null">未指定</option><option>VAT_SPECIAL</option><option>VAT_NORMAL</option>
-          <option>RECEIPT</option><option>OTHER</option>
-        </select></label>
-        <label>发票号<input v-model="invoice.invoice_number" class="input" /></label>
-        <label>发票日期<input v-model="invoice.invoice_date" type="date" class="input" /></label>
-        <label>销方名称<input v-model="invoice.seller_name" class="input" /></label>
-        <label>销方税号<input v-model="invoice.seller_tax_no" class="input" /></label>
-        <label>购方名称<input v-model="invoice.buyer_name" class="input" /></label>
-        <label>购方税号<input v-model="invoice.buyer_tax_no" class="input" /></label>
-        <label>未税金额<input v-model.number="invoice.amount_tax_excluded" type="number" step="0.01" class="input" /></label>
-        <label>税率<input v-model.number="invoice.tax_rate" type="number" step="0.0001" class="input" /></label>
-        <label>税额<input v-model.number="invoice.tax_amount" type="number" step="0.01" class="input" /></label>
-      </div>
-      <label class="flex items-center gap-2"><input v-model="invoice.deductible" type="checkbox" />预计可抵扣</label>
-      <button class="btn-secondary" @click="saveInvoice">保存发票信息</button>
-    </div>
-
-    <div class="card p-5 sm:p-6 text-sm space-y-3">
-      <h2 class="section-title">附件</h2>
-      <p class="muted">单个文件不超过 20 MB；支持图片、PDF、.log、.txt。</p>
-      <div class="flex flex-wrap gap-2">
-        <select v-model="attachmentType" class="input">
-          <option v-for="type in attachmentTypes" :key="type.value" :value="type.value">{{ type.label }}</option>
-        </select>
-        <input ref="fileInput" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.log,.txt" @change="chooseFile" />
-        <button class="btn-secondary" :disabled="busy || !selectedFile" @click="uploadAttachment">上传</button>
-      </div>
-      <ul v-if="claim.attachments?.length" class="space-y-1">
-        <li v-for="a in claim.attachments" :key="a.id">
-          {{ attachmentTypes.find(type => type.value === a.attachment_type)?.label || a.attachment_type }} ·
-          <button type="button" class="link" @click="download(a.id, a.file_name)">{{ a.file_name }}</button>
-          · {{ a.file_size }} bytes
-        </li>
-      </ul>
-      <p v-else class="muted">暂无附件</p>
-    </div>
+      <div class="card card-body space-y-3"><h2 class="section-title">操作历史</h2><details v-for="e in record.events" :key="e.id"><summary>{{ eventLabels[e.event_type] || e.event_type }} · {{ e.actor_name || `操作人 #${e.actor_user_id}` }} · {{ e.created_at }}</summary><div class="grid sm:grid-cols-2 gap-3 mt-2 text-sm"><div v-for="(value, side) in [e.old_value, e.new_value]" :key="side"><h3 class="font-medium mb-2">{{ side === 0 ? '更正前' : '更正后' }}</h3><p v-if="!auditRows(value).length" class="muted">无</p><dl v-else><div v-for="field in auditRows(value)" :key="field.key" class="mb-1"><dt class="muted">{{ field.label }}</dt><dd class="whitespace-pre-wrap break-words">{{ field.display }}</dd></div></dl></div></div></details></div>
+    </template>
   </div>
 </template>

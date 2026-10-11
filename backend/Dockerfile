@@ -10,4 +10,4 @@ COPY . .
 ENV PYTHONPATH=/app
 EXPOSE 8090
 
-CMD ["sh", "-c", "alembic upgrade head && python -m scripts.seed_defaults && uvicorn app.main:app --host 0.0.0.0 --port 8090"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8090"]

@@ -7,8 +7,9 @@ from minio.error import S3Error
 from sqlalchemy.orm import Session
 
 from app.attachments.minio_client import get_storage, safe_filename
-from app.common.errors import AppError, forbidden, not_found
+from app.common.errors import AppError, forbidden, not_found, bad_request
 from app.db.models.expense import ExpenseAttachment
+from app.db.models.ledger import LedgerAttachment
 from app.db.models.ticket import Ticket, TicketAttachment
 from app.db.session import get_db
 from app.deps import CurrentUser, require_login
@@ -41,7 +42,14 @@ def download_attachment(
     presigned URL signed against that browser-reachable host. Never redirect to the internal
     compose hostname alone.
     """
-    if source == "expense":
+    if source in ("expense-record", "reimbursement"):
+        if not user.is_admin:
+            raise forbidden()
+        att = db.get(LedgerAttachment, attachment_id)
+        if not att or (source == "expense-record" and att.record_id is None) or (source == "reimbursement" and att.batch_id is None):
+            raise not_found("附件不存在")
+        object_key, filename, mime = att.object_key, att.file_name, att.mime_type
+    elif source == "expense":
         if not user.is_admin:
             raise forbidden()
         att = db.get(ExpenseAttachment, attachment_id)
@@ -50,7 +58,7 @@ def download_attachment(
         object_key = att.object_key
         filename = att.file_name
         mime = att.mime_type
-    else:
+    elif source == "ticket":
         att = db.get(TicketAttachment, attachment_id)
         if not att:
             raise not_found("附件不存在")
@@ -62,6 +70,9 @@ def download_attachment(
         object_key = att.object_key
         filename = att.file_name
         mime = att.mime_type
+
+    else:
+        raise bad_request("附件来源无效", "INVALID_ATTACHMENT_SOURCE")
 
     try:
         storage = get_storage()

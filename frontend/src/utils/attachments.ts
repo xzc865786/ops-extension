@@ -20,7 +20,7 @@ async function downloadError(error: any): Promise<Error> {
   return new Error(message || '附件下载失败，请稍后重试')
 }
 
-export async function downloadAttachment(id: number, filename: string, source: 'ticket' | 'expense' = 'ticket') {
+export async function downloadAttachment(id: number, filename: string, source: 'ticket' | 'expense' | 'expense-record' | 'reimbursement' = 'ticket') {
   let blob: Blob
   try {
     const response = await api.get<Blob>(`/attachments/${id}/download`, {

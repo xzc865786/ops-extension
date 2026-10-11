@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     # Dev-only: skip Sub2API and accept X-Dev-User JSON header
     dev_auth_bypass: bool = False
+    # Rollback-only switch; new installations retire legacy financial writes.
+    legacy_expense_writes_enabled: bool = False
 
 
 @lru_cache

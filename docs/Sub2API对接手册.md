@@ -77,10 +77,10 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://sub2api.example.com/ext/app/
 | --- | --- | --- |
 | 我的工单 | 用户（`user`） | `https://sub2api.example.com/ext/auth/bootstrap?next=/ext/app/tickets` |
 | 工单管理 | 管理员（`admin`） | `https://sub2api.example.com/ext/auth/bootstrap?next=/ext/app/admin/tickets` |
-| 报账管理 | 管理员（`admin`） | `https://sub2api.example.com/ext/auth/bootstrap?next=/ext/app/admin/expenses` |
-| 费用报表 | 管理员（`admin`） | `https://sub2api.example.com/ext/auth/bootstrap?next=/ext/app/admin/reports` |
+| 支出记录 | 管理员（`admin`） | `https://sub2api.example.com/ext/auth/bootstrap?next=/ext/app/admin/expenses` |
+| 月度开支 | 管理员（`admin`） | `https://sub2api.example.com/ext/auth/bootstrap?next=/ext/app/admin/reports` |
 
-把示例域名统一替换为站点的真实 HTTPS 域名。**不要**手工在 URL 中追加 `token`、`user_id`、`theme` 或 `lang`，Sub2API 的 [iframe URL 构造器](https://github.com/Wei-Shaw/sub2api/blob/a3eb7ef302961cba716dc78b39b93b60c467db0e/frontend/src/utils/embedded-url.ts)会附加这些参数。不要把菜单 URL 改为 `/ext/app/...`：Ops 的 [Bootstrap 代码](../backend/app/auth/bridge.py)需要先校验 Sub2API 身份并签发自己的会话。Ops 内的“主数据”从“报账管理”页面进入，不需要第五个菜单。
+把示例域名统一替换为站点的真实 HTTPS 域名。**不要**手工在 URL 中追加 `token`、`user_id`、`theme` 或 `lang`，Sub2API 的 [iframe URL 构造器](https://github.com/Wei-Shaw/sub2api/blob/a3eb7ef302961cba716dc78b39b93b60c467db0e/frontend/src/utils/embedded-url.ts)会附加这些参数。不要把菜单 URL 改为 `/ext/app/...`：Ops 的 [Bootstrap 代码](../backend/app/auth/bridge.py)需要先校验 Sub2API 身份并签发自己的会话。Ops 内的历史主数据从“支出记录 → 历史单据”进入，不需要第五个菜单。
 
 ## 4. 登录、权限和主题的实际流程
 
@@ -98,7 +98,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://sub2api.example.com/ext/app/
 | 检查项 | 预期 |
 | --- | --- |
 | 普通用户点击“我的工单” | 直接看到工单列表，可创建工单；没有第二排 Ops 模块导航。 |
-| 管理员点击四个菜单 | 工单管理、报账管理、费用报表均能打开；主数据可由报账页进入。 |
+| 管理员点击四个菜单 | 工单管理、支出记录、月度开支均能打开；历史资料由“支出记录 → 历史单据”进入。 |
 | 浅色、深色、跟随系统 | iframe 内容与宿主的实际明暗模式一致；切换会重新加载页面。 |
 | 工单和报账附件 | 上传、下载成功；上传请求未被反代的大小限制拦截。 |
 | 浏览器开发者工具 | Bootstrap 返回 302，后续业务页面 URL 不带 token，`ops_session` 的 Path 为 `/ext` 且 HTTPS 下为 Secure。 |
@@ -132,3 +132,10 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://sub2api.example.com/ext/app/
 | 附件上传返回 413 | Nginx 或更前面的代理上传大小限制；本例为 `25m`，应用文件限制为 20 MB。 |
 
 对接完成后，日常升级 Ops 只需更新独立服务栈；Sub2API 的四个自定义菜单继续指向相同的 `/ext/auth/bootstrap` 路径。
+
+
+## 新版支出入口的兼容性
+
+仅修改菜单名称为“支出记录”和“月度开支”，继续使用上方相同的 bootstrap URL。日常导航移除财务主数据；历史单据和历史主数据由支出页面次级入口只读访问。普通用户仍无台账、报销、统计与凭证权限。
+
+新版采用自由填写付款人和固定人民币记账额，无提交、审批或分次报销。历史数据不会自动按最新汇率转换，也不会用申请人推断付款人。历史未核对数量在页面及导出可见。后端独立新增 API，默认停用旧费用写接口；旧读取和旧附件继续可用。详见 [支出台账迁移与验证说明](支出台账迁移与验证说明.md)。

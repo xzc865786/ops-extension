@@ -11,6 +11,7 @@ from app.db.models.expense import (
     ExpenseEvent,
 )
 from app.db.models.manual import ManualConfigVersion, ManualFile
+from app.db.models.ledger import RateQuote, ExpenseRecord, Reimbursement, ReimbursementItem, LedgerAttachment, LedgerEvent
 
 __all__ = [
     "ExtensionUser",

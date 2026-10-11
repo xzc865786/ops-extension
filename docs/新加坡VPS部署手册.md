@@ -73,9 +73,9 @@ docker compose ps
 docker compose logs --tail=80 ops-backend ops-frontend ops-db minio createbuckets
 ```
 
-后端容器启动命令会执行 `alembic upgrade head` 和 `python -m scripts.seed_defaults`。`createbuckets` 是一次性任务，正常运行完后显示 `Exited (0)`；前端、后端、数据库和 MinIO 应保持运行。初次构建会下载依赖与镜像。
+后端容器启动命令会执行 `alembic upgrade head`，不再自动运行旧主数据种子。`createbuckets` 是一次性任务，正常运行完后显示 `Exited (0)`；前端、后端、数据库和 MinIO 应保持运行。初次构建会下载依赖与镜像。
 
-`seed_defaults` 会添加**示例付款账户**。正式办理报账前，在页面“报账管理 → 主数据 → 付款账户”中核对并禁用或替换示例账户，不要将示例值用于实际付款。
+新版支出台账无需主数据种子即可录入；旧主数据保留用于历史读取。`seed_defaults` 只供旧流程显式维护，不应在新版发布时运行。已有费用数据的发布、盘点及回退步骤见 [支出台账迁移与验证说明](./支出台账迁移与验证说明.md)。
 
 从 VPS 本机验证：
 

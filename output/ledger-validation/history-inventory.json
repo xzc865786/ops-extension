@@ -1,0 +1,42 @@
+{
+  "items": [
+    {
+      "id": 2,
+      "claim_no": "DRYRUN-HKD",
+      "expense_date": "2026-09-01",
+      "status": "CANCELLED",
+      "currency": "HKD",
+      "amount": "0.00",
+      "description": null,
+      "category": "CDN",
+      "payment_count": 0,
+      "paid_total": "0.00",
+      "anomalies": [
+        "其他历史币种",
+        "零或负金额",
+        "原单已取消"
+      ],
+      "attachment_count": 0,
+      "record_id": null
+    },
+    {
+      "id": 1,
+      "claim_no": "DRYRUN-USD",
+      "expense_date": "2026-09-01",
+      "status": "PAID",
+      "currency": "USD",
+      "amount": "20.00",
+      "description": null,
+      "category": "CDN",
+      "payment_count": 0,
+      "paid_total": "0.00",
+      "anomalies": [
+        "已付状态与流水不一致"
+      ],
+      "attachment_count": 0,
+      "record_id": null
+    }
+  ],
+  "unconfirmed_count": 2,
+  "read_only": true
+}

@@ -1,5 +1,8 @@
 from datetime import date
 from decimal import Decimal
+import pytest
+
+pytestmark = pytest.mark.usefixtures("legacy_rollback_writes")
 
 from tests.conftest import login_as, make_user
 

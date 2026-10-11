@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Query, UploadFile, Request
 from sqlalchemy.orm import Session
 
 from app.attachments.minio_client import get_storage
@@ -25,7 +25,14 @@ from app.expenses.schemas import (
     SupplierOut,
 )
 
-router = APIRouter(prefix="/ext/api/v1/admin", tags=["expenses"])
+def legacy_write_guard(request: Request, admin: CurrentUser = Depends(require_admin)):
+    from app.config import get_settings
+    from app.common.errors import conflict
+    if request.method not in ("GET", "HEAD", "OPTIONS") and not get_settings().legacy_expense_writes_enabled:
+        raise conflict("请使用新版支出记录；历史单据仅供查阅", "LEGACY_EXPENSE_READ_ONLY")
+
+
+router = APIRouter(prefix="/ext/api/v1/admin", tags=["expenses"], dependencies=[Depends(legacy_write_guard)])
 
 
 def _detail_out(claim) -> dict:

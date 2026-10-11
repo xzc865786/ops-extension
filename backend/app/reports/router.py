@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response as FastAPIResponse
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -9,7 +9,11 @@ from app.db.session import get_db
 from app.deps import CurrentUser, require_admin
 from app.reports import service
 
-router = APIRouter(prefix="/ext/api/v1/admin/reports", tags=["reports"])
+def legacy_scope(response: FastAPIResponse):
+    response.headers["X-Report-Scope"] = "legacy-claims-original-currency"
+
+
+router = APIRouter(prefix="/ext/api/v1/admin/reports", tags=["reports"], dependencies=[Depends(legacy_scope)])
 
 
 def report_params(
@@ -88,10 +92,10 @@ def export_report(
         return Response(
             content=service.to_xlsx(selected),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f"attachment; filename=expense-report-{span}.xlsx"},
+            headers={"Content-Disposition": f"attachment; filename=expense-report-{span}.xlsx", "X-Report-Scope": "legacy-claims-original-currency"},
         )
     return Response(
         content=service.to_csv(sheets[view], service.EXPORT_HEADERS[view]),
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f"attachment; filename=expense-{view}-{span}.csv"},
+        headers={"Content-Disposition": f"attachment; filename=expense-{view}-{span}.csv", "X-Report-Scope": "legacy-claims-original-currency"},
     )

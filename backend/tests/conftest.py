@@ -85,3 +85,9 @@ def login_as(client, db, user):
     sess = create_session(db, user)
     client.cookies.set("ops_session", str(sess.id), path="/ext")
     return sess
+
+
+@pytest.fixture()
+def legacy_rollback_writes(monkeypatch):
+    """Exercise preserved legacy behavior only under the explicit rollback switch."""
+    monkeypatch.setattr(get_settings(), "legacy_expense_writes_enabled", True)

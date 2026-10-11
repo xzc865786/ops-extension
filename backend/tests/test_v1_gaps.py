@@ -1,4 +1,7 @@
 from datetime import date
+import pytest
+
+pytestmark = pytest.mark.usefixtures("legacy_rollback_writes")
 from decimal import Decimal
 from io import BytesIO
 from unittest.mock import MagicMock, patch

@@ -11,6 +11,7 @@ from app.auth.bridge import router as auth_router
 from app.common.errors import AppError
 from app.config import get_settings
 from app.expenses.router import router as expenses_router
+from app.ledger.router import router as ledger_router
 from app.manual.router import admin_router as manual_admin_router, public_router as manual_public_router
 from app.reports.router import router as reports_router
 from app.tickets.form_router import router as ticket_form_router
@@ -59,6 +60,7 @@ app.include_router(auth_router)
 app.include_router(ticket_form_router)
 app.include_router(tickets_router)
 app.include_router(expenses_router)
+app.include_router(ledger_router)
 app.include_router(reports_router)
 app.include_router(attachments_router)
 app.include_router(manual_public_router)

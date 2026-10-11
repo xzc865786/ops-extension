@@ -32,9 +32,8 @@ async function handleLogout() {
           <RouterLink class="nav-link" to="/tickets">我的工单</RouterLink>
           <template v-if="auth.isAdmin">
             <RouterLink class="nav-link" to="/admin/tickets">工单管理</RouterLink>
-            <RouterLink class="nav-link" to="/admin/expenses">报账管理</RouterLink>
-            <RouterLink class="nav-link" to="/admin/suppliers">主数据</RouterLink>
-            <RouterLink class="nav-link" to="/admin/reports">费用报表</RouterLink>
+            <RouterLink class="nav-link" to="/admin/expenses">支出记录</RouterLink>
+            <RouterLink class="nav-link" to="/admin/reports">月度开支</RouterLink>
             <RouterLink class="nav-link" to="/admin/manual">手册配置</RouterLink>
           </template>
         </nav>

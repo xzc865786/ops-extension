@@ -65,6 +65,7 @@ services:
       MINIO_USE_SSL: "false"
       ATTACHMENT_MAX_BYTES: "20971520"
       LOG_LEVEL: INFO
+      LEGACY_EXPENSE_WRITES_ENABLED: ${LEGACY_EXPENSE_WRITES_ENABLED:-false}
     depends_on:
       ops-db:
         condition: service_healthy

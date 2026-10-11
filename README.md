@@ -1,6 +1,6 @@
 # Ops Extension V1
 
-独立运营扩展服务：工单、报账、费用报表。通过同域 `/ext/*` 嵌入 Sub2API，**不修改** Sub2API 源码。
+独立运营扩展服务：工单、支出记录、月度开支。通过同域 `/ext/*` 嵌入 Sub2API，**不修改** Sub2API 源码。
 
 ## 能力概览
 
@@ -8,9 +8,9 @@
 |------|------|
 | Auth Bridge | Bootstrap 用 Sub2API `GET /api/v1/auth/me`（字段 `data.id`）签发 HttpOnly Session（`Path=/ext`） |
 | 工单 | 用户按分类填写对应表单建单（固定 P2）/回复/关单/附件；管理员认领·释放·接管·内部备注·改状态/分类/优先级；**工单表单配置**（仅 admin）可在后台调整各分类的字段、必填、提示和显示条件，带版本历史与回滚 |
-| 报账 | 仅 admin；供应商/成本中心/付款账户；公司直付 vs 个人垫付；允许申请人=审批人；分次付款、完整发票信息和附件 |
+| 支出记录 | 仅 admin；自由填写付款人、CNY/USD、固定人民币记账额、付款凭证；保存即记账，同付款人可整批报销，历史单据只读并人工确认迁入 |
 | 手册配置 | 仅 admin；在后台修改使用手册的推荐模型与过滤规则、Claude 角色映射、安装来源、WorkBuddy 参数、CC Switch 下载（含安装包上传）、站点地址、客服 QQ 群、公告、分组说明页（可从 Sub2API 同步分组和倍率）；保存即生效，带版本历史、对比与回滚 |
-| 报表 | 按费用发生日期区间筛选（本月/上月/本季度/上季度/本年/上年/近 12 个月快捷选项或自选区间）；按币种分别展示月度、分类/供应商/成本中心、付款和发票统计；明细与汇总 CSV/Excel |
+| 月度开支 | 按支出月份汇总已保存人民币金额，分类及人员汇总、完整明细；导出三张中文 Excel 工作表，历史未确认记录有明确提示 |
 
 ## 站点首页
 
@@ -43,7 +43,7 @@ docker compose up -d --build
 # 主站 Nginx 请 include nginx/ext.conf.example
 ```
 
-启动后 backend 容器会执行 `alembic upgrade head` 与种子脚本。
+启动后 backend 容器会执行 `alembic upgrade head`。新版不再自动运行财务主数据种子脚本，不修改已存在的历史主数据，也无需预建数据才能记账。
 
 ### 清空 Ops 数据库
 
@@ -54,7 +54,7 @@ python -m scripts.rollback_all_data
 python -m scripts.rollback_all_data --execute --confirm-db huima_ops
 ```
 
-第一条命令只显示各表行数；第二条命令会在一个事务中清空 `public` 下除 `alembic_version` 外的所有表，并重置自增序列。执行前请备份并核对连接的数据库名；这会删除工单、报账、主数据、用户快照、会话及数据库中的附件记录，保留表结构和迁移版本。MinIO 中的附件文件不在数据库内，不会被此脚本删除。后端容器重新启动时会再次运行 `seed_defaults`，补回默认成本中心和示例付款账户。
+第一条命令只显示各表行数；第二条命令会在一个事务中清空 `public` 下除 `alembic_version` 外的所有表，并重置自增序列。仅用于可丢弃测试库，不能用于新版升级或回退；这会删除工单、新旧财务数据、主数据、用户快照、会话及数据库中的附件记录。MinIO 文件不会被此脚本删除。新版后端启动不再自动补入财务主数据。
 
 Docker Compose 部署时，更新后端镜像后在维护窗口停止后端写入，再用一次性容器执行：
 
@@ -110,15 +110,15 @@ DEV_AUTH_BYPASS=true ./scripts/smoke_test.sh
 |------|------------|-----|
 | 我的工单 | user | `https://<domain>/ext/auth/bootstrap?next=/ext/app/tickets` |
 | 工单管理 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/tickets` |
-| 报账管理 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/expenses` |
-| 费用报表 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/reports` |
+| 支出记录 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/expenses` |
+| 月度开支 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/reports` |
 | 手册配置 | admin | `https://<domain>/ext/auth/bootstrap?next=/ext/app/admin/manual` |
 
 建议 `hide_open_button=true`。iframe 会自动追加 `user_id`/`token`/`theme`/`lang`/`ui_mode`；Bootstrap 校验后 302 到干净 URL（无 token）。**菜单必须指向 bootstrap**（不要直链 `/ext/app/...`），以便无入库 token 时仍能刷新身份快照与 Session。
 
 ### 前端视觉适配
 
-扩展前端按 Sub2API 官方主线的浅色、深色设计体系维护独立样式，不引用宿主 CSS。Bootstrap 保存的 `ops_theme` Cookie 会在页面渲染前应用；没有主题参数时默认浅色。iframe 中隐藏扩展自身导航，由 Sub2API 侧边栏的四个自定义菜单切换模块；独立打开扩展时仍显示自身导航。“主数据”从“报账管理”页面进入。视觉基准参考 [Sub2API 的样式定义](https://github.com/Wei-Shaw/sub2api/blob/a3eb7ef302961cba716dc78b39b93b60c467db0e/frontend/src/style.css)，宿主升级后可据此核对控件与主题差异。
+扩展前端按 Sub2API 官方主线的浅色、深色设计体系维护独立样式，不引用宿主 CSS。Bootstrap 保存的 `ops_theme` Cookie 会在页面渲染前应用；没有主题参数时默认浅色。iframe 中隐藏扩展自身导航，由 Sub2API 侧边栏的四个自定义菜单切换模块；独立打开扩展时仍显示自身导航。历史主数据从“支出记录 → 历史单据”进入。视觉基准参考 [Sub2API 的样式定义](https://github.com/Wei-Shaw/sub2api/blob/a3eb7ef302961cba716dc78b39b93b60c467db0e/frontend/src/style.css)，宿主升级后可据此核对控件与主题差异。
 
 ## Auth Bridge 要点
 
@@ -154,9 +154,11 @@ V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留�
 - 附件 ≤20MB；白名单：图片 / PDF / `.log`/`.txt`
 - 附件下载默认经 **后端鉴权流式代理**（不依赖浏览器直连 compose 内 `minio:9000`）。仅当配置 `MINIO_PUBLIC_ENDPOINT` 或 `MINIO_PUBLIC_URL` 时才 302 到公网 Presigned URL
 - 工单号按日序列分配（PG advisory lock + unique 冲突重试），避免并发撞号 500
-- 报账：`COMPANY_DIRECT` / `PERSONAL_ADVANCE`；结构化 `payment_accounts`；默认 CNY
+- 支出记录：付款人自由填写，默认 CNY 和需要报销；保存立即计入人民币月报，无审批步骤
 
-## 报账付款与报表口径
+## 旧单据付款与报表口径（历史兼容）
+
+以下为旧接口语义。默认仅保留读取，写入返回 409 `LEGACY_EXPENSE_READ_ONLY`，新页面使用独立台账 API。旧报表响应标注 `X-Report-Scope: legacy-claims-original-currency`，不代表新台账人民币总额。
 
 - 付款仅对 `APPROVED` 单开放；金额须大于零、精确到分，币种与单据相同且不得超过未付余额。允许分次付款，累计恰好付清时自动转为 `PAID`；`PAID` 不再接收付款。
 - `POST /ext/api/v1/admin/expenses/{id}/payments` 示例：`{"amount":"30.00","reference_no":"bank-ref"}`。省略 `currency` 时继承单据币种。旧请求的 `mark_paid=true` 不能使不足额付款变为已付，不足额时返回 `PAYMENT_INCOMPLETE`。
@@ -166,9 +168,11 @@ V1 鉴权只看 `sub2api_role`（`user`|`admin`）；`extension_role` 列保留�
 - **报表 API 响应结构已调整**：`summary` 返回 `{"start":"2026-09-01","end":"2026-09-30","currencies":[{"currency":"CNY","count":1,"total_amount":100.0,"tax_amount":6.0,"by_status":{"APPROVED":{"count":1,"amount":100.0}}}]}`（不再返回 `period/year/month`）；付款、发票接口也使用 `currencies` 数组。分类、供应商、成本中心及新增 `by-month` 返回每行含 `currency` 的数组。以上接口支持可选 `currency` 筛选，前后端须配套部署。
 - `GET /ext/api/v1/admin/reports/export` 支持 `format=csv|xlsx` 与 `view=detail|summary|month|category|supplier|cost_center|payment|invoice|all`。CSV 每次选一种视图；Excel 使用 `view=all` 可一次导出全部工作表。省略 `view` 继续导出明细；空结果保留表头。明细导出含 `payment_reconciliation_required`，历史付款异常须先核对。
 
-## 历史付款核对与发布
+## 旧付款核对工具（历史资料）
 
-1. 发布前备份 Ops 数据库，并在独立环境安装后端锁定依赖、执行迁移及测试。此版本不新增数据库列，也不自动修复历史数据。
+本轮实施未运行以下旧数据修正流程。新台账迁移与回退按 [支出台账迁移与验证说明](docs/支出台账迁移与验证说明.md) 执行，历史单据只读盘点使用 `python -m scripts.inventory_expenses`。
+
+1. 发布前备份 Ops 数据库，并在独立环境安装后端锁定依赖、执行迁移及测试。旧版付款核对本身不新增数据库列；新版台账另行追加 008 迁移，不自动修复旧数据。
 2. 从 `backend` 目录运行 `python -m scripts.reconcile_payments audit > payment-audit.csv`。该命令只读，列出已付未足额、超付、付款币种不符的单据。业务人员逐单核对其他付款凭证；有异常且未核清时，付款报表不能作为财务验收结果。
 3. 对确认无其他付款的 `PAID` 单，用 `restore_approved` 恢复为 `APPROVED`；对有外部付款凭证的，用 `record_payment` 补录。仅允许处理核对清单中指定的单号，并校验 `expected_amount`、`expected_paid`。清单列为 `claim_no,expected_amount,expected_paid,action,reason,reference_no,payment_date`；补录必须提供交易号及带时区的 ISO 付款时间。超付和币种不符须另行调查，不通过此工具猜测修正。
 4. 核对后运行 `python -m scripts.reconcile_payments apply --approved-list reviewed.csv --actor-user-id <extension_admin_id>`。整份清单在一次事务内执行；任何金额变化或校验失败都回滚，成功写入 `PAYMENT_RECONCILED` 事件。再次运行 `audit` 并复核报表。上线时同步发布后端与前端；如需回滚代码，先保留数据库备份和修正清单，历史修正只能依据事件和凭证逐单反向处理。
@@ -183,3 +187,16 @@ ops-extension/
 ├── scripts/          # seed + smoke
 └── docker-compose.yml
 ```
+
+
+## 支出记录与月度开支
+
+日常只需要“支出记录”和“月度开支”两个入口，原 bootstrap URL 保持不变。填写付款人（初始为空）、支出日期、用途、原币金额；美元自动采用录入时最新可用参考汇率，也可手填人民币结果。保存后金额固定，编辑初始化不查询新汇率。年付全额计入支出月份。
+
+参考汇率由后端代理 [Frankfurter v2](https://frankfurter.dev/) 获取，按日更新，缓存最多 30 分钟，并显示来源、有效日期和获取时间。显式刷新失败会显示失败，不将旧缓存标成新报价；网络失败仍可手填人民币保存，不使用默认汇率 1。
+
+报销只登记已经偿还的垫款，不执行转账。可将同一付款人的 CNY/USD 待报销记录一起结清；实报额不同需填写差额说明，按记账额比例和最大余数法逐笔分配到分。更正已报销核心金额等信息须先撤销整个批次，原批次、凭证和事件保留。
+
+月度开支按支出日期汇总保存的人民币金额。实际已报销额是这些支出的有效报销分配额，不是该月的转账流水。Excel 导出完整筛选结果，使用“支出明细、分类汇总、人员汇总”三张中文工作表。未核对历史单据不计入新统计，页面与导出显示数量。
+
+新接口前缀：`/ext/api/v1/admin/expense-records` 与 `/ext/api/v1/admin/reimbursements`。全部接口和凭证下载保持管理员权限；金额通过十进制字符串传递，编辑、作废及撤销需版本号，创建和报销需幂等键。迁移、兼容性、隔离验证和回退步骤见 [支出台账迁移与验证说明](docs/支出台账迁移与验证说明.md)。本次没有部署生产。
