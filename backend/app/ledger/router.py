@@ -47,7 +47,18 @@ def meta(db: Session = Depends(get_db)):
     return {"categories": [{"value": k, "label": v} for k, v in service.EXPENSE_CATEGORY_LABELS.items() if k != "STAFF_ADVANCE"],
             "payers": db.scalars(select(ExpenseRecord.payer).distinct().order_by(ExpenseRecord.payer)).all(),
             "merchants": db.scalars(select(ExpenseRecord.merchant).where(ExpenseRecord.merchant != "").distinct().order_by(ExpenseRecord.merchant)).all(),
+            "recent_payers": service.recent_payers(db), "merchant_categories": service.merchant_categories(db),
             "today": rates.today().isoformat()}
+
+
+@router.get("/expense-records/pending-payers")
+def pending_payers(db: Session = Depends(get_db)):
+    return service.pending_payers(db)
+
+
+@router.get("/expense-records/pending")
+def pending_records(payer: str = Query(..., min_length=1, max_length=100), db: Session = Depends(get_db)):
+    return service.pending_for_payer(db, payer)
 
 
 @router.get("/expense-records/rate")
@@ -86,6 +97,7 @@ def listing(params: dict = Depends(filters), page: int = Query(1, ge=1), page_si
     total = db.scalar(select(func.count()).select_from(query.order_by(None).subquery()))
     rows = db.execute(query.offset((page-1)*page_size).limit(page_size)).all()
     return {"items": [service.record_output(*r) for r in rows], "total": total, "page": page, "page_size": page_size,
+            "summary": service.summarize(db, query),
             "filters": params, "unconfirmed_count": service.unconfirmed_count(db)}
 
 

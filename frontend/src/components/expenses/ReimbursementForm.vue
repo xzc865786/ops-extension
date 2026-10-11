@@ -8,6 +8,8 @@ const emit = defineEmits<{ done: []; cancel: [] }>()
 const expected = computed(() => totalMoney(props.records.map(r => r.rmb_amount)))
 const form = reactive({ actual_amount: expected.value, reimbursement_date: beijingToday(), notes: '', difference_reason: '' })
 const differs = computed(() => { try { return cents(form.actual_amount) !== cents(expected.value) } catch { return true } })
+// Allocation preview is required only when the actual total differs from what is owed.
+const canConfirm = computed(() => !!preview.value || !differs.value)
 const preview = ref<any[] | null>(null), error = ref(''), busy = ref(false), file = ref<File | null>(null), savedBatch = ref<number | null>(null)
 const key = crypto.randomUUID()
 let generation = 0, submittedBody: any = null
@@ -19,7 +21,7 @@ async function showPreview() {
   catch (e) { error.value = errorText(e) } finally { busy.value = false }
 }
 async function confirm() {
-  if (busy.value || (!preview.value && !savedBatch.value && !submittedBody)) return
+  if (busy.value || (!canConfirm.value && !savedBatch.value && !submittedBody)) return
   busy.value = true; error.value = ''
   try {
     if (!savedBatch.value) { submittedBody ||= body(); const { data } = await api.post('/admin/reimbursements', submittedBody); savedBatch.value = data.id }
@@ -44,6 +46,6 @@ async function confirm() {
       <div><label for="reimbursement-proof" class="input-label">转账凭证（选填）</label><input id="reimbursement-proof" type="file" accept="image/*,.pdf,.txt,.log" @change="file = ($event.target as HTMLInputElement).files?.[0] || null" /></div>
     </fieldset>
     <div v-if="preview" class="table-wrap"><table class="table"><thead><tr><th>支出</th><th>应报销</th><th>实报分配</th><th>差额</th></tr></thead><tbody><tr v-for="p in preview" :key="p.id"><td>{{ p.title }}</td><td>{{ p.expected_amount }}</td><td>{{ p.actual_amount }}</td><td>{{ p.difference }}</td></tr></tbody></table></div>
-    <div class="flex flex-wrap gap-2"><button v-if="!savedBatch && !submittedBody" type="button" class="btn-secondary" :disabled="busy" @click="showPreview">查看逐笔分配</button><button class="btn-primary" :disabled="busy || (!preview && !savedBatch && !submittedBody)">{{ busy ? '正在处理…' : savedBatch ? '重试上传凭证' : submittedBody ? '重试同一笔登记' : '确认已报销' }}</button><button type="button" class="btn-ghost" :disabled="busy" @click="savedBatch ? emit('done') : emit('cancel')">关闭</button></div>
+    <div class="flex flex-wrap gap-2"><button v-if="!savedBatch && !submittedBody" type="button" class="btn-secondary" :disabled="busy" @click="showPreview">查看逐笔分配</button><button class="btn-primary" :disabled="busy || (!canConfirm && !savedBatch && !submittedBody)">{{ busy ? '正在处理…' : savedBatch ? '重试上传凭证' : submittedBody ? '重试同一笔登记' : '确认已报销' }}</button><button type="button" class="btn-ghost" :disabled="busy" @click="savedBatch ? emit('done') : emit('cancel')">关闭</button></div>
   </form>
 </template>

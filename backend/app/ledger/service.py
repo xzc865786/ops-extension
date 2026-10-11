@@ -1,13 +1,14 @@
 import hashlib
 import json
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
-from sqlalchemy import select, update, func, or_, text
+from sqlalchemy import and_, case, select, update, func, or_, text
 
 from app.common.errors import bad_request, conflict, not_found
 from app.common.enums import EXPENSE_CATEGORY_LABELS
 from app.db.models.expense import ExpenseClaim, ExpenseAttachment, ExpensePayment
+from app.db.models.user import ExtensionUser
 from app.db.models.ledger import ExpenseRecord, RateQuote, Reimbursement, ReimbursementItem, LedgerEvent, LedgerAttachment
 from app.ledger import rates
 
@@ -254,7 +255,9 @@ def attachments(db, *, record_id=None, batch_id=None):
 
 
 def batch_detail(db, batch):
+    revoker = db.get(ExtensionUser, batch.revoked_by) if batch.revoked_by else None
     return {**serialize(batch), "attachments": attachments(db, batch_id=batch.id),
+            "revoked_by_name": revoker.username_snapshot if revoker else None,
             "items": [serialize(i) for i in db.scalars(select(ReimbursementItem).where(ReimbursementItem.batch_id == batch.id).order_by(ReimbursementItem.record_id))]}
 
 
@@ -291,6 +294,66 @@ def query_records(filters, actor=None):
         keyword = filters["keyword"].replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         q = q.where(or_(*(getattr(ExpenseRecord, k).ilike("%"+keyword+"%", escape="\\") for k in ("title", "merchant", "notes", "payer"))))
     return q.order_by(ExpenseRecord.expense_date.desc(), ExpenseRecord.id.desc())
+
+
+PENDING = and_(ExpenseRecord.active.is_(True), ExpenseRecord.needs_reimbursement.is_(True), ReimbursementItem.id.is_(None))
+
+
+def summarize(db, query):
+    """Count and RMB totals for the complete filtered query, independent of paging."""
+    pending = case((PENDING, ExpenseRecord.rmb_amount), else_=0)
+    sub = query.order_by(None).with_only_columns(ExpenseRecord.rmb_amount.label("rmb"), pending.label("pending")).subquery()
+    count, total, owed = db.execute(select(func.count(), func.sum(sub.c.rmb), func.sum(sub.c.pending))).one()
+    return {"count": count, "total_amount": dec(Decimal(str(total or 0))), "pending_amount": dec(Decimal(str(owed or 0)))}
+
+
+def pending_query():
+    return (select(ExpenseRecord).outerjoin(ReimbursementItem, ReimbursementItem.active_record_id == ExpenseRecord.id)
+            .where(PENDING))
+
+
+def pending_payers(db):
+    sub = pending_query().with_only_columns(ExpenseRecord.payer, ExpenseRecord.rmb_amount).subquery()
+    rows = db.execute(select(sub.c.payer, func.count(), func.sum(sub.c.rmb_amount)).group_by(sub.c.payer)).all()
+    result = [{"payer": payer, "count": count, "amount": Decimal(str(amount))} for payer, count, amount in rows]
+    result.sort(key=lambda r: (-r["amount"], r["payer"]))
+    return [{**r, "amount": dec(r["amount"])} for r in result]
+
+
+def pending_for_payer(db, payer):
+    rows = db.scalars(pending_query().where(ExpenseRecord.payer == payer.strip()).order_by(ExpenseRecord.id)).all()
+    return [record_output(r) for r in rows]
+
+
+def previous_range(filters):
+    """The period right before the selected one: whole months shift by months, otherwise by equal days."""
+    start, end = filters.get("date_from"), filters.get("date_to")
+    if start and end:
+        start, end = date.fromisoformat(start), date.fromisoformat(end)
+    elif filters.get("month"):
+        start = date.fromisoformat(filters["month"] + "-01")
+        end = date(start.year + (start.month == 12), start.month % 12 + 1, 1) - timedelta(days=1)
+    else:
+        return None
+    if start.day == 1 and (end + timedelta(days=1)).day == 1:
+        months = (end.year - start.year) * 12 + end.month - start.month + 1
+        index = start.year * 12 + start.month - 1 - months
+        return date(index // 12, index % 12 + 1, 1), start - timedelta(days=1)
+    return start - (end - start) - timedelta(days=1), start - timedelta(days=1)
+
+
+def recent_payers(db, limit=5):
+    latest = func.max(ExpenseRecord.id)
+    return db.scalars(select(ExpenseRecord.payer).group_by(ExpenseRecord.payer).order_by(latest.desc()).limit(limit)).all()
+
+
+def merchant_categories(db):
+    result = {}
+    for merchant, category in db.execute(select(ExpenseRecord.merchant, ExpenseRecord.category)
+                                         .where(ExpenseRecord.merchant != "", ExpenseRecord.active.is_(True))
+                                         .order_by(ExpenseRecord.id.desc())):
+        result.setdefault(merchant, category)
+    return result
 
 
 def record_output(row, item=None, batch=None):

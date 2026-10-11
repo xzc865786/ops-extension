@@ -8,6 +8,15 @@ export interface ExpenseRecord {
   needs_reimbursement: boolean; active: boolean; notes: string; version: number; status: string; created_by: number
   batch_id: number | null; reimbursement_date: string | null; actual_reimbursement: string | null; difference: string | null; legacy_claim_id: number | null
 }
+export interface LedgerMeta {
+  categories: { value: string; label: string }[]; payers: string[]; merchants: string[]
+  recent_payers: string[]; merchant_categories: Record<string, string>
+}
+export const emptyMeta = (): LedgerMeta => ({ categories: [], payers: [], merchants: [], recent_payers: [], merchant_categories: {} })
+export interface ListSummary { count: number; total_amount: string; pending_amount: string }
+export interface PendingPayer { payer: string; count: number; amount: string }
+/** One reimbursement batch accepts at most this many records (backend BatchInput limit). */
+export const BATCH_LIMIT = 100
 export function errorText(error: any, fallback = '操作失败，请重试'): string {
   const detail = error.response?.data?.detail
   if (Array.isArray(detail)) {

@@ -114,7 +114,7 @@ try {
     await fresh.screenshot({ path: resolve(process.env.OPS_RELEASE_SCREENSHOT), fullPage: true })
   }
   await frame.getByRole('link', { name: /返回支出记录/ }).click()
-  await frame.getByRole('link', { name: '详情', exact: true }).click()
+  await frame.getByRole('link', { name: record.title, exact: true }).click()
   await frame.getByRole('heading', { name: record.title, exact: true }).waitFor()
   assert.deepEqual(errors, [])
   await freshCtx.close()

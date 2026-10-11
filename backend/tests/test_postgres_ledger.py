@@ -68,6 +68,23 @@ def test_postgres_date_range_includes_both_boundaries(pg):
         result = reports.monthly(db, filters, actor)
         assert result['total_amount'] == '50.00'
         assert {row['id'] for row in result['items']} == {first, second.id}
+        assert result['previous_range'] == ['2025-12-29', '2025-12-30'] and result['previous_total_amount'] == '0.00'
+
+
+def test_postgres_summary_pending_payers_and_suggestions(pg):
+    migrate(pg, 'head')
+    factory = sessionmaker(pg, expire_on_commit=False, autoflush=False)
+    actor, _, _ = actor_and_record(factory, amount='20', merchant='阿里云', category='CDN')
+    with factory() as db:
+        service.create_record(db, actor, RecordCreate(title='公司直付', expense_date='2026-10-02', payer='李四', amount='5.50',
+                                                      needs_reimbursement=False, merchant='阿里云', category='CLOUD_SERVER', idempotency_key=str(uuid.uuid4())))
+        service.create_record(db, actor, RecordCreate(title='旧垫付', expense_date='2025-01-01', payer='张三', amount='0.30', idempotency_key=str(uuid.uuid4())))
+        query = service.query_records({'month': '', 'voided': False}, actor)
+        assert service.summarize(db, query) == {'count': 3, 'total_amount': '25.80', 'pending_amount': '20.30'}
+        assert service.pending_payers(db) == [{'payer': '张三', 'count': 2, 'amount': '20.30'}]
+        assert len(service.pending_for_payer(db, '张三')) == 2
+        assert service.recent_payers(db) == ['张三', '李四']
+        assert service.merchant_categories(db) == {'阿里云': 'CLOUD_SERVER'}
 
 
 def test_fresh_upgrade_and_empty_downgrade(pg):

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import ts from 'typescript'
 const source = readFileSync(new URL('../../src/utils/expenseMoney.ts', import.meta.url), 'utf8')
 const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText
-const { beijingToday, cents, convert, totalMoney, conversionController } = await import('data:text/javascript;base64,' + Buffer.from(js).toString('base64'))
+const { beijingToday, cents, convert, totalMoney, conversionController, yuan, signedCents } = await import('data:text/javascript;base64,' + Buffer.from(js).toString('base64'))
 const quote = rate => ({ id: 'quote-'+rate, rate, effective_date: '2026-10-09', fetched_at: '2026-10-11T00:00:00Z', source: 'test' })
 const state = () => ({ currency: 'USD', amount: '20', rmb_amount: '', amount_mode: 'AUTO', quote: null, pendingDecision: false, loading: false, error: '' })
 function pending() { let resolve, reject; const promise = new Promise((a,b) => { resolve=a; reject=b }); return {promise, resolve, reject} }
@@ -51,4 +51,8 @@ test('offline still permits manual value and explicit refresh clears fake rates'
   const s=state(), control=conversionController(s, async () => { throw new Error('offline') })
   await control.refresh(); assert.ok(s.error); assert.equal(s.quote,null)
   control.setRmb('143.26'); assert.equal(s.rmb_amount,'143.26'); assert.equal(s.amount_mode,'MANUAL')
+})
+test('display amounts group thousands and report sums accept zero and negatives', () => {
+  assert.equal(yuan('1234567.5'), '¥ 1,234,567.50'); assert.equal(yuan('-1.00'), '-¥ 1.00'); assert.equal(yuan('999'), '¥ 999.00'); assert.equal(yuan(null), '—')
+  assert.equal(signedCents('0.00'), 0n); assert.equal(signedCents('-1.5'), -150n); assert.throws(() => signedCents('1e3'))
 })

@@ -28,7 +28,15 @@ def monthly(db, filters, actor):
                 person["pending"] += r.rmb_amount
     def output(values):
         return [{k: service.dec(v) if isinstance(v, Decimal) else v for k, v in row.items()} for row in values]
+    pending = sum((r.rmb_amount for r, i, _ in rows if r.needs_reimbursement and not i), Decimal(0))
+    previous = service.previous_range(filters)
+    previous_total = None
+    if previous:
+        scope = {**filters, "month": "", "date_from": previous[0].isoformat(), "date_to": previous[1].isoformat()}
+        previous_total = service.dec(sum((r.rmb_amount for r, _, _ in db.execute(service.query_records(scope, actor))), Decimal(0)))
     return {"total_amount": service.dec(total), "count": len(items), "items": items,
+            "pending_amount": service.dec(pending), "previous_total_amount": previous_total,
+            "previous_range": [d.isoformat() for d in previous] if previous else None,
             "categories": output(categories.values()), "people": output(people.values()),
             "filters": filters, "unconfirmed_count": service.unconfirmed_count(db),
             "scope": "按支出日期筛选；实际已报销额为这些支出的有效报销分配额，不是所选期间的转账流水"}

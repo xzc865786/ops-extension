@@ -61,3 +61,18 @@ export function conversionController(state: ConversionState, fetchQuote: (refres
   function keepManual() { state.pendingDecision = false }
   return { setAmount, setRmb, setCurrency, refresh, keepManual, dispose: invalidate }
 }
+/** Display-only: thousands separators on a decimal string, e.g. "1234.5" → "¥ 1,234.50". */
+export function yuan(value: string | null | undefined): string {
+  if (value == null || value === '') return '—'
+  const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(value)
+  if (!match) return value
+  const [, sign, whole, fraction = ''] = match
+  return `${sign}¥ ${whole!.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${fraction.padEnd(2, '0').slice(0, 2)}`
+}
+/** Like cents() but accepts zero and negative report values such as "0.00" or "-1.00". */
+export function signedCents(value: string): bigint {
+  const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(value)
+  if (!match) throw new Error('金额格式无效')
+  const result = BigInt(match[2]!) * 100n + BigInt((match[3] || '').padEnd(2, '0'))
+  return match[1] ? -result : result
+}

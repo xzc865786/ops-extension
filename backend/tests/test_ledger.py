@@ -373,3 +373,66 @@ def test_auto_server_amount_and_nonmonetary_edit_preserve_saved_snapshot(client,
     response=client.patch(f"{ROOT}/{row['id']}",json=body)
     assert response.status_code==200,response.text
     assert response.json()['rmb_amount']=='142.00' and Decimal(response.json()['reference_rate'])==Decimal('7.10')
+
+
+def test_list_summary_covers_full_filter_not_page(client, admin):
+    for n in range(3):
+        create(client, amount=f'{n + 1}0.00')
+    create(client, amount='5.00', needs_reimbursement=False)
+    data = client.get(ROOT, params={'month': '2026-10', 'page_size': 1}).json()
+    assert len(data['items']) == 1
+    assert data['summary'] == {'count': 4, 'total_amount': '65.00', 'pending_amount': '60.00'}
+    voided = client.get(ROOT, params={'month': '2026-10', 'voided': True}).json()['summary']
+    assert voided == {'count': 0, 'total_amount': '0.00', 'pending_amount': '0.00'}
+
+
+def test_pending_payers_and_settle_all_ignore_dates(client, admin):
+    a = create(client, expense_date='2025-01-05', amount='10.00')
+    b = create(client, expense_date='2026-10-01', amount='20.00')
+    create(client, payer='李四', amount='7.00')
+    create(client, payer='李四', amount='3.00', needs_reimbursement=False)
+    settled = create(client, payer='王五', amount='9.00')
+    assert client.post(BATCH, json=batch_body([settled], actual_amount='9.00')).status_code == 201
+    voided = create(client, payer='李四', amount='1.00')
+    client.post(f"{ROOT}/{voided['id']}/void", json={'version': voided['version'], 'reason': '重复'})
+    assert client.get(ROOT + '/pending-payers').json() == [
+        {'payer': '张三', 'count': 2, 'amount': '30.00'}, {'payer': '李四', 'count': 1, 'amount': '7.00'}]
+    pending = client.get(ROOT + '/pending', params={'payer': ' 张三 '}).json()
+    assert [r['id'] for r in pending] == [a['id'], b['id']] and all(r['status'] == 'PENDING' for r in pending)
+    assert client.post(BATCH, json=batch_body(pending, actual_amount='30.00')).status_code == 201
+    assert client.get(ROOT + '/pending-payers').json() == [{'payer': '李四', 'count': 1, 'amount': '7.00'}]
+
+
+def test_meta_recent_payers_and_merchant_categories(client, admin):
+    create(client, payer='甲', merchant='阿里云', category='CDN')
+    create(client, payer='乙', merchant='阿里云', category='CLOUD_SERVER')
+    create(client, payer='甲', merchant='OpenAI', category='MODEL_API')
+    meta = client.get(ROOT + '/meta').json()
+    assert meta['recent_payers'] == ['甲', '乙']
+    assert meta['merchant_categories'] == {'OpenAI': 'MODEL_API', '阿里云': 'CLOUD_SERVER'}
+
+
+@pytest.mark.parametrize('params, previous', [
+    ({'date_from': '2026-10-01', 'date_to': '2026-10-31'}, ['2026-09-01', '2026-09-30']),
+    ({'date_from': '2026-01-01', 'date_to': '2026-03-31'}, ['2025-10-01', '2025-12-31']),
+    ({'date_from': '2026-10-05', 'date_to': '2026-10-14'}, ['2026-09-25', '2026-10-04']),
+    ({'month': '2026-03'}, ['2026-02-01', '2026-02-28']),
+    ({'month': ''}, None),
+])
+def test_monthly_previous_period_and_pending(client, admin, params, previous):
+    create(client, expense_date='2026-09-30', amount='40.00')
+    create(client, expense_date='2026-10-01', amount='100.00')
+    create(client, expense_date='2026-10-02', amount='8.00', needs_reimbursement=False)
+    report = client.get(ROOT + '/monthly', params=params).json()
+    assert report['previous_range'] == previous
+    if params.get('date_from') == '2026-10-01':
+        assert report['pending_amount'] == '100.00' and report['previous_total_amount'] == '40.00'
+    if previous is None:
+        assert report['previous_total_amount'] is None
+
+
+def test_revoked_batch_reports_revoker_name(client, admin):
+    record = create(client)
+    batch = client.post(BATCH, json=batch_body([record])).json()
+    revoked = client.post(f"{BATCH}/{batch['id']}/revoke", json={'version': batch['version'], 'reason': '登记错了'}).json()
+    assert revoked['revoked_by_name'] == '录入管理员'
