@@ -87,6 +87,30 @@ const router = createRouter({
       component: () => import('@/views/admin/reports/ReportDashboard.vue'),
     },
     {
+      path: '/admin/accounts',
+      name: 'admin-accounts',
+      meta: { admin: true },
+      component: () => import('@/views/admin/accounts/AccountList.vue'),
+    },
+    {
+      path: '/admin/accounts/new',
+      name: 'admin-account-new',
+      meta: { admin: true },
+      component: () => import('@/views/admin/accounts/AccountForm.vue'),
+    },
+    {
+      path: '/admin/accounts/:id/edit',
+      name: 'admin-account-edit',
+      meta: { admin: true },
+      component: () => import('@/views/admin/accounts/AccountForm.vue'),
+    },
+    {
+      path: '/admin/accounts/:id',
+      name: 'admin-account-detail',
+      meta: { admin: true },
+      component: () => import('@/views/admin/accounts/AccountDetail.vue'),
+    },
+    {
       path: '/admin/manual',
       name: 'admin-manual',
       meta: { admin: true },

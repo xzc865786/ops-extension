@@ -69,7 +69,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://sub2api.example.com/ext/app/
 
 健康接口应返回 `{"ok":true,"service":"ops-extension"}`；前端应返回 `200`。此时直接打开前端业务路径未必有登录会话，须通过下一步菜单的 Bootstrap 进入。确认现有站点响应头没有对 `/ext/app/*` 设置 `X-Frame-Options: DENY` 或不允许同源 iframe 的 `Content-Security-Policy`；若有，只调整这些扩展路径所需的嵌入策略，不要移除全站安全策略。
 
-## 3. 在 Sub2API 新增四个自定义菜单
+## 3. 在 Sub2API 新增五个自定义菜单
 
 以 Sub2API 官方前端当前的设置结构为准：管理员进入**系统设置 → 常规设置 → 自定义菜单**，为每项填写菜单名称、可见范围和完整 URL；`page_slug` 留空，选择 URL/iframe 页面，建议勾选“隐藏新标签页打开按钮”。设置页面还可上传 SVG 图标、调整菜单顺序。具体字段见 [Sub2API 设置页面源码](https://github.com/Wei-Shaw/sub2api/blob/a3eb7ef302961cba716dc78b39b93b60c467db0e/frontend/src/views/admin/SettingsView.vue)。
 
@@ -79,8 +79,9 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://sub2api.example.com/ext/app/
 | 工单管理 | 管理员（`admin`） | `https://sub2api.example.com/ext/auth/bootstrap?next=/ext/app/admin/tickets` |
 | 支出记录 | 管理员（`admin`） | `https://sub2api.example.com/ext/auth/bootstrap?next=/ext/app/admin/expenses` |
 | 月度开支 | 管理员（`admin`） | `https://sub2api.example.com/ext/auth/bootstrap?next=/ext/app/admin/reports` |
+| 账号记录 | 管理员（`admin`） | `https://sub2api.example.com/ext/auth/bootstrap?next=/ext/app/admin/accounts` |
 
-把示例域名统一替换为站点的真实 HTTPS 域名。**不要**手工在 URL 中追加 `token`、`user_id`、`theme` 或 `lang`，Sub2API 的 [iframe URL 构造器](https://github.com/Wei-Shaw/sub2api/blob/a3eb7ef302961cba716dc78b39b93b60c467db0e/frontend/src/utils/embedded-url.ts)会附加这些参数。不要把菜单 URL 改为 `/ext/app/...`：Ops 的 [Bootstrap 代码](../backend/app/auth/bridge.py)需要先校验 Sub2API 身份并签发自己的会话。Ops 内的历史主数据从“支出记录 → 历史单据”进入，不需要第五个菜单。
+把示例域名统一替换为站点的真实 HTTPS 域名。**不要**手工在 URL 中追加 `token`、`user_id`、`theme` 或 `lang`，Sub2API 的 [iframe URL 构造器](https://github.com/Wei-Shaw/sub2api/blob/a3eb7ef302961cba716dc78b39b93b60c467db0e/frontend/src/utils/embedded-url.ts)会附加这些参数。不要把菜单 URL 改为 `/ext/app/...`：Ops 的 [Bootstrap 代码](../backend/app/auth/bridge.py)需要先校验 Sub2API 身份并签发自己的会话。旧版报账单据只保留在数据库中，不再提供页面入口。
 
 ## 4. 登录、权限和主题的实际流程
 
@@ -98,7 +99,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://sub2api.example.com/ext/app/
 | 检查项 | 预期 |
 | --- | --- |
 | 普通用户点击“我的工单” | 直接看到工单列表，可创建工单；没有第二排 Ops 模块导航。 |
-| 管理员点击四个菜单 | 工单管理、支出记录、月度开支均能打开；历史资料由“支出记录 → 历史单据”进入。 |
+| 管理员点击五个菜单 | 工单管理、支出记录、月度开支、账号记录均能打开。 |
 | 浅色、深色、跟随系统 | iframe 内容与宿主的实际明暗模式一致；切换会重新加载页面。 |
 | 工单和报账附件 | 上传、下载成功；上传请求未被反代的大小限制拦截。 |
 | 浏览器开发者工具 | Bootstrap 返回 302，后续业务页面 URL 不带 token，`ops_session` 的 Path 为 `/ext` 且 HTTPS 下为 Secure。 |
@@ -131,7 +132,7 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://sub2api.example.com/ext/app/
 | 订单校验服务暂时不可用 | 管理员在工单详情点“查询实时状态”查看原因：Key 无效、未完成管理员合规确认，或连不上 `SUB2API_BASE_URL`。 |
 | 附件上传返回 413 | Nginx 或更前面的代理上传大小限制；本例为 `25m`，应用文件限制为 20 MB。 |
 
-对接完成后，日常升级 Ops 只需更新独立服务栈；Sub2API 的四个自定义菜单继续指向相同的 `/ext/auth/bootstrap` 路径。
+对接完成后，日常升级 Ops 只需更新独立服务栈；Sub2API 的五个自定义菜单继续指向相同的 `/ext/auth/bootstrap` 路径。
 
 
 ## 新版支出入口的兼容性

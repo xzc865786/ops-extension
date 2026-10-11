@@ -41,6 +41,7 @@ git rev-parse --short HEAD
 | `ops-backend.SUB2API_BASE_URL` | 后端容器可以访问的 Sub2API 地址。优先填现有 `https://sub2api.example.com` 并验证容器内连通；若 VPS 不允许经公网域名回连，则按对接手册使用共享 Docker 网络和真实服务名。不能填容器内的 `localhost`。 |
 | `ops-backend.PUBLIC_BASE_URL` | `https://sub2api.example.com`，不带末尾 `/`。 |
 | `ops-backend.SESSION_SECRET` | 独立随机长值，例如由 `openssl rand -hex 32` 生成。 |
+| `ops-backend.ACCOUNT_VAULT_KEY` | 账号记录的密码加密密钥，Compose 已从 `.env` 读取。用 `python3 -c "import base64,os;print(base64.b64encode(os.urandom(32)).decode())"` 生成一次，**单独备份到密码管理器等数据库备份以外的位置**；密钥丢失后已保存的密码无法找回，上线后不要更换。留空时账号记录可用，但不能保存或查看密码。 |
 | `ops-backend.COOKIE_SECURE`、`DEV_AUTH_BYPASS` | HTTPS 下保持 `COOKIE_SECURE=true`；明确设置 `DEV_AUTH_BYPASS=false`。 |
 
 宿主机 Nginx 反代时，把 `ops-frontend` 的端口映射从 `8088:80` 改为 `127.0.0.1:8088:80`，把 `ops-backend` 的 `8090:8090` 改为 `127.0.0.1:8090:8090`。MinIO 只供 Compose 内部使用，删除其 `9000:9000`、`9001:9001` 公网端口映射；确需使用控制台时再单独配置受限访问。若主站 Nginx 本身也是容器，应改用共享 Docker 网络和服务名代理，不要在 Nginx 容器中使用 `127.0.0.1` 指向 Ops。

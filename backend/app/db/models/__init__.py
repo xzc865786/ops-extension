@@ -12,6 +12,7 @@ from app.db.models.expense import (
 )
 from app.db.models.manual import ManualConfigVersion, ManualFile
 from app.db.models.ledger import RateQuote, ExpenseRecord, Reimbursement, ReimbursementItem, LedgerAttachment, LedgerEvent
+from app.db.models.account import AccountRecord, AccountEvent
 
 __all__ = [
     "ExtensionUser",
@@ -33,4 +34,6 @@ __all__ = [
     "ExpenseEvent",
     "ManualConfigVersion",
     "ManualFile",
+    "AccountRecord",
+    "AccountEvent",
 ]

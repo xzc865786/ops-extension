@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     # Dev-only: skip Sub2API and accept X-Dev-User JSON header
     dev_auth_bypass: bool = False
+    # base64 of 32 random bytes; encrypts account passwords. Keep a copy apart from database backups.
+    account_vault_key: str = ""
     # Rollback-only switch; new installations retire legacy financial writes.
     legacy_expense_writes_enabled: bool = False
 

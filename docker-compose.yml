@@ -66,6 +66,8 @@ services:
       ATTACHMENT_MAX_BYTES: "20971520"
       LOG_LEVEL: INFO
       LEGACY_EXPENSE_WRITES_ENABLED: ${LEGACY_EXPENSE_WRITES_ENABLED:-false}
+      # Encrypts account-record passwords; keep a copy apart from database backups.
+      ACCOUNT_VAULT_KEY: ${ACCOUNT_VAULT_KEY:-}
     depends_on:
       ops-db:
         condition: service_healthy

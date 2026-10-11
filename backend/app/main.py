@@ -6,6 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.accounts.router import router as accounts_router
 from app.attachments.router import router as attachments_router
 from app.auth.bridge import router as auth_router
 from app.common.errors import AppError
@@ -61,6 +62,7 @@ app.include_router(ticket_form_router)
 app.include_router(tickets_router)
 app.include_router(expenses_router)
 app.include_router(ledger_router)
+app.include_router(accounts_router)
 app.include_router(reports_router)
 app.include_router(attachments_router)
 app.include_router(manual_public_router)

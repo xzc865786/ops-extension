@@ -2,6 +2,7 @@
 
 Run with python -m tests.serve_ledger_browser. Never reads the project .env.
 """
+import base64
 import hashlib
 import os
 import tempfile
@@ -15,7 +16,8 @@ def main():
     import uvicorn
     with tempfile.TemporaryDirectory(prefix='ops-ledger-browser-') as directory:
         os.environ.update(DATABASE_URL='sqlite+pysqlite:///'+(Path(directory)/'test.db').as_posix(),
-                          DEV_AUTH_BYPASS='true', COOKIE_SECURE='false', SESSION_SECRET='isolated-browser-test')
+                          DEV_AUTH_BYPASS='true', COOKIE_SECURE='false', SESSION_SECRET='isolated-browser-test',
+                          ACCOUNT_VAULT_KEY=base64.b64encode(os.urandom(32)).decode())
         from app.config import get_settings, Settings
         Settings.model_config = {**Settings.model_config, "env_file": None}
         get_settings.cache_clear()
