@@ -46,7 +46,7 @@ async function done() { reimbursing.value = false; await load() }
         <p v-if="record.status === 'REIMBURSED'" class="alert-warning">已报销记录的金额、付款人、日期等更正，请先撤销整个报销批次。</p>
         <dl class="grid sm:grid-cols-2 gap-3"><div>支出日期：{{ record.expense_date }}</div><div>分类：{{ record.category_label }}</div><div>付款人：{{ record.payer }}</div><div>商家：{{ record.merchant || '—' }}</div><div>原币金额：{{ record.currency }} {{ record.amount }}</div><div class="font-bold">人民币记账额：¥ {{ record.rmb_amount }}</div></dl>
         <p v-if="record.currency === 'USD'" class="text-sm muted">{{ record.amount_mode === 'MANUAL' ? '已手动调整' : '自动换算' }} · {{ record.reference_rate ? `1 美元 = ${record.reference_rate} 人民币；有效日期 ${record.rate_date}；获取时间 ${record.rate_fetched_at}；来源 ${record.rate_source}` : '人工填写，无外部参考汇率' }}</p>
-        <p class="whitespace-pre-wrap">备注：{{ record.notes || '—' }}</p><RouterLink v-if="record.legacy_claim_id" :to="`/admin/expenses/history?claim=${record.legacy_claim_id}`" class="link">查看原历史单据 #{{ record.legacy_claim_id }}</RouterLink>
+        <p class="whitespace-pre-wrap">备注：{{ record.notes || '—' }}</p>
         <h2 class="section-title">付款凭证</h2><div v-for="a in record.attachments" :key="a.source + a.id"><button class="link" @click="download(a)">{{ a.file_name }}</button></div><label class="input-label">补传付款凭证<input type="file" :disabled="busy" accept="image/*,.pdf,.txt,.log" @change="upload($event)" /></label>
       </div>
       <ReimbursementForm v-if="reimbursing" :records="[record]" @done="done" @cancel="reimbursing = false" />

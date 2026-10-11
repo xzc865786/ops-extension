@@ -58,8 +58,7 @@ const router = createRouter({
     },
     {
       path: '/admin/expenses/history',
-      meta: { admin: true },
-      component: () => import('@/views/admin/expenses/ExpenseHistory.vue'),
+      redirect: '/admin/expenses',
     },
     {
       path: '/admin/expenses/:id',

@@ -13,15 +13,16 @@ const toDate = (value: string) => {
 }
 
 const props = withDefaults(defineProps<{
-  modelValue: DateRange
+  modelValue: DateRange | null
   /** Longest selectable span in days, kept in line with the backend limit. */
   maxDays?: number
   ariaLabel?: string
+  allowAll?: boolean
 }>(), { maxDays: 1096, ariaLabel: '日期区间' })
 
-const emit = defineEmits<{ 'update:modelValue': [value: DateRange] }>()
+const emit = defineEmits<{ 'update:modelValue': [value: DateRange | null] }>()
 
-const pickerValue = computed(() => props.modelValue.map(toDate))
+const pickerValue = computed(() => props.modelValue?.map(toDate) ?? null)
 const activePreset = computed(() => presetFor(props.modelValue))
 
 // Two side-by-side months only when there is room; the stacked mobile menu gets one.
@@ -45,6 +46,11 @@ function applyPreset(preset: RangePreset) {
   picker.value?.closeMenu()
 }
 
+function applyAll() {
+  emit('update:modelValue', null)
+  picker.value?.closeMenu()
+}
+
 function onUpdate(value: Date[] | null) {
   // Partial or cleared selections are ignored so the report never queries an open range.
   const range = value?.every((d) => d instanceof Date) ? value.map(toDateString) : null
@@ -64,8 +70,9 @@ function onUpdate(value: Date[] | null) {
       :formats="{ input: formatRange, preview: formatRange }"
       :time-config="{ enableTimePicker: false }"
       :input-attrs="{ clearable: false }"
+      placeholder="不限日期"
       :action-row="{ selectBtnLabel: '确定', cancelBtnLabel: '取消', showNow: false }"
-      :aria-labels="{ input: ariaLabel }"
+      :aria-labels="{ input: ariaLabel, nextMonth: '下个月', prevMonth: '上个月' }"
       @update:model-value="onUpdate"
     >
       <template #left-sidebar>
@@ -78,6 +85,7 @@ function onUpdate(value: Date[] | null) {
             :class="{ 'date-range-preset-active': activePreset?.key === preset.key }"
             @click="applyPreset(preset)"
           >{{ preset.label }}</button>
+          <button v-if="allowAll" type="button" class="date-range-preset" :class="{ 'date-range-preset-active': !modelValue }" @click="applyAll">不限日期</button>
         </div>
       </template>
     </VueDatePicker>

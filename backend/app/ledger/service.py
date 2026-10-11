@@ -263,7 +263,10 @@ def query_records(filters, actor=None):
         ReimbursementItem, ReimbursementItem.active_record_id == ExpenseRecord.id
     ).outerjoin(Reimbursement, Reimbursement.id == ReimbursementItem.batch_id)
     month = filters.get("month")
-    if month:
+    if filters.get("date_from") and filters.get("date_to"):
+        q = q.where(ExpenseRecord.expense_date >= date.fromisoformat(filters["date_from"]),
+                    ExpenseRecord.expense_date <= date.fromisoformat(filters["date_to"]))
+    elif month:
         try:
             start = date.fromisoformat(month + "-01")
             end = date(start.year + (start.month == 12), start.month % 12 + 1, 1)

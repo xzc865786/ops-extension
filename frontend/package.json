@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test:manual": "node --test \"tests/manual/*.test.mjs\"",
     "test:expenses": "node --test \"tests/expenses/*.test.mjs\"",
-    "test:release": "node tests/expenses/release-browser.mjs"
+    "test:release": "node tests/expenses/release-browser.mjs",
+    "test:dates": "node tests/expenses/date-range-browser.mjs"
   },
   "dependencies": {
     "@vuepic/vue-datepicker": "^14.0.0",

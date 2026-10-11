@@ -301,6 +301,19 @@
     @apply relative w-full sm:w-72;
   }
 
+  .ledger-filter {
+    @apply flex min-w-0 flex-col gap-1.5;
+  }
+
+  .ledger-filters .date-range-picker {
+    @apply w-full;
+  }
+
+  .ledger-filter .input,
+  .ledger-filter .dp__input {
+    @apply h-11;
+  }
+
   .date-range-tag {
     @apply pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700;
     @apply dark:bg-primary-900/30 dark:text-primary-300;

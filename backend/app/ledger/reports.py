@@ -31,7 +31,7 @@ def monthly(db, filters, actor):
     return {"total_amount": service.dec(total), "count": len(items), "items": items,
             "categories": output(categories.values()), "people": output(people.values()),
             "filters": filters, "unconfirmed_count": service.unconfirmed_count(db),
-            "scope": "按支出日期归属；实际已报销额为这些支出的有效报销分配额，不是当月转账流水"}
+            "scope": "按支出日期筛选；实际已报销额为这些支出的有效报销分配额，不是所选期间的转账流水"}
 
 
 STATUS_LABELS = {"PENDING": "待报销", "REIMBURSED": "已报销", "NOT_REQUIRED": "无需报销", "VOIDED": "作废"}
@@ -57,7 +57,7 @@ def excel(report):
     money_fields = {"amount", "rmb_amount", "actual_reimbursement", "difference", "required", "pending", "settled", "actual", "not_required"}
     for name, columns, rows in sheets:
         sheet = book.create_sheet(name)
-        notes = ["金额单位：人民币；" + report["scope"], "筛选条件：" + str(report["filters"]), f"历史未核对记录未计入：{report['unconfirmed_count']} 笔"]
+        notes = ["金额单位：人民币；" + report["scope"], "筛选条件：" + str(report["filters"])]
         for n, note in enumerate(notes, 1):
             cell = sheet.cell(n, 1, note)
             cell.data_type = "s"

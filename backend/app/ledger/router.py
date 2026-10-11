@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import Response
 from sqlalchemy import select, func
@@ -5,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.attachments.minio_client import get_storage, validate_attachment
-from app.common.errors import AppError, conflict, not_found
+from app.common.errors import AppError, bad_request, conflict, not_found
 from app.db.models.ledger import ExpenseRecord, Reimbursement, LedgerAttachment, ReimbursementItem
 from app.db.session import get_db
 from app.deps import CurrentUser, require_admin
@@ -16,10 +18,16 @@ router = APIRouter(prefix="/ext/api/v1/admin", tags=["expense-ledger"], dependen
 
 
 def filters(month: str | None = Query(None, pattern=r"^(\d{4}-\d{2})?$"),
+            date_from: date | None = None, date_to: date | None = None,
             payer: str | None = Query(None, max_length=100), category: str | None = None,
             status: str | None = Query(None, pattern="^(PENDING|REIMBURSED|NOT_REQUIRED)$"),
             keyword: str | None = Query(None, max_length=200), mine: bool = False, voided: bool = False):
-    return dict(month=rates.today().strftime("%Y-%m") if month is None else month,
+    if (date_from is None) != (date_to is None):
+        raise bad_request("请选择完整的起止日期", "INCOMPLETE_DATE_RANGE")
+    if date_from and date_to and (date_from > date_to or (date_to - date_from).days > 1096):
+        raise bad_request("日期范围须按先后顺序选择，最长支持 1096 天跨度", "INVALID_DATE_RANGE")
+    return dict(month="" if date_from else (rates.today().strftime("%Y-%m") if month is None else month),
+                date_from=date_from.isoformat() if date_from else None, date_to=date_to.isoformat() if date_to else None,
                 payer=payer, category=category, status=status, keyword=keyword, mine=mine, voided=voided)
 
 

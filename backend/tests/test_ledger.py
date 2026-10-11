@@ -66,6 +66,44 @@ def test_cny_default_immediate_month_and_idempotency(client, db, admin):
     assert db.scalar(select(func.count()).select_from(ExpenseRecord)) == 1
 
 
+def test_date_range_inclusive_list_report_export_and_month_compatibility(client, db, admin):
+    old = old_claim(db, admin)
+    dates = ['2025-12-30', '2025-12-31', '2026-01-01', '2026-01-02']
+    records = [create(client, expense_date=d, amount=str(n * 10)) for n, d in enumerate(dates, 1)]
+    params = {'date_from': '2025-12-31', 'date_to': '2026-01-01'}
+    expected = {records[1]['id'], records[2]['id']}
+    listing = client.get(ROOT, params={**params, 'month': '2026-10'}).json()
+    assert listing['total'] == 2 and {r['id'] for r in listing['items']} == expected
+    report = client.get(ROOT + '/monthly', params=params).json()
+    assert report['total_amount'] == '50.00' and report['people'][0]['pending'] == '50.00'
+    assert report['categories'][0]['amount'] == '50.00'
+    assert {r['id'] for r in report['items']} == expected
+    book = load_workbook(BytesIO(client.get(ROOT + '/export', params=params).content))
+    values = list(book['支出明细'].iter_rows(min_row=6, values_only=True))
+    assert {int(row[0]) for row in values} == expected
+    assert sum(Decimal(str(row[13])) for row in values) == Decimal('50.00')
+    assert book['分类汇总'].cell(6, 2).value == 50
+    assert book['人员汇总'].cell(6, 3).value == 50
+    assert all('历史未核对' not in str(cell.value) for sheet in book for row in sheet for cell in row)
+    assert client.get(ROOT, params={'month': '2026-01'}).json()['total'] == 2
+    assert client.get(ROOT, params={'month': ''}).json()['total'] == 4
+    assert client.get(ROOT, params={'date_from': dates[1], 'date_to': dates[1]}).json()['total'] == 1
+    db.refresh(old)
+    assert old.amount_tax_included == Decimal('20') and old.currency == 'USD'
+
+
+@pytest.mark.parametrize('params,status', [
+    ({'date_from': '2026-01-01'}, 400),
+    ({'date_to': '2026-01-01'}, 400),
+    ({'date_from': '2026-02-01', 'date_to': '2026-01-01'}, 400),
+    ({'date_from': '2020-01-01', 'date_to': '2026-01-01'}, 400),
+    ({'date_from': '2026-02-30', 'date_to': '2026-03-01'}, 422),
+])
+def test_invalid_date_ranges_rejected_in_list_report_and_export(client, admin, params, status):
+    for path in [ROOT, ROOT + '/monthly', ROOT + '/export']:
+        assert client.get(path, params=params).status_code == status
+
+
 @pytest.mark.parametrize('field,value', [('amount','0'),('amount','-1'),('amount','1.001'),('amount','NaN'),('amount','Infinity'),('amount','1e3'),('amount',1),('amount','10000000000000000'),('payer','  '),('title',''),('currency','HKD'),('category','STAFF_ADVANCE')])
 def test_invalid_values_rejected(client, admin, field, value):
     body = payload(); body[field] = value

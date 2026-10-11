@@ -56,6 +56,20 @@ def actor_and_record(factory, **changes):
         return actor,row.id,row.version
 
 
+def test_postgres_date_range_includes_both_boundaries(pg):
+    from app.ledger import reports
+    migrate(pg, 'head')
+    factory = sessionmaker(pg, expire_on_commit=False, autoflush=False)
+    actor, first, _ = actor_and_record(factory, expense_date='2025-12-31', amount='20')
+    with factory() as db:
+        second = service.create_record(db, actor, RecordCreate(title='跨年支出', expense_date='2026-01-01', payer='张三', amount='30', idempotency_key=str(uuid.uuid4())))
+        service.create_record(db, actor, RecordCreate(title='范围外支出', expense_date='2026-01-02', payer='张三', amount='40', idempotency_key=str(uuid.uuid4())))
+        filters = {'date_from': '2025-12-31', 'date_to': '2026-01-01'}
+        result = reports.monthly(db, filters, actor)
+        assert result['total_amount'] == '50.00'
+        assert {row['id'] for row in result['items']} == {first, second.id}
+
+
 def test_fresh_upgrade_and_empty_downgrade(pg):
     migrate(pg,'head')
     assert 'expense_records' in inspect(pg).get_table_names()
