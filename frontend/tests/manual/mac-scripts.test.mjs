@@ -23,8 +23,17 @@ const engine = new Function(`${pureSource}; return {validateData, mergeClaudeSet
 
 const decode = command => JSON.parse(Buffer.from(command.match(/bash -s -- '([A-Za-z0-9+/=]+)'$/)[1], 'base64').toString('utf8'));
 const hasBash = spawnSync('bash', ['--version']).status === 0;
+function bashPath(url) {
+  const path = url.pathname.replace(/^\/([A-Za-z]:)/, '$1');
+  if (process.platform !== 'win32' || !hasBash) return path;
+  // Windows bash may be WSL or Git Bash; neither should receive the other's drive notation.
+  const candidates = [path.replace(/^([A-Za-z]):/, (_, drive) => `/mnt/${drive.toLowerCase()}`), path.replace(/^([A-Za-z]):/, (_, drive) => `/${drive.toLowerCase()}`), path];
+  return candidates.find(candidate => spawnSync('bash', ['-c', `test -f '${candidate.replace(/'/g, "'\\''")}'`]).status === 0) || path;
+}
+const installPath = bashPath(INSTALL_SH);
 function bash(script) {
-  const result = spawnSync('bash', ['-c', script], {encoding: 'utf8'});
+  // stdin avoids Windows' legacy bash.exe command-line quote conversion.
+  const result = spawnSync('bash', ['-s'], {input: script, encoding: 'utf8'});
   assert.equal(result.status, 0, result.stderr);
   return result.stdout;
 }
@@ -32,7 +41,7 @@ function bash(script) {
 test('Mac scripts keep LF line endings and pass a bash syntax check', {skip: !hasBash && 'bash not available'}, () => {
   for (const [url, text] of [[INSTALL_SH, installText], [CONFIG_SH, configText]]) {
     assert.ok(!text.includes('\r'), `${url.pathname} must use LF line endings`);
-    const result = spawnSync('bash', ['-n', url.pathname.replace(/^\/([A-Za-z]:)/, '$1')], {encoding: 'utf8'});
+    const result = spawnSync('bash', ['-n', bashPath(url)], {encoding: 'utf8'});
     assert.equal(result.status, 0, result.stderr);
   }
 });
@@ -137,7 +146,10 @@ test('WorkBuddy models keep the user\'s own entries and replace ours', () => {
   const settings = decode(buildMacConfigCommand({workbuddy: {apiKey: 'sk-w', model: 'gpt-6.1-sol'}}, DEFAULTS, PAGE).command).settings;
   const entry = engine.workbuddyEntry('sk-w', 'gpt-6.1-sol', settings);
   assert.equal(entry.url, 'https://api.tysy.top/v1/chat/completions');
-  assert.equal(entry.maxInputTokens, DEFAULTS.workbuddy.max_input_tokens);
+  assert.equal(Object.hasOwn(entry, 'maxInputTokens'), false);
+  assert.equal(Object.hasOwn(entry, 'maxOutputTokens'), false);
+  assert.equal(entry.reasoning.defaultEffort, 'high');
+  assert.deepEqual(entry.reasoning.supportedEfforts, ['low', 'medium', 'high']);
   const mine = {id: 'deepseek', url: 'https://other.example/v1'};
   const old = {id: 'gpt-5', url: 'https://api.tysy.top/v1/chat/completions'};
   assert.deepEqual(engine.mergeWorkbuddy(null, entry, settings.site), [entry]);
@@ -161,8 +173,8 @@ test('restore picks the newest backup that is still active', () => {
 });
 
 test('install script helpers: versions, tool choice and setting overrides', {skip: !hasBash && 'bash not available'}, () => {
-  // Load the functions without running main (the last line).
-  const load = `source <(sed '$d' '${INSTALL_SH.pathname.replace(/^\/([A-Za-z]:)/, '$1')}');`;
+  // Remove the entry-point call, including when the script ends with a blank line.
+  const load = `source <(sed '/^main /d' '${installPath}');`;
   assert.equal(bash(`${load} for v in '13.5 13.4.1' '13.5 13.5' '13.5 14.0' '14 13.6.1'; do set -- $v; version_ge $2 $1 && echo y || echo n; done`), 'n\ny\ny\nn\n');
   assert.equal(bash(`${load} choose_tools 'workbuddy,claude,claude,nope'`), 'workbuddy,claude');
   const out = bash(`${load} apply_setting 'HUIMA_NPM_REGISTRY=https://npm.example.cn'; apply_setting "HUIMA_CODEX_PACKAGE=@x/y;id"; apply_setting 'EVIL=1'; echo "$HUIMA_NPM_REGISTRY|$HUIMA_CODEX_PACKAGE"`);
@@ -172,7 +184,7 @@ test('install script helpers: versions, tool choice and setting overrides', {ski
 });
 
 test('install script picks the newest LTS tarball from index.json, not the lagging alias', {skip: !hasBash && 'bash not available'}, () => {
-  const load = `source <(sed '$d' '${INSTALL_SH.pathname.replace(/^\/([A-Za-z]:)/, '$1')}');`;
+  const load = `source <(sed '/^main /d' '${installPath}');`;
   const index = JSON.stringify([
     {version: 'v25.1.0', files: ['osx-arm64-tar'], lts: false},
     {version: 'v24.21.0', files: ['linux-x64', 'osx-arm64-tar', 'osx-x64-tar'], lts: 'Krypton'},

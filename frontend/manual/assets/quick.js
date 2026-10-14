@@ -4,6 +4,7 @@ import {TOOLS, buildConfigCmd, buildRollbackCmd} from './quick-config-core.js';
 import {buildMacConfigCommand, buildMacInstallCommand, buildMacRestoreCommand} from './mac-command-core.js';
 import {download, downloadUrl, guardClick} from './ui.js';
 import {manualConfigReady} from './manual-config.js';
+import {resolveWorkBuddy, workbuddySummary} from './workbuddy-config-core.js';
 
 // Admin-editable settings (models, install sources, endpoints); null only if even the bundled defaults failed.
 const cfg = await manualConfigReady.catch(() => null);
@@ -48,6 +49,7 @@ function resetModels(tool, message = '先粘贴 Key，再点击“读取可用�
   select.replaceChildren(new Option(message, ''));
   select.disabled = true;
   status(`status-${tool}`, '');
+  if (tool === 'workbuddy') byId('workbuddy-capabilities').textContent = '';
   if (tool === 'claude') resetRoleSelects('role-claude-');
 }
 
@@ -148,7 +150,8 @@ function fillModels(tool, payload) {
   }
   const ids = models.map(model => model.id);
   // Preselect a sensible default so beginners only need to confirm.
-  const preferred = recommendModel(ids, tool, cfg);
+  const thinkingIds = tool === 'workbuddy' ? ids.filter(id => resolveWorkBuddy(id, cfg).supports_reasoning) : [];
+  const preferred = recommendModel(thinkingIds.length ? thinkingIds : ids, tool, cfg);
   select.replaceChildren(...models.map(({id, label}) => {
     const option = new Option(id === preferred ? `${label}（推荐）` : label, id);
     option.selected = id === preferred;
@@ -157,8 +160,15 @@ function fillModels(tool, payload) {
   select.disabled = false;
   if (tool === 'claude') { claudeIds = ids; fillRoleSelects('role-claude-', ids, preferred, cfg); }
   status(`status-${tool}`, `可用模型 ${models.length} 个，已选好推荐模型，也可以自己换。`);
+  if (tool === 'workbuddy') updateWorkbuddySummary();
   return true;
 }
+
+function updateWorkbuddySummary() {
+  const model = byId('model-workbuddy').value;
+  byId('workbuddy-capabilities').textContent = model && cfg ? workbuddySummary(model, cfg) : '';
+}
+byId('model-workbuddy').addEventListener('change', updateWorkbuddySummary);
 
 loadButton.addEventListener('click', async () => {
   const tools = checked(configBoxes);

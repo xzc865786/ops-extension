@@ -1,5 +1,7 @@
 ﻿# Crops, cleans and compresses the raw VM screenshots into frontend/manual/assets/screenshots.
 # Run with Windows PowerShell (System.Drawing):  powershell -ExecutionPolicy Bypass -File process-shots.ps1
+# -Only ccs-workbuddy-add-model,... regenerates just those outputs.
+param([string[]]$Only)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 $src = Join-Path $PSScriptRoot 'shots'
@@ -23,7 +25,9 @@ $jobs = @(
     @{ src = 's12-codex-desktop';       name = 'quick-codex-desktop';    crop = 98, 75, 1088, 603 }
     @{ src = 's11-workbuddy-model';     name = 'quick-workbuddy-model';  crop = 370, 20, 800, 420 }
     @{ src = 's11b-workbuddy-reply';    name = 'quick-workbuddy-reply';  crop = 305, 10, 936, 320 }
-    @{ src = 's13-workbuddy-add-model'; name = 'ccs-workbuddy-add-model'; crop = 322, 85, 640, 583 }
+    @{ src = 's11c-workbuddy-effort';   name = 'quick-workbuddy-effort'; crop = 494, 290, 616, 240 }
+    @{ src = 's13-workbuddy-add-model-top'; name = 'ccs-workbuddy-add-model'; crop = 322, 85, 640, 583 }
+    @{ src = 's13b-workbuddy-add-model-bottom'; name = 'ccs-workbuddy-add-model-2'; crop = 322, 85, 640, 583 }
     @{ src = 's14-ccswitch-main';       name = 'ccs-main';               crop = 62, 52, 900, 300 }
     @{ src = 's15-browser-open-ccswitch'; name = 'ccs-browser-open';     crop = 418, 78, 448, 158; cover = @(@{ X = 432; Y = 136; W = 135; H = 22; Color = 'White' }) }
     @{ src = 's16-ccswitch-import-preview'; name = 'ccs-import-preview'; crop = 262, 119, 500, 528 }
@@ -43,6 +47,7 @@ $params.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter([System.Dr
 $maxWidth = 1000
 
 foreach ($job in $jobs) {
+    if ($Only -and $job.name -notin $Only) { continue }
     $path = Join-Path $src "$($job.src).png"
     if (-not (Test-Path $path)) { Write-Host "跳过（没有原图）：$($job.src)" -ForegroundColor Yellow; continue }
     $image = [System.Drawing.Bitmap]::FromFile($path)

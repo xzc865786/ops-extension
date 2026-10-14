@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import httpx
 import pytest
 
-from app.manual.schema import DEFAULT_CONFIG_PATH, load_default_config
+from app.manual.schema import DEFAULT_CONFIG_PATH, ManualConfig, load_default_config
 from app.orders.sub2api import Sub2APIAdminClient
 from tests.conftest import login_as, make_user
 
@@ -31,6 +31,48 @@ def save(client, config, base_version, **extra):
 def test_manual_bundles_the_same_defaults_as_backend():
     # The manual falls back to its bundled copy when the API is unreachable; both must match.
     assert json.loads(MANUAL_DEFAULT.read_text(encoding="utf-8")) == json.loads(DEFAULT_CONFIG_PATH.read_text(encoding="utf-8"))
+
+
+def test_workbuddy_defaults_and_historical_versions():
+    cfg = load_default_config().dump()
+    wb = cfg["workbuddy"]
+    assert wb["max_input_tokens"] is None and wb["max_output_tokens"] is None
+    assert wb["default_effort"] == "high"
+    assert wb["supported_efforts"] == ["low", "medium", "high"]
+    for field in ["capability_rules", "default_effort", "supported_efforts"]:
+        wb.pop(field)
+    wb.update(supports_reasoning=False, max_input_tokens=128000, max_output_tokens=8192)
+    restored = ManualConfig.model_validate(cfg).workbuddy
+    assert restored.supports_reasoning is False
+    assert restored.max_output_tokens == 8192
+    assert restored.default_effort == "high"
+    assert restored.capability_rules == []
+
+
+def test_workbuddy_rules_may_follow_defaults():
+    cfg = load_default_config().dump()
+    assert cfg["workbuddy"]["supports_images"] is True and cfg["workbuddy"]["supports_reasoning"] is True
+    assert {"gpt-6.1-sol", "deepseek-v4.1-flash", "glm-5.3-flash"} <= set(cfg["models"]["workbuddy"]["include"])
+    assert not any("*" in pattern for pattern in cfg["models"]["workbuddy"]["include"])
+    cfg["workbuddy"]["capability_rules"] = [{"models": ["glm*"], "supports_images": False}]
+    rule = ManualConfig.model_validate(cfg).workbuddy.capability_rules[0]
+    assert rule.supports_images is False and rule.supports_reasoning is None
+
+
+@pytest.mark.parametrize("field,value", [
+    ("default_effort", "max"),
+    ("supported_efforts", ["high", "high"]),
+    ("supported_efforts", ["low", "medium"]),
+    ("max_input_tokens", 0),
+    ("capability_rules", [{"models": ["*"], "supports_reasoning": True}]),
+    ("capability_rules", [{"models": ["gpt-x"]}, {"models": ["GPT-X"]}]),
+])
+def test_invalid_workbuddy_capabilities_are_rejected(field, value):
+    from pydantic import ValidationError
+    cfg = load_default_config().dump()
+    cfg["workbuddy"][field] = value
+    with pytest.raises(ValidationError):
+        ManualConfig.model_validate(cfg)
 
 
 def test_public_config_seeds_defaults_without_login(client):

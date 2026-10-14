@@ -60,7 +60,7 @@ export function buildMacInstallCommand(tools, cfg, base) {
 // Returns the command to copy and a masked version that is safe to show on screen.
 export function buildMacConfigCommand(input, cfg, base) {
   const tools = validateConfigInput(input);
-  const data = base64Utf8(JSON.stringify({tools, settings: scriptSettings(cfg)}));
+  const data = base64Utf8(JSON.stringify({tools, settings: scriptSettings(cfg, tools.workbuddy?.model)}));
   const command = pipe('huima-config.sh', base, [data]);
   return {command, preview: command.replace(data, `${data.slice(0, 6)}……（含 Key，已隐藏）`)};
 }

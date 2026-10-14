@@ -128,8 +128,12 @@ export const FIELD_LABELS: Record<string, string> = {
   'workbuddy.max_input_tokens': 'WorkBuddy 输入上限',
   'workbuddy.max_output_tokens': 'WorkBuddy 输出上限',
   'workbuddy.supports_tool_call': 'WorkBuddy 工具调用',
-  'workbuddy.supports_images': 'WorkBuddy 图片输入',
-  'workbuddy.supports_reasoning': 'WorkBuddy 思考模式',
+  'workbuddy.supports_images': 'WorkBuddy 默认图片输入',
+  'workbuddy.supports_reasoning': 'WorkBuddy 默认思考',
+  'workbuddy.can_disable_thinking': 'WorkBuddy 允许关闭思考',
+  'workbuddy.default_effort': 'WorkBuddy 默认思考强度',
+  'workbuddy.supported_efforts': 'WorkBuddy 支持的思考档位',
+  'workbuddy.capability_rules': 'WorkBuddy 模型能力规则',
   'install.npm_registry': 'npm 国内镜像',
   'install.npm_registry_fallback': 'npm 备用源',
   'install.node_mirror': 'Node.js 下载镜像',
@@ -173,6 +177,12 @@ FIELD_LABELS['groups.faq'] = '分组常见问题'
 
 // Chinese name for a config path, including list entries such as groups.items.2.models.0.
 export function fieldLabel(path: string): string | undefined {
+  const capability = path.match(/^workbuddy\.capability_rules\.(\d+)(?:\.([a-z_]+))?/)
+  if (capability) {
+    const fields: Record<string, string> = {models: '匹配模型', supports_images: '图片输入', supports_reasoning: '思考能力', can_disable_thinking: '允许关闭思考'}
+    const owner = `第 ${Number(capability[1]) + 1} 条 WorkBuddy 能力规则`
+    return capability[2] ? `${owner} · ${fields[capability[2]] || capability[2]}` : owner
+  }
   const entry = path.match(/^groups\.(items|faq)\.(\d+)(?:\.([a-z_]+))?/)
   if (entry) {
     const owner = entry[1] === 'items' ? `第 ${Number(entry[2]) + 1} 个分组` : `第 ${Number(entry[2]) + 1} 条常见问题`

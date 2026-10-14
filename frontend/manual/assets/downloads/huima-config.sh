@@ -52,6 +52,18 @@ function validateData(data) {
     }
     if (typeof item.model !== 'string' || !MODEL_PATTERN.test(item.model)) throw new Error(LABELS[name] + '：模型名称不正确。');
   }
+  if (names.indexOf('workbuddy') >= 0) {
+    const wb = s.workbuddy;
+    if (!isObject(wb) || !['supports_tool_call', 'supports_images', 'supports_reasoning', 'only_reasoning', 'can_disable_thinking'].every(key => typeof wb[key] === 'boolean')
+      || !(wb.max_input_tokens === null || (Number.isInteger(wb.max_input_tokens) && wb.max_input_tokens >= 1024 && wb.max_input_tokens <= 2000000))
+      || !(wb.max_output_tokens === null || (Number.isInteger(wb.max_output_tokens) && wb.max_output_tokens >= 256 && wb.max_output_tokens <= 1000000))
+      || !Array.isArray(wb.supported_efforts) || wb.supported_efforts.length < 1 || wb.supported_efforts.length > 3
+      || new Set(wb.supported_efforts).size !== wb.supported_efforts.length
+      || !wb.supported_efforts.every(value => ['low', 'medium', 'high'].indexOf(value) >= 0)
+      || wb.supported_efforts.indexOf(wb.default_effort) < 0 || (wb.only_reasoning && wb.can_disable_thinking)) {
+      throw new Error('WorkBuddy 模型能力配置异常，请回到手册重新生成命令。');
+    }
+  }
   return names;
 }
 
@@ -121,13 +133,20 @@ function mergeCodexConfig(text, model, baseUrl) {
 function codexAuth(key) { return JSON.stringify({OPENAI_API_KEY: key}, null, 2) + '\n'; }
 
 function workbuddyEntry(key, model, s) {
-  const wb = s.workbuddy || {};
-  return {
+  const wb = s.workbuddy;
+  const entry = {
     id: model, name: model, vendor: 'Custom', url: s.workbuddy_url, apiKey: key,
-    maxInputTokens: Number(wb.max_input_tokens) || 128000, maxOutputTokens: Number(wb.max_output_tokens) || 8192,
     supportsToolCall: wb.supports_tool_call !== false, supportsImages: wb.supports_images === true,
     supportsReasoning: wb.supports_reasoning === true,
+    onlyReasoning: wb.only_reasoning === true,
   };
+  if (wb.max_input_tokens !== null) entry.maxInputTokens = wb.max_input_tokens;
+  if (wb.max_output_tokens !== null) entry.maxOutputTokens = wb.max_output_tokens;
+  if (entry.supportsReasoning) entry.reasoning = {
+    defaultEffort: wb.default_effort, supportedEfforts: wb.supported_efforts,
+    canDisableThinking: wb.can_disable_thinking,
+  };
+  return entry;
 }
 
 function mergeWorkbuddy(document, entry, site) {
@@ -264,6 +283,12 @@ function configureWorkbuddy(item, s) {
   backup(path);
   writeText(path, JSON.stringify(document, null, 2) + '\n');
   say('  [完成] 已写入 ' + path + '，模型 ' + item.model);
+  const wb = s.workbuddy;
+  const effortNames = {low: '低', medium: '中', high: '高'};
+  say(wb.supports_reasoning ? '  [完成] 思考已开启，默认强度 ' + effortNames[wb.default_effort] + '，可选 ' + wb.supported_efforts.map(effort => effortNames[effort]).join('/') : '  [注意] 该模型不开启思考。');
+  if (wb.only_reasoning) say('  [完成] 仅思考模式：对话里始终开启思考，可在模型菜单切换强度。');
+  say(wb.supports_images ? '  [完成] 图片输入已开启。' : '  [注意] 该模型仅支持文本输入，未开启图片输入。');
+  if (wb.max_input_tokens === null && wb.max_output_tokens === null) say('  [完成] 输入/输出上限使用 WorkBuddy 默认值。');
 }
 
 function describe(b64) {

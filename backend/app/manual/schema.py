@@ -127,12 +127,53 @@ class ClaudeRoles(Strict):
         return _patterns(values, info.field_name)
 
 
+ReasoningEffort = Literal["low", "medium", "high"]
+
+
+# Per-model exceptions; None means "use the WorkBuddy-wide default".
+class WorkBuddyCapability(Strict):
+    models: list[str] = Field(min_length=1, max_length=30)
+    supports_images: bool | None = None
+    supports_reasoning: bool | None = None
+    can_disable_thinking: bool | None = None
+
+    @field_validator("models")
+    @classmethod
+    def check_models(cls, values: list[str]) -> list[str]:
+        return _patterns(values, "模型能力规则")
+
+
+def _default_workbuddy_capabilities() -> list[WorkBuddyCapability]:
+    raw = json.loads(DEFAULT_CONFIG_PATH.read_text(encoding="utf-8"))
+    return [WorkBuddyCapability.model_validate(rule) for rule in raw["workbuddy"]["capability_rules"]]
+
+
 class WorkBuddy(Strict):
-    max_input_tokens: int = Field(ge=1024, le=2_000_000)
-    max_output_tokens: int = Field(ge=256, le=1_000_000)
+    max_input_tokens: int | None = Field(default=None, ge=1024, le=2_000_000)
+    max_output_tokens: int | None = Field(default=None, ge=256, le=1_000_000)
     supports_tool_call: bool
+    # Defaults for models without a matching capability rule.
     supports_images: bool
     supports_reasoning: bool
+    # False writes WorkBuddy's "仅思考模式": no off switch, so thinking cannot start disabled.
+    can_disable_thinking: bool = False
+    default_effort: ReasoningEffort = "high"
+    supported_efforts: list[ReasoningEffort] = Field(default_factory=lambda: ["low", "medium", "high"], min_length=1, max_length=3)
+    capability_rules: list[WorkBuddyCapability] = Field(default_factory=_default_workbuddy_capabilities, max_length=100)
+
+    @model_validator(mode="after")
+    def check_reasoning(self) -> "WorkBuddy":
+        if len(set(self.supported_efforts)) != len(self.supported_efforts):
+            raise ValueError("思考档位不能重复")
+        if self.default_effort not in self.supported_efforts:
+            raise ValueError("默认思考强度必须包含在支持的档位中")
+        seen: set[str] = set()
+        for rule in self.capability_rules:
+            for pattern in rule.models:
+                if pattern.lower() in seen:
+                    raise ValueError("模型能力规则不能包含重复的匹配条件")
+                seen.add(pattern.lower())
+        return self
 
 
 class Install(Strict):

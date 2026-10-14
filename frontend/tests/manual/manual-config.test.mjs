@@ -53,8 +53,10 @@ test('include / exclude rules filter the model list per client', () => {
   const list = payload(['claude-sonnet-5-5', 'gpt-6.1-sol', 'gpt6-luna', 'o3-mini', 'deepseek-v3', 'gpt-5-codex']);
   assert.deepEqual(ids(parseAvailableModels(list, 'claude', DEFAULTS)), ['claude-sonnet-5-5']);
   assert.deepEqual(ids(parseAvailableModels(list, 'codex', DEFAULTS)), ['gpt-6.1-sol', 'gpt6-luna', 'o3-mini', 'gpt-5-codex']);
+  // WorkBuddy defaults list exact model IDs, so image models and retired IDs never show up.
+  assert.deepEqual(ids(parseAvailableModels(payload(['gpt-6.1-sol', 'gpt-image-2', 'gpt-5.4', 'glm-5.3-flash']), 'workbuddy', DEFAULTS)), ['gpt-6.1-sol', 'glm-5.3-flash']);
   const cfg = clone();
-  cfg.models.workbuddy.include.push('deepseek*');
+  cfg.models.workbuddy.include = ['gpt*', 'o1*', 'o3*', 'deepseek*'];
   cfg.models.workbuddy.exclude = ['o3*'];
   assert.deepEqual(ids(parseAvailableModels(list, 'workbuddy', cfg)), ['gpt-6.1-sol', 'gpt6-luna', 'deepseek-v3', 'gpt-5-codex']);
 });

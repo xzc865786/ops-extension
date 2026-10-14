@@ -44,6 +44,19 @@ const endpoints = computed(() => ({
   workbuddy: `${site.value}/v1/chat/completions`,
 }))
 
+const EFFORTS = [{value: 'low', label: '低'}, {value: 'medium', label: '中'}, {value: 'high', label: '高'}]
+function setWorkbuddyLimit(field: string, event: Event) {
+  const text = (event.target as HTMLInputElement).value
+  form.value.workbuddy[field] = text === '' ? null : Number(text)
+}
+function applyWorkbuddyDefaults() {
+  form.value.workbuddy = clone(defaults.value.workbuddy)
+  toast.success('已应用 WorkBuddy 推荐值，请核对模型能力规则后保存发布')
+}
+function addWorkbuddyRule() {
+  form.value.workbuddy.capability_rules.push({models: [], supports_images: null, supports_reasoning: null, can_disable_thinking: null})
+}
+
 function errMsg(e: any, fallback: string) {
   const data = e.response?.data
   const message: string = data?.detail?.detail || (typeof data?.detail === 'string' ? data.detail : '') || fallback
@@ -378,15 +391,34 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
 
         <section class="card p-5 sm:p-6 space-y-4">
           <h2 class="font-semibold">WorkBuddy 模型参数 <span class="muted text-sm font-normal">· 写入 models.json</span></h2>
+          <button type="button" class="btn-ghost btn-sm" @click="applyWorkbuddyDefaults">应用 WorkBuddy 推荐配置</button>
+          <p class="muted text-xs">推荐配置：默认开启高强度思考（可选低／中／高，仅思考模式）和图片输入，输入／输出上限留空。旧版本仍保留原值，点击上方按钮后保存发布即可升级。WorkBuddy 能选哪些模型由“推荐模型”页 WorkBuddy 的“可用模型”决定，新增模型时记得在那里补上完整模型 ID。</p>
           <div class="grid gap-4 sm:grid-cols-2">
-            <div><label class="input-label">输入 Token 上限</label><input v-model.number="form.workbuddy.max_input_tokens" type="number" min="1024" class="input" /></div>
-            <div><label class="input-label">输出 Token 上限</label><input v-model.number="form.workbuddy.max_output_tokens" type="number" min="256" class="input" /></div>
+            <div><label class="input-label">输入 Token 上限（可留空）</label><input :value="form.workbuddy.max_input_tokens" @input="setWorkbuddyLimit('max_input_tokens', $event)" type="number" min="1024" max="2000000" placeholder="使用 WorkBuddy 默认值" class="input" /></div>
+            <div><label class="input-label">输出 Token 上限（可留空）</label><input :value="form.workbuddy.max_output_tokens" @input="setWorkbuddyLimit('max_output_tokens', $event)" type="number" min="256" max="1000000" placeholder="使用 WorkBuddy 默认值" class="input" /></div>
           </div>
           <div class="flex flex-wrap gap-5 text-sm">
             <label class="flex items-center gap-2"><input v-model="form.workbuddy.supports_tool_call" type="checkbox" /> 工具调用</label>
-            <label class="flex items-center gap-2"><input v-model="form.workbuddy.supports_images" type="checkbox" /> 图片输入</label>
-            <label class="flex items-center gap-2"><input v-model="form.workbuddy.supports_reasoning" type="checkbox" /> 思考模式</label>
+            <label class="flex items-center gap-2"><input v-model="form.workbuddy.supports_reasoning" type="checkbox" /> 默认开启思考</label>
+            <label class="flex items-center gap-2"><input v-model="form.workbuddy.supports_images" type="checkbox" /> 默认开启图片输入</label>
+            <label class="flex items-center gap-2"><input v-model="form.workbuddy.can_disable_thinking" type="checkbox" :disabled="!form.workbuddy.supports_reasoning" /> 允许用户关闭思考（不勾选＝仅思考模式，始终开启）</label>
           </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div><label class="input-label">默认思考强度</label><select v-model="form.workbuddy.default_effort" class="input"><option v-for="effort in EFFORTS" :key="effort.value" :value="effort.value">{{ effort.label }}</option></select></div>
+            <div><p class="input-label">支持的思考档位</p><div class="flex gap-4"><label v-for="effort in EFFORTS" :key="effort.value" class="flex items-center gap-2"><input v-model="form.workbuddy.supported_efforts" type="checkbox" :value="effort.value" />{{ effort.label }}</label></div></div>
+          </div>
+          <h3 class="font-medium">模型能力例外规则</h3>
+          <p class="muted text-xs">没有匹配规则的模型使用上面的默认值；只有某些模型不支持图片或思考、或关闭思考的方式与默认不同时才需要添加规则。完整模型 ID 优先于通配规则；通配规则按下方顺序匹配。同一个 ID 在不同通道能力不一致时，应使用各通道均支持的能力。</p>
+          <div v-for="(rule, index) in form.workbuddy.capability_rules" :key="index" class="rounded-lg border border-slate-200 p-4 space-y-3">
+            <div class="flex justify-between"><label class="input-label">匹配模型 ID／通配符</label><button type="button" class="btn-ghost btn-sm" @click="form.workbuddy.capability_rules.splice(index, 1)">删除规则</button></div>
+            <PatternList v-model="rule.models" />
+            <div class="flex flex-wrap items-center gap-4 text-sm">
+              <label>图片输入 <select v-model="rule.supports_images" class="input"><option :value="null">跟随默认</option><option :value="true">支持</option><option :value="false">不支持</option></select></label>
+              <label>思考 <select v-model="rule.supports_reasoning" class="input"><option :value="null">跟随默认</option><option :value="true">支持</option><option :value="false">不支持</option></select></label>
+              <label>允许关闭思考 <select v-model="rule.can_disable_thinking" class="input" :disabled="rule.supports_reasoning === false"><option :value="null">跟随默认</option><option :value="true">允许</option><option :value="false">不允许（仅思考）</option></select></label>
+            </div>
+          </div>
+          <button type="button" class="btn-ghost btn-sm" @click="addWorkbuddyRule">添加模型能力规则</button>
         </section>
       </div>
 

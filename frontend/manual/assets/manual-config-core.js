@@ -14,6 +14,33 @@ const QQ = /^(\d{5,12})?$/;
 const patterns = list => Array.isArray(list) && list.every(item => typeof item === 'string' && PATTERN.test(item));
 const int = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
 
+export function isSafeWorkBuddy(wb) {
+  if (!wb || !['supports_tool_call', 'supports_images', 'supports_reasoning'].every(key => typeof wb[key] === 'boolean')) return false;
+  if (!(wb.can_disable_thinking === undefined || typeof wb.can_disable_thinking === 'boolean')) return false;
+  if (['default_effort', 'supported_efforts', 'capability_rules'].some(key => wb[key] === null)) return false;
+  if (!(wb.max_input_tokens == null || int(wb.max_input_tokens, 1024, 2000000))
+    || !(wb.max_output_tokens == null || int(wb.max_output_tokens, 256, 1000000))) return false;
+  const efforts = wb.supported_efforts ?? ['low', 'medium', 'high'];
+  if (!Array.isArray(efforts) || efforts.length < 1 || efforts.length > 3
+    || new Set(efforts).size !== efforts.length || !efforts.every(value => ['low', 'medium', 'high'].includes(value))
+    || !efforts.includes(wb.default_effort ?? 'high')) return false;
+  const rules = wb.capability_rules ?? [];
+  const seen = new Set();
+  return Array.isArray(rules) && rules.length <= 100 && rules.every(rule => {
+    if (!rule || !patterns(rule.models) || rule.models.length < 1 || rule.models.length > 30
+      || !rule.models.every(value => /[A-Za-z0-9]/.test(value))
+      || !(rule.supports_images == null || typeof rule.supports_images === 'boolean')
+      || !(rule.supports_reasoning == null || typeof rule.supports_reasoning === 'boolean')
+      || !(rule.can_disable_thinking == null || typeof rule.can_disable_thinking === 'boolean')) return false;
+    return rule.models.every(pattern => {
+      const key = pattern.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  });
+}
+
 export function isSafeConfig(cfg) {
   try {
     const {site, contact, announcement, models, claude_roles: roles, workbuddy: wb, install, ccswitch} = cfg;
@@ -22,8 +49,7 @@ export function isSafeConfig(cfg) {
       && ['claude', 'codex', 'workbuddy'].every(client => patterns(models[client].include) && models[client].include.length > 0
         && patterns(models[client].exclude) && patterns(models[client].recommend))
       && ['fable', 'opus', 'sonnet', 'haiku', 'subagent'].every(role => patterns(roles[role]))
-      && int(wb.max_input_tokens, 1024, 2000000) && int(wb.max_output_tokens, 256, 1000000)
-      && ['supports_tool_call', 'supports_images', 'supports_reasoning'].every(key => typeof wb[key] === 'boolean')
+      && isSafeWorkBuddy(wb)
       && ['npm_registry', 'npm_registry_fallback', 'node_mirror', 'workbuddy_site'].every(key => HTTPS_URL.test(install[key]))
       && int(install.node_min_major, 18, 60) && int(install.node_lts_major, 18, 60) && install.node_min_major <= install.node_lts_major
       && NPM_PACKAGE.test(install.claude_package) && NPM_PACKAGE.test(install.codex_package)

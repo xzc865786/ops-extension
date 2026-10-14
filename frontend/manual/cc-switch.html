@@ -170,15 +170,32 @@ requires_openai_auth = true</code></pre>
         <p class="caption">来源：<a href="https://github.com/farion1231/cc-switch/blob/v3.20.3/src/components/providers/forms/CodexFormFields.tsx" target="_blank" rel="noopener noreferrer">CC Switch Codex 表单</a>、<a href="https://learn.chatgpt.com/docs/windows/windows-app" target="_blank" rel="noopener noreferrer">Codex Windows 说明</a>。</p>
       </section>
 
-      <section class="doc-section" id="workbuddy" data-title="WorkBuddy 自定义模型 设置 模型 添加 Custom chat completions 接口地址">
+      <section class="doc-section" id="workbuddy" data-title="WorkBuddy 自定义模型 设置 模型 添加 Custom chat completions 接口地址 图片 思考 强度 高 低 中">
         <p class="eyebrow">第 4.3 步 · WorkBuddy 单独配置</p><h2>在 WorkBuddy 添加自定义模型</h2>
         <p>WorkBuddy 不通过 CC Switch 配置，在它自己的设置里添加即可。</p>
         <ol class="steps">
           <li class="step"><span class="step-number">1</span><div class="step-content"><h3>打开“添加模型”</h3><p>点左下角头像 →“设置”→“模型”→ 右上角“添加模型”。也可以点输入框右下角的“快速”按钮，在列表最底部点“配置自定义模型”。</p></div></li>
-          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>填写接口地址、Key 和模型名称</h3><p>供应商保持“自定义”；接口地址填下方<strong>完整地址</strong>；API Key 粘贴 <strong>OpenAI 风格的 Key</strong>（和 Codex 同一种，Anthropic 风格的 Key 不能用）；模型名称填分组支持的完整模型 ID，例如 <code>gpt-6.1-sol</code>。填好后点“测试连接”。</p><div class="copy-row"><code class="copy-value" data-cfg="endpoint.workbuddy">https://api.tysy.top/v1/chat/completions</code><button class="copy-button" type="button" aria-label="复制 WorkBuddy 地址">复制</button></div><figure class="figure medium"><a href="assets/screenshots/ccs-workbuddy-add-model.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：WorkBuddy 添加模型窗口：供应商自定义（仅支持 OpenAI 兼容协议 API），接口地址、API Key 和测试连接按钮、模型名称，高级配置中只勾选了工具调用。"><img class="screenshot-frame" src="assets/screenshots/ccs-workbuddy-add-model.jpg" width="640" height="583" loading="lazy" alt="WorkBuddy 添加模型窗口：供应商自定义（仅支持 OpenAI 兼容协议 API），接口地址、API Key 和测试连接按钮、模型名称，高级配置中只勾选了工具调用。"></a><figcaption class="caption">图 11 · WorkBuddy 的“添加模型”窗口。高级配置只保留“工具调用”。</figcaption></figure></div></li>
-          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>高级配置保持默认，保存</h3><p>“工具调用”默认已勾选，保持即可。<strong>“自定义协议”一定不要勾</strong>，勾上后会报错；“图片输入”“思考模式”第一次也先不勾。保存后，点输入框右下角的“快速”按钮，在列表最底部的“自定义模型”里选中它（不要选 Auto）。</p></div></li>
+          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>填写接口地址、Key 和模型名称</h3><p>供应商保持“自定义”；接口地址填下方<strong>完整地址</strong>；API Key 粘贴 <strong>OpenAI 风格的 Key</strong>（和 Codex 同一种，Anthropic 风格的 Key 不能用）；模型名称填分组支持的完整模型 ID，例如 <code>gpt-6.1-sol</code>。填好后点“测试连接”。</p><div class="copy-row"><code class="copy-value" data-cfg="endpoint.workbuddy">https://api.tysy.top/v1/chat/completions</code><button class="copy-button" type="button" aria-label="复制 WorkBuddy 地址">复制</button></div></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>按模型设置高级配置，保存</h3><p>在下方输入完整模型 ID，按推荐表设置。“思考模式”开启后，默认选择高强度，支持档位勾选低／中／高；推荐表显示不开启思考的模型不用设置这些选项。图片输入按推荐表勾选。输入／输出上限默认留空；“自定义协议”保持关闭。保存后，点输入框右下角的“快速”按钮，在列表最底部的“自定义模型”里选中它（不要选 Auto）。</p><figure class="figure medium"><a href="assets/screenshots/ccs-workbuddy-add-model.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：WorkBuddy 添加模型窗口上半部分：供应商自定义，接口地址填汇码完整地址，API Key 输入框和测试连接按钮，模型名称 gpt-6.1-sol，高级配置勾选工具调用、图片输入、思考模式、仅思考模式，未勾选允许关闭思考和自定义协议。"><img class="screenshot-frame" src="assets/screenshots/ccs-workbuddy-add-model.jpg" width="640" height="583" loading="lazy" alt="WorkBuddy 添加模型窗口上半部分：供应商自定义，接口地址填汇码完整地址，API Key 输入框和测试连接按钮，模型名称 gpt-6.1-sol，高级配置勾选工具调用、图片输入、思考模式、仅思考模式，未勾选允许关闭思考和自定义协议。"></a><figcaption class="caption">图 11 · 添加模型窗口上半部分：填好地址、Key 和模型名称，按推荐表勾选高级配置。</figcaption></figure><figure class="figure medium"><a href="assets/screenshots/ccs-workbuddy-add-model-2.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：WorkBuddy 添加模型窗口往下滚动后：默认思考强度选高，支持的思考强度勾选低、中、高，超高和极致不勾，输入和输出上限留空显示使用提供商默认值。"><img class="screenshot-frame" src="assets/screenshots/ccs-workbuddy-add-model-2.jpg" width="640" height="583" loading="lazy" alt="WorkBuddy 添加模型窗口往下滚动后：默认思考强度选高，支持的思考强度勾选低、中、高，超高和极致不勾，输入和输出上限留空显示使用提供商默认值。"></a><figcaption class="caption">图 12 · 往下滚动：默认思考强度选“高”，档位只勾低、中、高，输入／输出留空。</figcaption></figure></div></li>
         </ol>
-        <div class="notice warning"><strong>不要勾选“自定义协议”。</strong>勾上后 WorkBuddy 会按另一种方式发送请求，连接汇码会报错。已经勾上的，编辑这个模型取消勾选再保存。WorkBuddy 内置套餐和汇码余额分开计费。</div>
+        <div class="tool-config workbuddy-model-picker">
+          <label class="tool-field" for="workbuddy-manual-model">要配置的完整模型 ID</label>
+          <input id="workbuddy-manual-model" type="text" maxlength="128" value="gpt-6.1-sol" autocomplete="off" spellcheck="false">
+        </div>
+        <p class="caption" id="workbuddy-manual-summary" role="status" aria-live="polite">默认高强度思考，可选低／中／高；支持图片输入，输入／输出上限留空。</p>
+        <div class="table-wrap"><table class="field-table"><caption>与一键配置共用的模型推荐值</caption><thead><tr><th scope="col">高级配置</th><th scope="col">填写方式</th></tr></thead><tbody>
+          <tr><th scope="row">工具调用</th><td data-wb-setting="tools">勾选</td></tr>
+          <tr><th scope="row">思考模式</th><td data-wb-setting="thinking">勾选</td></tr>
+          <tr><th scope="row">默认思考强度</th><td data-wb-setting="effort">高</td></tr>
+          <tr><th scope="row">支持的思考强度</th><td data-wb-setting="efforts">低、中、高</td></tr>
+          <tr><th scope="row">仅思考模式</th><td data-wb-setting="only">勾选</td></tr>
+          <tr><th scope="row">允许关闭思考</th><td data-wb-setting="disable">不勾选</td></tr>
+          <tr><th scope="row">图片输入</th><td data-wb-setting="images">勾选</td></tr>
+          <tr><th scope="row">输入上限</th><td data-wb-setting="input">留空，使用 WorkBuddy 默认值</td></tr>
+          <tr><th scope="row">输出上限</th><td data-wb-setting="output">留空，使用 WorkBuddy 默认值</td></tr>
+          <tr><th scope="row">自定义协议</th><td>不勾选</td></tr>
+        </tbody></table></div>
+        <div class="notice">高强度优先保证任务效果，可能需要更长时间和更多用量。按推荐表勾选“仅思考模式”后，对话里不再显示思考开关，始终按所选强度思考，可在模型菜单里切换低／中／高。图片能力取决于汇码实际通道；发图片报错时，编辑模型取消“图片输入”并联系客服核实。WorkBuddy 内置套餐和汇码余额分开计费。</div>
         <p class="caption">来源：<a href="https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Model" target="_blank" rel="noopener noreferrer">WorkBuddy 模型配置说明</a>、<a href="https://cloud.tencent.com/document/product/1829/135988" target="_blank" rel="noopener noreferrer">腾讯云自定义模型接入示例</a>。</p>
       </section>
 
@@ -190,7 +207,7 @@ requires_openai_auth = true</code></pre>
           <li><strong>Codex</strong>：新建任务（命令行运行 <code>codex</code>），发测试消息。</li>
           <li><strong>WorkBuddy</strong>：选中刚添加的模型，新建任务，发测试消息。</li>
         </ul>
-        <figure class="figure"><a href="assets/screenshots/ccs-claude-theme.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Claude Code 首次启动的引导页 Let&#39;s get started，选择终端文字样式，默认 Auto (match terminal)。"><img class="screenshot-frame" src="assets/screenshots/ccs-claude-theme.jpg" width="1000" height="553" loading="lazy" alt="Claude Code 首次启动的引导页 Let&#39;s get started，选择终端文字样式，默认 Auto (match terminal)。"></a><figcaption class="caption">图 12 · Claude Code 第一次打开的引导页，直接按回车。</figcaption></figure><p>收到回复后，到汇码<a href="https://api.tysy.top/usage" data-cfg-href="/usage">使用记录</a>核对时间、模型和 Key。三者对上才算接通，避免误用仍保留的其他服务商。</p>
+        <figure class="figure"><a href="assets/screenshots/ccs-claude-theme.jpg" target="_blank" rel="noopener noreferrer" aria-label="打开大图：Claude Code 首次启动的引导页 Let&#39;s get started，选择终端文字样式，默认 Auto (match terminal)。"><img class="screenshot-frame" src="assets/screenshots/ccs-claude-theme.jpg" width="1000" height="553" loading="lazy" alt="Claude Code 首次启动的引导页 Let&#39;s get started，选择终端文字样式，默认 Auto (match terminal)。"></a><figcaption class="caption">图 13 · Claude Code 第一次打开的引导页，直接按回车。</figcaption></figure><p>收到回复后，到汇码<a href="https://api.tysy.top/usage" data-cfg-href="/usage">使用记录</a>核对时间、模型和 Key。三者对上才算接通，避免误用仍保留的其他服务商。</p>
       </section>
 
       <section class="doc-section" id="switch" data-title="切换 多把 Key 换 Key 编辑 启用 卡片">
@@ -231,5 +248,6 @@ requires_openai_auth = true</code></pre>
       <footer class="site-footer"><span>汇码智能 · 进阶路线</span><a href="index.html">返回手册首页</a><a href="quick.html">新手路线</a><a href="#start">回到顶部 ↑</a></footer>
     </main>
   </div>
+  <script type="module" src="assets/workbuddy-manual.js"></script>
 </body>
 </html>

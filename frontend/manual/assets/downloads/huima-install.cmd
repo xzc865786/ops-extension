@@ -10,13 +10,35 @@ set "CC_SETUP_MODE=%~1"
 set "CC_SETUP_PAUSE=1"
 if /i "%~1"=="--no-pause" set "CC_SETUP_PAUSE=0"
 if /i "%~2"=="--no-pause" set "CC_SETUP_PAUSE=0"
-set "CC_SETUP_PS=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
-if exist "%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe" set "CC_SETUP_PS=%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe"
-"%CC_SETUP_PS%" -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$s=[IO.File]::ReadAllText($env:CC_SETUP_FILE,[Text.Encoding]::UTF8); $m='# POWERSHELL_'+'PAYLOAD'; & ([scriptblock]::Create($s.Substring($s.IndexOf($m)+$m.Length)))"
+call :HUIMA_FIND_PS
+if not defined HUIMA_PS (
+  echo [错误] 未找到可用的 Windows PowerShell 5.1 或 PowerShell 7，或启动被系统策略限制。
+  echo 请按使用手册中的官方安装链接安装软件，并使用“按图配置”。
+  if "%CC_SETUP_PAUSE%"=="1" pause
+  exit /b 1
+)
+"%HUIMA_PS%" -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$s=[IO.File]::ReadAllText($env:CC_SETUP_FILE,[Text.Encoding]::UTF8); $m='# POWERSHELL_'+'PAYLOAD'; & ([scriptblock]::Create($s.Substring($s.IndexOf($m)+$m.Length)))"
 set "CC_SETUP_EXIT=%ERRORLEVEL%"
 echo.
 if "%CC_SETUP_PAUSE%"=="1" pause
 exit /b %CC_SETUP_EXIT%
+
+:HUIMA_FIND_PS
+set "HUIMA_PS="
+if exist "%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe" call :HUIMA_TRY_PS "%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe"
+if not defined HUIMA_PS if exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" call :HUIMA_TRY_PS "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
+if not defined HUIMA_PS if exist "%ProgramW6432%\PowerShell\7\pwsh.exe" call :HUIMA_TRY_PS "%ProgramW6432%\PowerShell\7\pwsh.exe"
+if not defined HUIMA_PS if exist "%ProgramFiles%\PowerShell\7\pwsh.exe" call :HUIMA_TRY_PS "%ProgramFiles%\PowerShell\7\pwsh.exe"
+if not defined HUIMA_PS for /f "delims=" %%P in ('"%SystemRoot%\System32\where.exe" powershell.exe 2^>nul') do call :HUIMA_TRY_PS "%%P"
+if not defined HUIMA_PS for /f "delims=" %%P in ('"%SystemRoot%\System32\where.exe" pwsh.exe 2^>nul') do call :HUIMA_TRY_PS "%%P"
+exit /b
+
+:HUIMA_TRY_PS
+if defined HUIMA_PS exit /b
+"%~1" -NoLogo -NoProfile -Command "if ($PSVersionTable.PSVersion -lt [version]'5.1') { exit 1 }; ConvertTo-Json @{ok=$true} | Out-Null; exit 0" >nul 2>&1
+if not errorlevel 1 set "HUIMA_PS=%~1"
+exit /b
+
 # POWERSHELL_PAYLOAD
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'

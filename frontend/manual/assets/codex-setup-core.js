@@ -1,6 +1,8 @@
 /* Original, dependency-free Windows configurator. Secrets are data, never code. */
 // Brand: 汇码. qiyuan_docs / QIYUAN_* identifiers deliberately stay unchanged
 // so existing configurations, DPAPI backups and rollback history remain compatible.
+import {windowsPowerShellDiscovery} from './windows-powershell.js';
+
 const BASE_URL = 'https://api.tysy.top/v1';
 
 export function validateSetupInput({ apiKey, model } = {}) {
@@ -420,12 +422,21 @@ try {
   const ps = (getPowerShellCore() + main).replace(/"\\r\\n"/g, '"`r`n"').replace(/"\\n"/g, '"`n"').replace(/"\\r"/g, '"`r"');
   const launcher = `@echo off
 setlocal DisableDelayedExpansion
+chcp 65001 >nul 2>nul
 set "QIYUAN_DOCS_SELF=%~f0"
-powershell.exe -NoLogo -NoProfile -Command "$f=[IO.File]::ReadAllText($env:QIYUAN_DOCS_SELF); $m='#==QIYUAN_POWERSHELL=='; $s=$f.Substring($f.LastIndexOf($m)+$m.Length); & ([scriptblock]::Create($s))"
+call :HUIMA_FIND_PS
+if not defined HUIMA_PS (
+  echo [错误] 未找到可用的 Windows PowerShell 5.1 或 PowerShell 7，或启动被系统策略限制。
+  echo 请把此提示提供给客服。
+  if not "%HUIMA_NO_PAUSE%"=="1" pause
+  exit /b 1
+)
+"%HUIMA_PS%" -NoLogo -NoProfile -Command "$f=[IO.File]::ReadAllText($env:QIYUAN_DOCS_SELF); $m='#==QIYUAN_POWERSHELL=='; $s=$f.Substring($f.LastIndexOf($m)+$m.Length); & ([scriptblock]::Create($s))"
 set "qiyuan_result=%errorlevel%"
 echo.
-pause
+if not "%HUIMA_NO_PAUSE%"=="1" pause
 exit /b %qiyuan_result%
+${windowsPowerShellDiscovery}
 #==QIYUAN_POWERSHELL==
 `;
   return (launcher + ps).replace(/\r?\n/g, '\r\n');

@@ -4,6 +4,8 @@
 
 import {validateClaudeRoles} from './ccswitch-setup-core.js';
 import {derive, isSafeConfig} from './manual-config-core.js';
+import {resolveWorkBuddy} from './workbuddy-config-core.js';
+import {windowsPowerShellDiscovery} from './windows-powershell.js';
 
 const MODEL_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/;
 export const TOOLS = Object.freeze({
@@ -225,10 +227,19 @@ function Set-WorkBuddy([string]$Key, [string]$Model) {
   $entry = [pscustomobject][ordered]@{
     id = $Model; name = $Model; vendor = 'Custom'
     url = $script:Settings.workbuddy_url; apiKey = $Key
-    maxInputTokens = [int]$script:Settings.workbuddy.max_input_tokens; maxOutputTokens = [int]$script:Settings.workbuddy.max_output_tokens
     supportsToolCall = [bool]$script:Settings.workbuddy.supports_tool_call
     supportsImages = [bool]$script:Settings.workbuddy.supports_images
     supportsReasoning = [bool]$script:Settings.workbuddy.supports_reasoning
+    onlyReasoning = [bool]$script:Settings.workbuddy.only_reasoning
+  }
+  $wb = $script:Settings.workbuddy
+  if ($null -ne $wb.max_input_tokens) { Set-Field $entry 'maxInputTokens' ([int]$wb.max_input_tokens) }
+  if ($null -ne $wb.max_output_tokens) { Set-Field $entry 'maxOutputTokens' ([int]$wb.max_output_tokens) }
+  if ($wb.supports_reasoning) {
+    Set-Field $entry 'reasoning' ([pscustomobject]@{
+      defaultEffort = $wb.default_effort; supportedEfforts = @($wb.supported_efforts)
+      canDisableThinking = [bool]$wb.can_disable_thinking
+    })
   }
   $isOurs = { param($item) (Test-JsonObject $item) -and $item.PSObject.Properties['url'] -and ([string]$item.url).StartsWith($script:Settings.site) }
   # WorkBuddy itself creates models.json as a top-level array ([]) on first launch, so use that shape.
@@ -248,6 +259,14 @@ function Set-WorkBuddy([string]$Key, [string]$Model) {
   Backup-File $path
   Write-TextFile $path (ConvertTo-Json -InputObject $document -Depth 16)
   Write-Ok ('已写入 ' + $path + '，模型 ' + $Model)
+  $effortNames = @{ low = '低'; medium = '中'; high = '高' }
+  if ($wb.supports_reasoning) {
+    Write-Ok ('思考已开启，默认强度 ' + $effortNames[$wb.default_effort] + '，可选 ' + (@($wb.supported_efforts | ForEach-Object { $effortNames[$_] }) -join '/'))
+    if ($wb.only_reasoning) { Write-Ok '仅思考模式：对话里始终开启思考，可在模型菜单切换强度。' }
+  }
+  else { Write-Warn '该模型不开启思考。' }
+  if ($wb.supports_images) { Write-Ok '图片输入已开启。' } else { Write-Warn '该模型仅支持文本输入，未开启图片输入。' }
+  if ($null -eq $wb.max_input_tokens -and $null -eq $wb.max_output_tokens) { Write-Ok '输入/输出上限使用 WorkBuddy 默认值。' }
 }
 
 function Main {
@@ -259,6 +278,24 @@ function Main {
     if ([string]$url -notmatch '^https://[A-Za-z0-9.-]+(:\d{1,5})?(/[A-Za-z0-9._~/-]*)?$') { throw ('接口地址格式不正确：' + $url) }
   }
   $names = @($payload.PSObject.Properties.Name)
+  if ($names -contains 'workbuddy') {
+    $wb = $script:Settings.workbuddy
+    foreach ($field in @('supports_tool_call', 'supports_images', 'supports_reasoning', 'only_reasoning', 'can_disable_thinking')) {
+      if ($wb.$field -isnot [bool]) { throw 'WorkBuddy 模型能力配置异常，请回到手册重新生成脚本。' }
+    }
+    foreach ($limit in @(@{field='max_input_tokens'; min=1024; max=2000000}, @{field='max_output_tokens'; min=256; max=1000000})) {
+      $value = $wb.($limit.field)
+      if ($null -ne $value -and (!(($value -is [int]) -or ($value -is [long])) -or $value -lt $limit.min -or $value -gt $limit.max)) {
+        throw 'WorkBuddy Token 上限异常，请回到手册重新生成脚本。'
+      }
+    }
+    $efforts = @($wb.supported_efforts)
+    if ($efforts.Count -lt 1 -or $efforts.Count -gt 3 -or @($efforts | Select-Object -Unique).Count -ne $efforts.Count -or
+      @($efforts | Where-Object { $_ -cnotin @('low', 'medium', 'high') }).Count -gt 0 -or
+      $wb.default_effort -cnotin $efforts -or ($wb.only_reasoning -and $wb.can_disable_thinking)) {
+      throw 'WorkBuddy 思考配置异常，请回到手册重新生成脚本。'
+    }
+  }
   $labels = @{ claude = 'Claude Code'; codex = 'Codex'; workbuddy = 'WorkBuddy' }
   Write-Host '========================================================'
   Write-Host '               汇码 · 一键配置'
@@ -349,12 +386,20 @@ setlocal DisableDelayedExpansion
 chcp 65001 >nul 2>nul
 title ${title}
 set "HUIMA_SELF=%~f0"
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$f=[IO.File]::ReadAllText($env:HUIMA_SELF,[Text.Encoding]::UTF8); $m='#==HUIMA_POWERSHELL=='; & ([scriptblock]::Create($f.Substring($f.LastIndexOf($m)+$m.Length)))"
+call :HUIMA_FIND_PS
+if not defined HUIMA_PS (
+  echo [错误] 未找到可用的 Windows PowerShell 5.1 或 PowerShell 7，或启动被系统策略限制。
+  echo 请按使用手册中的“按图配置”完成配置，并把此提示提供给客服。
+  if not "%HUIMA_NO_PAUSE%"=="1" pause
+  exit /b 1
+)
+"%HUIMA_PS%" -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$f=[IO.File]::ReadAllText($env:HUIMA_SELF,[Text.Encoding]::UTF8); $m='#==HUIMA_POWERSHELL=='; & ([scriptblock]::Create($f.Substring($f.LastIndexOf($m)+$m.Length)))"
 set "HUIMA_EXIT=%errorlevel%"
 echo.
-pause
+if not "%HUIMA_NO_PAUSE%"=="1" pause
 if not "%HUIMA_EXIT%"=="10" exit /b %HUIMA_EXIT%
 (goto) 2>nul & del "%~f0"
+${windowsPowerShellDiscovery}
 #==HUIMA_POWERSHELL==
 `;
   // String.raw keeps "\n" literally; PowerShell needs its own escape.
@@ -362,22 +407,18 @@ if not "%HUIMA_EXIT%"=="10" exit /b %HUIMA_EXIT%
 }
 
 // Settings the generated script needs from the manual configuration (all re-validated before use).
-export function scriptSettings(cfg) {
+export function scriptSettings(cfg, workbuddyModel = '') {
   if (!isSafeConfig(cfg)) throw new Error('手册配置异常，请刷新页面后重试。');
   const {site, endpoints} = derive(cfg);
-  const wb = cfg.workbuddy;
   return {
     site, codex: endpoints.codex, workbuddy_url: endpoints.workbuddy,
-    workbuddy: {
-      max_input_tokens: wb.max_input_tokens, max_output_tokens: wb.max_output_tokens,
-      supports_tool_call: wb.supports_tool_call, supports_images: wb.supports_images, supports_reasoning: wb.supports_reasoning,
-    },
+    workbuddy: resolveWorkBuddy(workbuddyModel, cfg),
   };
 }
 
 export function buildConfigCmd(input, cfg) {
   const tools = validateConfigInput(input);
-  const data = {tools, settings: scriptSettings(cfg)};
+  const data = {tools, settings: scriptSettings(cfg, tools.workbuddy?.model)};
   return wrapCmd('汇码一键配置', CORE + CONFIGURE.replace('__HUIMA_DATA__', base64Utf8(JSON.stringify(data))));
 }
 
