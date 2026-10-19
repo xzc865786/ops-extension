@@ -375,7 +375,7 @@ function Install-CodexDesktop([string]$Architecture) {
         $code = Invoke-Winget @('install', '--id', $script:CodexStoreId, '--source', 'msstore', '--exact',
             '--accept-package-agreements', '--accept-source-agreements')
         if (Test-WingetSuccess $code) {
-            Write-Host '  Codex 桌面版已安装。在开始菜单搜索“Codex”即可打开。' -ForegroundColor Green
+            Write-Host '  Codex 桌面版已安装。在开始菜单搜索“ChatGPT”即可打开（Codex 已并入 ChatGPT）。' -ForegroundColor Green
             $script:Results['Codex 桌面版'] = 'ok'
             return
         }
@@ -385,7 +385,7 @@ function Install-CodexDesktop([string]$Architecture) {
     }
     $script:Results['Codex 桌面版'] = 'fail'
     try { Start-Process ('ms-windows-store://pdp/?ProductId=' + $script:CodexStoreId) } catch { }
-    Write-Host '  已尝试打开微软商店的 Codex 页面，稍后可以在那里点“获取”手动安装。'
+    Write-Host '  已尝试打开微软商店的 ChatGPT（Codex）页面，稍后可以在那里点“获取”手动安装。'
     Write-Host '  现在先改装 Codex 命令行版，配置方法相同，在终端里使用。'
     try {
         Initialize-Npm $Architecture
