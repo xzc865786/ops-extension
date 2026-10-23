@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"
+ role="img" aria-labelledby="title desc">
+  <title id="title">汇码智能主标识 — Balanced Baseline</title>
+  <desc id="desc">Flat vector master reconstructed from the approved mark. Three graphite modules converge around a teal core.</desc>
+  <g id="modules" fill="#2B2E33">
+    <path id="module-upper-left"
+      d="M21 116 L21 75
+         C21 66 26 59 34 52
+         L86 19
+         C95 14 105 14 114 20
+         C122 26 125 36 121 45
+         C118 53 112 59 106 63
+         L21 116 Z"/>
+    <path id="module-right"
+      d="M126 33
+         L167 56
+         C175 61 180 69 180 79
+         L181 133
+         C181 144 176 153 166 158
+         C157 163 147 163 138 159
+         C130 155 126 147 126 137
+         Z"/>
+    <path id="module-lower-left"
+      d="M58 113
+         L150 167
+         L127 182
+         C122 185 116 187 109 187
+         L68 187
+         C59 187 51 184 44 180
+         L27 169
+         C18 164 14 155 16 145
+         C18 134 24 124 34 117
+         C42 112 50 111 58 113
+         Z"/>
+  </g>
+  <path id="intelligence-core" fill="#17CFD8"
+    d="M68 104
+       C80 101 91 93 103 83
+       C99 94 98 101 99 106
+       C99 112 102 119 105 126
+       C93 116 81 109 68 104
+       Z"/>
+</svg>

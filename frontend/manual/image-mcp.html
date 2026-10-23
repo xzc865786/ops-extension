@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="汇码生图使用手册：下载 Windows 安装助手，连接 WorkBuddy、Codex 或 Claude Code，生成图片、参考图修改并保存原图。">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>AI 生图 · 汇码智能</title>
+  <link rel="icon" href="assets/brand/favicon.ico" sizes="any">
+  <link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/docs.css">
+  <link rel="stylesheet" href="assets/image-mcp.css">
+  <script src="assets/docs.js" defer></script>
+  <script src="assets/image-mcp-core.js" defer></script>
+  <script src="assets/image-mcp.js" defer></script>
+  <script type="module" src="assets/manual-config.js"></script>
+</head>
+<body class="image-guide">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="汇码智能使用手册首页"><img class="brand-logo" src="assets/brand/logo-horizontal.svg" width="168" height="51" alt="汇码智能"><span class="brand-subtitle">使用手册</span></a>
+    <div class="search-box"><label class="sr-only" for="doc-search">搜索本页</label><input id="doc-search" type="search" placeholder="搜索本页：安装、生图、原图" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore></div>
+    <div class="topbar-links"><a href="https://api.tysy.top/dashboard" data-cfg-href="/dashboard">进入控制台 ↗</a></div>
+    <button id="menu-toggle" type="button" aria-controls="docs-sidebar" aria-expanded="false" aria-label="展开目录">目录</button>
+  </header>
+  <div class="docs-layout">
+    <aside id="docs-sidebar" aria-label="文档目录"><nav aria-label="手册章节">
+      <a class="nav-home" href="index.html">手册首页</a>
+      <p class="nav-label">安装与配置</p>
+      <a class="nav-route" href="quick.html">新手路线 · 一键安装配置</a>
+      <a class="nav-route" href="cc-switch.html">进阶路线 · CC Switch</a>
+      <a href="groups.html">选择分组</a>
+      <p class="nav-label">创作与使用</p>
+      <a class="nav-route is-open" href="#start">AI 生图 · 生成与改图</a>
+      <div class="nav-sub">
+        <a href="#prepare">使用前准备</a>
+        <a href="#install">安装与连接</a>
+        <a href="#first-image">生成第一张图</a>
+        <a href="#edit">参考图与继续修改</a>
+        <a href="#files">找到你的原图</a>
+        <a href="#maintenance">更换配置与卸载</a>
+        <a href="#faq">常见问题</a>
+        <a href="#contact">需要帮助</a>
+      </div>
+    </nav><div class="sidebar-note">从一句描述开始<br>把想法变成图片</div></aside>
+    <main id="main-content" tabindex="-1">
+      <p id="search-status" class="search-status" aria-live="polite" role="status" hidden></p>
+      <section class="doc-section hero-section" id="start" data-title="AI 生图 Windows 下载 安装助手 MCP 汇码 图片">
+        <div class="image-hero">
+          <div><p class="eyebrow">汇码智能 · AI 生图</p><h1>让创作，<br>从一句描述开始。</h1><p class="lead">在你熟悉的聊天软件里，生成图片、参考改图。原图自动保存到电脑，让想法变成看得见的作品。</p>
+            <div class="image-actions"><a class="button image-download" id="image-download" aria-disabled="true">安装包准备中</a><a href="#first-image">已安装？开始生图 →</a></div>
+            <p id="image-release-status" class="caption" role="status">安装包信息加载中。页面不读取或保存你的 Key。</p>
+            <details id="image-release-details" hidden><summary>查看版本与文件校验信息</summary><p id="image-release-meta"></p><p>SHA-256：</p><div class="copy-row"><pre class="copy-value" id="image-release-sha"></pre><button class="copy-button" type="button">复制校验值</button></div><p id="image-signing-note"></p></details>
+          </div>
+          <div class="image-brand-mark"><img src="assets/brand/image-symbol.svg" width="150" height="150" alt="汇码智能正式标识"></div>
+        </div>
+        <div class="notice">生图工具连接到聊天软件后，由 AI 帮你调用。这种连接方式叫 MCP，安装助手会帮你完成配置。</div>
+      </section>
+      <section class="doc-section" id="prepare" data-title="准备 Key 密钥 生图分组 客户端 WorkBuddy Codex Claude Code 权限">
+        <p class="eyebrow">01 · 使用前准备</p><h2>开始前，准备好这两样</h2>
+        <div class="image-preparations">
+          <article class="card"><span class="image-index">01</span><h3>一个能正常聊天的软件</h3><p>选择你正在使用的 WorkBuddy、Codex 或 Claude Code。先确认可以正常对话，再接入生图。</p><a href="quick.html">还没安装？查看新手路线 →</a></article>
+          <article class="card"><span class="image-index">02</span><h3>一把生图分组 API Key</h3><p>在汇码创建具有生图权限的 Key，稍后填进本机安装助手。</p><a href="index.html#api-key">查看创建 Key 的步骤 →</a></article>
+        </div>
+        <p>创建 Key 时，选择开放 Flare / Sunburst 生图模型的分组；分组权限和费用说明见<a href="groups.html">分组说明</a>。不确定时，先向客服确认。</p>
+        <div class="notice"><strong>生图 Key 单独配置。</strong>你原来的聊天 Key 和聊天模型继续使用，无需替换。即使通过 Claude Code 使用，生图工具也使用自己的 Key。</div>
+      </section>
+      <section class="doc-section" id="install" data-title="安装 双击 exe Windows 软件 密钥 目录 配置 连接 检查">
+        <p class="eyebrow">02 · 安装与连接</p><h2>跟着助手，一步步连接</h2><p>安装包包含配套运行环境，无需打开终端，也不用手动修改配置文件。当前下载入口提供 Windows x64 安装包，适用于 Windows 10 1809 或更新的 64 位 Windows。</p>
+        <ol class="steps">
+          <li class="step"><span class="step-number">1</span><div class="step-content"><h3>下载并双击安装助手</h3><p>在本页顶部下载完整安装包，双击打开“汇码生图安装助手”。欢迎页显示“把想法变成图片”，点击“开始设置”。</p><p>系统提示来源或安全检查时，先核对下载渠道和文件信息。不要关闭系统防护；无法确认时联系客服。</p></div></li>
+          <li class="step"><span class="step-number">2</span><div class="step-content"><h3>选择你平时使用的软件</h3><p>可以选择多个。助手会标记是否发现用户配置；已经安装但未检测到时，可以打开过一次软件后“重新检测”，也可手动勾选。</p><p>保存正在进行的工作，并完全退出所选软件。助手不会强制结束你的聊天。</p></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>粘贴生图 Key，验证并继续</h3><p>Key 只填进本机安装助手。点击“验证并继续”，助手只查询模型列表，不会生成图片。本机已有 Key 时，留空可继续使用。</p><p>提示 Key 无效时，请重新复制完整 Key；提示没有生图模型时，请检查分组权限。</p></div></li>
+          <li class="step"><span class="step-number">4</span><div class="step-content"><h3>选择图片保存位置</h3><p>默认放在“图片 / 汇码生图”。可以点击“更改位置”，选择可写的本地文件夹。助手会创建目录并检查写入权限。</p></div></li>
+          <li class="step"><span class="step-number">5</span><div class="step-content"><h3>确认设置，安装并连接</h3><p>核对软件、Key 使用方式和图片目录，确认已退出客户端，再点击“安装并连接”。助手校验程序文件、写入本工具配置，并检查 MCP 工具能否启动和被发现。</p><p>发现已有其他“汇码生图”配置时，默认保留；只有你明确选择替换，才会覆盖此工具的条目。其他设置保留。</p></div></li>
+          <li class="step"><span class="step-number">6</span><div class="step-content"><h3>查看结果，重新打开聊天软件</h3><p>每个软件分别显示连接结果。某个软件失败时，可以先使用成功的软件，再单独处理失败项。</p><p>“工具连接检查通过”表示本机工具可以启动并列出功能；第一张图片需要你主动发送指令。</p></div></li>
+        </ol>
+        <div class="notice"><strong>安装与连接检查不生成图片。</strong>发送生图或改图指令后，才会调用相应服务并产生费用。</div>
+      </section>
+      <section class="doc-section" id="first-image" data-title="第一张图 提示词 Flare low 品牌理念 模型 生成 复制">
+        <p class="eyebrow">03 · 生成第一张图</p><h2>把汇码的理念，画成一张图</h2><p>先选你使用的软件，再复制下面的指令。</p>
+        <div class="image-clients" role="group" aria-label="选择你使用的客户端"><button type="button" data-image-client="workbuddy" aria-pressed="true">WorkBuddy</button><button type="button" data-image-client="codex" aria-pressed="false">Codex</button><button type="button" data-image-client="claude" aria-pressed="false">Claude Code</button></div>
+        <div class="notice" id="image-client-instruction" aria-live="polite">完全退出并重新打开 WorkBuddy。进入“专家·技能·连接器” → “连接器” → “自定义连接器”，在 MCP 服务管理中检查 huima-image。按提示信任后，确认连接正常、3/3 工具启用，再新建聊天并发送指令。</div>
+        <div class="notice warning">发送指令后会调用生图服务并产生费用。出现工具授权提示时，请核对是“汇码生图”及本次需要执行的操作，再决定是否允许。</div>
+        <div class="image-prompt"><div class="image-prompt-title"><h3>示例：汇码品牌理念插画</h3><span>Flare · low</span></div><div class="copy-row"><pre class="copy-value" id="image-first-prompt">请使用汇码生图工具，调用 Flare 模型，以 low 质量生成一张“汇码智能”的品牌理念插画。汇码智能提供 AI API、软件服务与定制开发。画面以一个智能青色的核心连接多个石墨色模块，模块逐步构成应用界面、代码窗口和创作画布，表达技术能力汇聚、连接并转化为实际应用的过程。采用简洁的几何插画风格，以石墨色和智能青为主，白色或浅灰背景，构图有秩序、留白充足，体现专业、现代、克制的科技感。不要添加文字，不要绘制或改造官方 Logo，不使用霓虹、发光或金属效果。完成后展示预览，并告诉我原图保存位置。</pre><button class="copy-button" type="button">复制生图指令</button></div></div>
+        <p>成功后，助手会返回图片预览和原图保存位置。聊天界面没有显示图片时，可以打开 HTML 预览或原图文件。</p>
+        <div class="notice">此示例不指定尺寸。图片的实际像素以生成结果为准；以后如果明确请求了尺寸，却收到不同像素的图片，属于接口返回异常。保留原图和请求记录，不要反复重发。</div>
+      </section>
+      <section class="doc-section" id="edit" data-title="改图 编辑 参考图 路径 上一张 图片 PNG JPEG WebP">
+        <p class="eyebrow">04 · 日常创作</p><h2>有了第一张图，还可以这样用</h2>
+        <h3>继续修改上一张</h3><p>在同一聊天里说明要保留什么、改变什么，让助手读取上一张原图继续修改。</p>
+        <div class="copy-row"><pre class="copy-value">请使用汇码改图工具，把上一张图片调整为深色背景，保留智能青核心和原有构图，提升模块与背景的对比度，并另存为新图片。</pre><button class="copy-button" type="button">复制改图指令</button></div>
+        <h3>修改电脑里的图片</h3><p>在文件资源管理器里选中图片，使用“复制文件地址”或“复制为路径”，把完整路径替换到下面的指令中。</p>
+        <div class="copy-row"><pre class="copy-value">请使用汇码改图工具，读取“这里替换为图片的完整路径”，保留画面主体，把背景改为简洁的浅灰色，并保存为新图片。</pre><button class="copy-button" type="button">复制参考图指令</button></div>
+        <p>仅把图片拖进聊天框，不一定能让工具读取本地原图。请提供工具可访问的完整文件路径。参考图支持 PNG、JPEG、WebP，单张不超过 10 MiB。</p>
+        <details><summary>怎么选模型和质量？</summary><p>可以在指令中指定 Flare 或 Sunburst，质量可选 low、medium、high。聊天模型和生图模型分别选择；切换质量不会自动替换生图模型。实际费用以平台使用记录为准。</p></details>
+      </section>
+      <section class="doc-section" id="files" data-title="保存 分享 原图 预览 像素 HTML 文件夹">
+        <p class="eyebrow">05 · 保存与分享</p><h2>分享作品时，记得使用原图</h2><p>聊天里的预览方便查看，原图保存在你安装时选择的文件夹中。每次生成或修改都有独立的结果目录。</p>
+        <div class="image-file-list"><div><strong>原图</strong><span>用于分享、交付和继续编辑。</span></div><div><strong>JPEG 预览</strong><span>缩小后的图片，适合快速查看。</span></div><div><strong>HTML 预览</strong><span>在浏览器查看预览、实际像素和原图入口。</span></div></div>
+        <div class="notice">找不到图片时，可以问助手“上一张原图保存在哪里？”，或重新打开安装助手，点击“打开图片文件夹”。</div>
+      </section>
+      <section class="doc-section" id="maintenance" data-title="维护 更换 Key 目录 卸载 删除 保留 连接检查">
+        <p class="eyebrow">06 · 以后会用到</p><h2>更换配置，或者卸载工具</h2><p>在开始菜单打开“汇码生图安装助手”，进入“管理已安装的生图工具”。也可以重新打开原安装包。</p>
+        <ul><li><strong>检查连接：</strong>检查工具启动与发现，不生成图片。</li><li><strong>更换 Key 或保存目录：</strong>重新配置，并勾选需要更新的客户端。留空 Key 可沿用已保存的 Key。</li><li><strong>接入其他软件：</strong>勾选新增的软件，完成配置后重新打开它。</li><li><strong>卸载：</strong>移除本助手管理的连接。没有剩余连接时删除当前版本运行文件；保留图片、Key 和安装助手。其他来源的配置与旧版本文件不会强制删除。</li></ul>
+        <p>不再使用的 Key，可以在平台密钥页面禁用。卸载本机工具不会自动禁用平台 Key。</p>
+      </section>
+      <section class="doc-section" id="faq" data-title="报错 问题 超时 取消 Key 401 403 目录 冲突 校验 失败">
+        <p class="eyebrow">07 · 遇到问题</p><h2>先看看这里</h2>
+        <details><summary>助手说连接通过，聊天里却不能生图？</summary><p>完全退出软件后重新打开，新建聊天，明确要求“使用汇码生图工具”。仍不可用时，在安装助手里检查连接，并将脱敏诊断信息提供给客服。</p></details>
+        <details><summary>一直在等，或者提示超时怎么办？</summary><p>先查看图片保存目录和平台使用记录。Codex 中停止聊天不一定取消生图请求，也不代表不会计费。没有显示进度时，不能据此认定请求已经停止；不要连续重复发送。</p></details>
+        <details><summary>提示 Key 无效、没有权限或没有生图模型？</summary><p>检查 Key 是否完整、有效，以及是否属于开放生图权限的分组。更换生图 Key 不需要改动聊天软件的 Key。网络连接失败时，先检查网络和服务地址。</p></details>
+        <details><summary>图片尺寸和我请求的不一样？</summary><p>当前接口可能返回与明确请求尺寸不一致的图片，这是接口返回异常。请以实际图片像素为准，保留原图、请求尺寸及请求记录联系支持。工具不会自动重复生成，也不会偷偷缩放原图。</p></details>
+        <details><summary>安装提示校验失败、文件占用或目录不可写？</summary><p>校验失败时重新下载完整安装包，不要跳过校验。文件占用时先保存工作并退出相关软件；目录不可写时改用自己的“图片”或“文档”目录。需要帮助时复制助手提供的诊断信息。</p></details>
+        <details><summary>为什么有的软件成功，有的软件失败？</summary><p>每个客户端配置单独处理。已有其他同名配置、配置格式异常或文件正在被修改时，相应客户端会单独显示失败。可以先使用成功的软件，再重新配置失败的软件。</p></details>
+      </section>
+      <section class="doc-section" id="contact" data-title="帮助 客服 诊断 支持 联系">
+        <p class="eyebrow">需要帮助</p><h2>把问题清楚地告诉客服</h2><p>准备好安装助手版本、失败步骤、错误代码和客户端版本。助手里的“复制诊断信息”不会包含 Key 或完整个人目录。</p>
+        <div class="notice warning">不要发送 API Key、登录凭据或未经脱敏的配置文件。截图前请遮住密钥、个人信息和私人对话。</div><p><a href="index.html#contact">查看客服联系方式与求助模板 →</a></p>
+      </section>
+      <footer class="site-footer"><span>汇码智能 · AI 生图</span><a href="index.html">返回手册首页</a><a href="#start">回到顶部 ↑</a></footer>
+    </main>
+  </div>
+</body>
+</html>
