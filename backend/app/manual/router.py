@@ -1,3 +1,5 @@
+import hashlib
+import json
 import logging
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
@@ -49,11 +51,14 @@ def _version_out(row, with_config: bool = False) -> dict:
 @public_router.get("/manual-config")
 def public_manual_config(request: Request, db: Session = Depends(get_db)):
     payload = service.public_payload(db)
-    etag = f'W/"manual-{payload["version"]}"'
+    encoded = jsonable_encoder(payload)
+    # Deployments can add compatible defaults without creating a configuration version.
+    digest = hashlib.sha256(json.dumps(encoded, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
+    etag = f'W/"manual-{payload["version"]}-{digest}"'
     headers = {"Cache-Control": "public, max-age=60", "ETag": etag}
     if request.headers.get("if-none-match") == etag:
         return Response(status_code=304, headers=headers)
-    return JSONResponse(jsonable_encoder(payload), headers=headers)
+    return JSONResponse(encoded, headers=headers)
 
 
 @public_router.api_route("/manual-files/{file_id}/{file_name}", methods=["GET", "HEAD"])

@@ -94,6 +94,14 @@ def test_admin_endpoints_require_admin(client, db):
     assert client.put("/ext/api/v1/admin/manual/config", json={"config": {}, "base_version": 1}).status_code == 403
 
 
+def test_public_etag_refreshes_legacy_cached_payload_without_publishing(client):
+    response = client.get("/ext/api/v1/public/manual-config", headers={"If-None-Match": 'W/"manual-1"'})
+    assert response.status_code == 200
+    assert "image_mcp" in response.json()["config"]
+    assert response.headers["etag"] != 'W/"manual-1"'
+    assert client.get("/ext/api/v1/public/manual-config", headers={"If-None-Match": response.headers["etag"]}).status_code == 304
+
+
 def test_save_creates_version_and_updates_public_config(client, db):
     admin_client(client, db)
     current = live(client)
