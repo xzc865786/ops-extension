@@ -97,7 +97,6 @@ label.field-hint { display:block; }
 .group-intro { white-space:pre-line; }
 .group-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:14px 0 18px; }
 .group-list > .notice { grid-column:1 / -1; margin:0; }
-.group-list > .card + .card { margin-top:0; }
 .group-card { display:flex; flex-direction:column; gap:10px; border-top:3px solid var(--brand-teal); }
 .group-head { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
 .group-head h3 { margin:0; overflow-wrap:anywhere; }
@@ -296,8 +295,6 @@ a.card:hover { border-color: #c5ccd4; box-shadow: var(--shadow); transform: tran
 .card .eyebrow { margin-bottom: 12px; font-size: 11px; }
 .card .section-kicker { margin-bottom: 10px; color: var(--accent); font-size: 11px; }
 .card > :last-child { margin-bottom: 0; }
-.card + .card { margin-top: 16px; }
-.card-grid > .card + .card { margin-top: 0; }
 .table-wrap { max-width: 100%; margin: 22px 0; overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
 .table-wrap .field-table { display: table; margin: 0; border: 0; border-radius: 0; border-collapse: separate; }
 .field-table caption { padding: 11px 18px; border-bottom: 1px solid var(--line); color: var(--muted); background: white; font-size: 12px; text-align: left; }

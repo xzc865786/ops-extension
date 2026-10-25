@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:manual": "node --test \"tests/manual/*.test.mjs\"",
+    "test:manual:layout": "node tests/manual/layout-browser.mjs",
     "test:expenses": "node --test \"tests/expenses/*.test.mjs\"",
     "test:release": "node tests/expenses/release-browser.mjs",
     "test:dates": "node tests/expenses/date-range-browser.mjs"

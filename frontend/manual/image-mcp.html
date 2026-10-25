@@ -25,25 +25,37 @@
     <button id="menu-toggle" type="button" aria-controls="docs-sidebar" aria-expanded="false" aria-label="展开目录">目录</button>
   </header>
   <div class="docs-layout">
-    <aside id="docs-sidebar" aria-label="文档目录"><nav aria-label="手册章节">
-      <a class="nav-home" href="index.html">手册首页</a>
-      <p class="nav-label">安装与配置</p>
-      <a class="nav-route" href="quick.html">新手路线 · 一键安装配置</a>
-      <a class="nav-route" href="cc-switch.html">进阶路线 · CC Switch</a>
-      <a href="groups.html">选择分组</a>
-      <p class="nav-label">创作与使用</p>
-      <a class="nav-route is-open" href="#start">AI 生图 · 生成与改图</a>
-      <div class="nav-sub">
-        <a href="#prepare">使用前准备</a>
-        <a href="#install">安装与连接</a>
-        <a href="#first-image">生成第一张图</a>
-        <a href="#edit">参考图与继续修改</a>
-        <a href="#files">找到你的原图</a>
-        <a href="#maintenance">更换配置与卸载</a>
-        <a href="#faq">常见问题</a>
-        <a href="#contact">需要帮助</a>
-      </div>
-    </nav><div class="sidebar-note">从一句描述开始<br>把想法变成图片</div></aside>
+    <aside id="docs-sidebar" aria-label="文档目录">
+      <nav aria-label="手册章节">
+        <a class="nav-home" href="index.html#start">手册首页</a>
+        <p class="nav-label">准备账号</p>
+        <a href="index.html#account">注册与登录</a>
+        <a href="index.html#balance">额度与充值</a>
+        <a href="index.html#api-key">创建 API Key</a>
+        <a href="groups.html">选择分组</a>
+        <p class="nav-label">安装和配置（二选一）</p>
+        <a class="nav-route" href="quick.html">新手路线 · 一键安装配置</a>
+        <a class="nav-route" href="cc-switch.html">进阶路线 · CC Switch</a>
+        <p class="nav-label">日常使用</p>
+        <a class="nav-route is-open" href="#start">AI 生图 · 安装与使用</a>
+        <div class="nav-sub">
+          <a href="#prepare">使用前准备</a>
+          <a href="#install">安装与连接</a>
+          <a href="#first-image">生成第一张图</a>
+          <a href="#edit">参考图与继续修改</a>
+          <a href="#files">找到你的原图</a>
+          <a href="#maintenance">更换配置与卸载</a>
+          <a href="#faq">常见问题</a>
+          <a href="#contact">需要帮助</a>
+        </div>
+        <a href="index.html#usage">查看用量与控制消费</a>
+        <a href="index.html#security">安全使用须知</a>
+        <p class="nav-label">遇到问题</p>
+        <a href="index.html#troubleshooting">常见问题与报错</a>
+        <a href="index.html#contact">联系客服</a>
+      </nav>
+      <div class="sidebar-note">从一句描述开始<br>把想法变成图片</div>
+    </aside>
     <main id="main-content" tabindex="-1">
       <p id="search-status" class="search-status" aria-live="polite" role="status" hidden></p>
       <section class="doc-section hero-section" id="start" data-title="AI 生图 Windows 下载 安装助手 MCP 汇码 图片">
@@ -59,7 +71,7 @@
       </section>
       <section class="doc-section" id="prepare" data-title="准备 Key 密钥 生图分组 客户端 WorkBuddy Codex Claude Code 权限">
         <p class="eyebrow">01 · 使用前准备</p><h2>开始前，准备好这两样</h2>
-        <div class="image-preparations">
+        <div class="card-grid image-preparations">
           <article class="card"><span class="image-index">01</span><h3>一个能正常聊天的软件</h3><p>选择你正在使用的 WorkBuddy、Codex 或 Claude Code。先确认可以正常对话，再接入生图。</p><a href="quick.html">还没安装？查看新手路线 →</a></article>
           <article class="card"><span class="image-index">02</span><h3>一把生图分组 API Key</h3><p>在汇码创建具有生图权限的 Key，稍后填进本机安装助手。</p><a href="index.html#api-key">查看创建 Key 的步骤 →</a></article>
         </div>

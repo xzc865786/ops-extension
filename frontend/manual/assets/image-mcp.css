@@ -1,6 +1,5 @@
 /* The manual deliberately stays light, including on dark OS themes. */
 :root { color-scheme: light; }
-body.image-guide { color: #2b2e33; background: #fff; }
 .image-hero { display: grid; grid-template-columns: minmax(0, 1fr) 165px; align-items: center; gap: 38px; }
 .image-hero h1 { letter-spacing: -.04em; }
 .image-brand-mark { padding: 25px; border-radius: 18px; background: #f5f7f8; }
@@ -9,7 +8,10 @@ body.image-guide { color: #2b2e33; background: #fff; }
 .image-download { background: #2b2e33; border-color: #2b2e33; color: #fff; }
 .image-download:hover { background: #171a1f; color: #fff; }
 .image-download[aria-disabled="true"] { background: #eef0f2; border-color: #e6e9ed; color: #66717b; cursor: not-allowed; }
-.image-preparations { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 24px 0; }
+.image-preparations { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.image-preparations > .card { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.image-preparations h3 { margin: 0; }
+.image-preparations > .card > a { margin-top: auto; padding-top: 4px; }
 .image-index { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: #eafafb; color: #087a82; font-size: 13px; font-weight: 600; }
 .image-clients { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
 .image-clients button { padding: 9px 16px; min-height: 42px; border: 1px solid #e6e9ed; border-radius: 8px; background: #f5f7f8; color: #2b2e33; font: inherit; cursor: pointer; }
@@ -31,4 +33,5 @@ body.image-guide { color: #2b2e33; background: #fff; }
 .image-entry-card small { color: #66717b; font-size: 14px; }
 .image-entry-card > span:last-child { white-space: nowrap; }
 @media (max-width: 750px) { .image-hero { grid-template-columns: 1fr; } .image-brand-mark { display: none; } }
-@media (max-width: 520px) { .image-preparations { grid-template-columns: 1fr; } .image-prompt { padding: 17px; } .image-file-list div { grid-template-columns: 1fr; gap: 5px; } .image-entry-card { align-items: flex-start; flex-direction: column; } .image-actions { align-items: stretch; flex-direction: column; } }
+@media (max-width: 700px) { .image-preparations { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .image-prompt { padding: 17px; } .image-file-list div { grid-template-columns: 1fr; gap: 5px; } .image-entry-card { align-items: flex-start; flex-direction: column; } .image-actions { align-items: stretch; flex-direction: column; } }
