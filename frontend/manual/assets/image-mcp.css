@@ -35,3 +35,6 @@
 @media (max-width: 750px) { .image-hero { grid-template-columns: 1fr; } .image-brand-mark { display: none; } }
 @media (max-width: 700px) { .image-preparations { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .image-prompt { padding: 17px; } .image-file-list div { grid-template-columns: 1fr; gap: 5px; } .image-entry-card { align-items: flex-start; flex-direction: column; } .image-actions { align-items: stretch; flex-direction: column; } }
+
+.image-key-links { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin-top: auto; }
+#image-key-note, #image-key-detail, #image-release-meta { white-space: pre-line; overflow-wrap: anywhere; }

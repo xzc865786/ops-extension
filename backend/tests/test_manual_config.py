@@ -202,7 +202,7 @@ def test_restore_creates_a_new_version(client, db):
 def _mock_storage():
     storage = MagicMock()
     stream = MagicMock()
-    stream.stream.return_value = iter([b"MSI-BYTES"])
+    stream.stream.side_effect = lambda _size: iter([b"MSI-BYTES"])
     storage.open_stream.return_value = stream
     return storage, stream
 
@@ -357,3 +357,152 @@ def test_sub2api_groups_report_missing_key_and_upstream_errors(client, db, monke
     res = client.get("/ext/api/v1/admin/manual/sub2api-groups")
     assert res.status_code == 502
     assert "SUB2API_ADMIN_API_KEY" in res.json()["detail"]
+
+
+# AI image configuration uses only isolated SQLite and mocked object storage.
+def test_image_default_and_old_restore(client, db):
+    from app.db.models.manual import ManualConfigVersion
+    old = load_default_config().dump()
+    old.pop("image_mcp")
+    db.add(ManualConfigVersion(version=1, config=old))
+    db.commit()
+    admin_client(client, db)
+    current = live(client)
+    assert current["image_mcp_compat_default"] is True
+    image = current["config"]["image_mcp"]
+    assert image["downloads"]["windows_x64"]["file_size"] == 127966065
+    assert image["downloads"]["windows_x64"]["sha256"] == "cebbe26b4286a0ade27284e5f17369c8254257214c914ede09ba4de3045bda66"
+    assert not image["downloads"]["macos_arm64"]["enabled"]
+    image["downloads"]["windows_x64"]["enabled"] = False
+    assert save(client, current["config"], 1).status_code == 200
+    restored = client.post("/ext/api/v1/admin/manual/versions/1/restore", json={"base_version": 2})
+    assert restored.status_code == 200
+    assert restored.json()["config"]["image_mcp"]["downloads"]["windows_x64"]["enabled"] is True
+
+
+def test_image_group_public_rename_and_cancel(client, db):
+    admin_client(client, db)
+    cfg = live(client)["config"]
+    cfg["groups"]["items"] = [copy.deepcopy(GROUP)]
+    cfg["image_mcp"]["recommended_group_id"] = GROUP["sub2api_id"]
+    cfg["image_mcp"]["key_note"] = "请先开通"
+    with patch("app.manual.service.get_admin_client") as external:
+        assert save(client, cfg, 1).status_code == 200
+        external.assert_not_called()
+    public = client.get("/ext/api/v1/public/manual-config").json()["config"]
+    image = public["image_mcp"]
+    assert image["recommended_group"]["name"] == GROUP["name"]
+    assert "recommended_group_id" not in image
+    assert "sub2api_id" not in json.dumps(public)
+    assert "file_id" not in image["downloads"]["windows_x64"]
+    cfg["groups"]["items"][0]["name"] = "新生图名称"
+    assert save(client, cfg, 2).status_code == 200
+    public = client.get("/ext/api/v1/public/manual-config").json()["config"]
+    assert public["image_mcp"]["recommended_group"]["name"] == public["groups"]["items"][0]["name"] == "新生图名称"
+    cfg["image_mcp"]["recommended_group_id"] = None
+    assert save(client, cfg, 3).status_code == 200
+    assert client.get("/ext/api/v1/public/manual-config").json()["config"]["image_mcp"]["recommended_group"] is None
+
+
+@pytest.mark.parametrize("action", ["hide", "delete", "duplicate", "unlinked"])
+def test_image_group_reference_must_stay_unique_and_public(client, db, action):
+    admin_client(client, db)
+    cfg = live(client)["config"]
+    cfg["groups"]["items"] = [copy.deepcopy(GROUP)]
+    cfg["image_mcp"]["recommended_group_id"] = GROUP["sub2api_id"]
+    assert save(client, cfg, 1).status_code == 200
+    if action == "hide": cfg["groups"]["items"][0]["visible"] = False
+    if action == "delete": cfg["groups"]["items"] = []
+    if action == "duplicate": cfg["groups"]["items"].append({**GROUP, "name": "重复关联"})
+    if action == "unlinked": cfg["groups"]["items"][0]["sub2api_id"] = None
+    assert save(client, cfg, 2).status_code == 422
+    assert live(client)["version"] == 2
+
+
+@pytest.mark.parametrize("field,value", [("url", "http://bad/setup.exe"), ("url", "assets/downloads/../a.exe"),
+    ("url", "/ext/api/v1/public/manual-files/1/%2e%2e%2fsetup.exe"), ("sha256", "bad"),
+    ("file_size", 0), ("version", "guess"), ("system", ""), ("signing", "unsigned-local"),
+    ("url", "https://example.com/setup.dmg"), ("file_name", "wrong.exe")])
+def test_image_invalid_release(client, db, field, value):
+    admin_client(client, db)
+    cfg = live(client)["config"]
+    cfg["image_mcp"]["downloads"]["windows_x64"][field] = value
+    assert save(client, cfg, 1).status_code == 422
+
+
+def test_image_url_release_and_pause_do_not_fetch_or_fallback(client, db):
+    admin_client(client, db)
+    cfg = live(client)["config"]
+    win = cfg["image_mcp"]["downloads"]["windows_x64"]
+    win.update(url="https://example.com/setup.exe", file_name="setup.exe")
+    with patch("httpx.get", side_effect=AssertionError("no network")), patch("httpx.head", side_effect=AssertionError("no network")):
+        assert save(client, cfg, 1).status_code == 200
+    public = client.get("/ext/api/v1/public/manual-config").json()["config"]["image_mcp"]
+    assert public["downloads"]["windows_x64"]["download_url"] == win["url"]
+    win["enabled"] = False
+    assert save(client, cfg, 2).status_code == 200
+    public = client.get("/ext/api/v1/public/manual-config").json()["config"]["image_mcp"]
+    assert public["downloads"]["windows_x64"]["download_url"] == ""
+
+
+@pytest.mark.parametrize("source", ["file", "url"])
+def test_image_file_metadata_reference_head_and_restore(client, db, source):
+    from app.db.models.manual import ManualFile
+    admin_client(client, db)
+    storage, stream = _mock_storage()
+    with patch("app.manual.service.get_storage", return_value=storage), patch("app.manual.router.get_storage", return_value=storage):
+        uploaded = client.post("/ext/api/v1/admin/manual/files", files={"file": ("生图 setup.exe", b"MSI-BYTES")}).json()
+        cfg = live(client)["config"]
+        win = cfg["image_mcp"]["downloads"]["windows_x64"]
+        win.update(source=source, file_id=uploaded["id"], url=uploaded["download_path"] if source == "url" else "",
+                   file_name=uploaded["file_name"] if source == "url" else "forged.exe", file_size=1, sha256="a" * 64)
+        assert save(client, cfg, 1).status_code == 200
+        win_saved = live(client)["config"]["image_mcp"]["downloads"]["windows_x64"]
+        assert win_saved["file_name"] == uploaded["file_name"]
+        assert win_saved["file_size"] == 9 and win_saved["sha256"] == uploaded["sha256"]
+        head = client.head(uploaded["download_path"])
+        assert head.status_code == 200 and head.content == b"" and head.headers["content-length"] == "9"
+        storage.stat_object.assert_called_once()
+        assert client.get(uploaded["download_path"]).content == b"MSI-BYTES"
+        # Uploaded files currently stream the full object; they do not advertise Range support.
+        ranged = client.get(uploaded["download_path"], headers={"Range": "bytes=0-1"})
+        assert ranged.status_code == 200 and ranged.content == b"MSI-BYTES"
+        assert "accept-ranges" not in ranged.headers
+        assert client.delete(f"/ext/api/v1/admin/manual/files/{uploaded['id']}").status_code == 409
+        # Missing storage is detected by HEAD; deleted records never fall back to static downloads.
+        storage.stat_object.side_effect = RuntimeError("missing object")
+        assert client.head(uploaded["download_path"]).status_code == 503
+        record = db.get(ManualFile, uploaded["id"])
+        record.deleted = True
+        db.commit()
+        public = client.get("/ext/api/v1/public/manual-config").json()["config"]["image_mcp"]
+        assert public["downloads"]["windows_x64"]["enabled"] is False
+        assert public["downloads"]["windows_x64"]["download_url"] == ""
+        cfg["image_mcp"] = load_default_config().image_mcp.model_dump(mode="json")
+        assert save(client, cfg, 2).status_code == 200
+        restored = client.post("/ext/api/v1/admin/manual/versions/2/restore", json={"base_version": 3})
+        assert restored.status_code == 400 and restored.json()["code"] == "MANUAL_FILE_MISSING"
+
+
+def test_image_corruption_only_disables_image_section(client, db):
+    from app.db.models.manual import ManualConfigVersion
+    cfg = load_default_config().dump()
+    cfg["image_mcp"]["downloads"]["windows_x64"]["sha256"] = "corrupt"
+    cfg["contact"]["qq"] = "123456789"
+    db.add(ManualConfigVersion(version=1, config=cfg))
+    db.commit()
+    public = client.get("/ext/api/v1/public/manual-config").json()["config"]
+    assert public["contact"]["qq"] == "123456789"
+    assert public["ccswitch"]["windows"]["download_url"].endswith(".msi")
+    assert not public["image_mcp"]["downloads"]["windows_x64"]["enabled"]
+
+
+def test_manual_upload_limit_is_256_mib(client, db, monkeypatch):
+    from app.config import get_settings
+    assert get_settings().manual_file_max_bytes == 256 * 1024 * 1024
+    admin_client(client, db)
+    monkeypatch.setattr(get_settings(), "manual_file_max_bytes", 10)
+    with patch("app.manual.service.get_storage") as storage:
+        response = client.post("/ext/api/v1/admin/manual/files", files={"file": ("large.exe", b"x" * 11)})
+        assert response.status_code == 400 and response.json()["code"] == "FILE_TOO_LARGE"
+        storage.assert_not_called()

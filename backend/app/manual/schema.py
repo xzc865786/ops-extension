@@ -366,6 +366,96 @@ def _default_groups() -> Groups:
     return Groups.model_validate(json.loads(DEFAULT_CONFIG_PATH.read_text(encoding="utf-8"))["groups"])
 
 
+MANUAL_FILE_URL_RE = re.compile(r"^/ext/api/v1/public/manual-files/([1-9][0-9]*)/([A-Za-z0-9._~%()+-]{1,600})$")
+
+
+class ImageDownload(Strict):
+    enabled: bool = False
+    source: Literal["url", "file"] = "url"
+    file_id: int | None = Field(default=None, ge=1)
+    url: str = Field(default="", max_length=1000)
+    version: str = ""
+    system: str = Field(default="", max_length=150)
+    signing: Literal["unsigned-local", "unsigned-preview", "signed"] = "unsigned-preview"
+    file_name: str = Field(default="", max_length=200)
+    file_size: int | None = Field(default=None, ge=1, lt=2_000_000_000)
+    sha256: str = ""
+    note: str = Field(default="", max_length=500)
+
+    @field_validator("system", "note", "file_name")
+    @classmethod
+    def text(cls, value: str) -> str:
+        return _text(value, "生图安装包")
+
+    @field_validator("version")
+    @classmethod
+    def version_format(cls, value: str) -> str:
+        value = value.strip().lstrip("vV")
+        if value and not VERSION_RE.fullmatch(value):
+            raise ValueError("版本号格式应为 0.1.0")
+        return value
+
+    @field_validator("sha256")
+    @classmethod
+    def digest(cls, value: str) -> str:
+        value = value.strip().lower()
+        if value and not re.fullmatch(r"[a-f0-9]{64}", value):
+            raise ValueError("SHA-256 必须为 64 位十六进制摘要")
+        return value
+
+    @model_validator(mode="after")
+    def release(self) -> "ImageDownload":
+        self.url = self.url.strip()
+        if self.url and not (HTTPS_URL_RE.fullmatch(self.url) or MANUAL_ASSET_RE.fullmatch(self.url)
+                             or MANUAL_FILE_URL_RE.fullmatch(self.url)):
+            raise ValueError("下载地址必须是 https 地址、assets/downloads/ 文件或站内手册文件地址")
+        if self.enabled:
+            if not self.version or not self.system:
+                raise ValueError("开放下载时必须填写版本和适用系统说明")
+            if self.signing == "unsigned-local":
+                raise ValueError("本地测试构建不能开放公开下载")
+            if self.source == "file" and not self.file_id:
+                raise ValueError("请选择上传的安装包")
+            if self.source == "url" and not (self.url and self.file_name and self.file_size and self.sha256):
+                raise ValueError("地址来源必须填写完整的文件名、大小和 SHA-256 发行信息")
+        if self.source == "url":
+            self.file_id = None
+        return self
+
+
+class ImageDownloads(Strict):
+    windows_x64: ImageDownload = Field(default_factory=ImageDownload)
+    macos_arm64: ImageDownload = Field(default_factory=ImageDownload)
+    macos_x64: ImageDownload = Field(default_factory=ImageDownload)
+
+    @model_validator(mode="after")
+    def extensions(self) -> "ImageDownloads":
+        from urllib.parse import unquote, urlsplit
+        for platform in type(self).model_fields:
+            item = getattr(self, platform)
+            if item.enabled and item.source == "url":
+                name = unquote(urlsplit(item.url).path).rsplit("/", 1)[-1]
+                allowed = (".exe", ".msi") if platform == "windows_x64" else (".dmg", ".pkg", ".zip")
+                if not name.lower().endswith(allowed) or item.file_name != name:
+                    raise ValueError(f"{platform} 下载文件名或平台扩展名不匹配")
+        return self
+
+
+class ImageMCP(Strict):
+    downloads: ImageDownloads = Field(default_factory=ImageDownloads)
+    recommended_group_id: int | None = Field(default=None, ge=1)
+    key_note: str = Field(default="", max_length=500)
+
+    @field_validator("key_note")
+    @classmethod
+    def text(cls, value: str) -> str:
+        return _text(value, "生图 Key 补充说明")
+
+
+def _default_image_mcp() -> ImageMCP:
+    return ImageMCP.model_validate(json.loads(DEFAULT_CONFIG_PATH.read_text(encoding="utf-8"))["image_mcp"])
+
+
 class ManualConfig(Strict):
     schema_: int = Field(1, alias="schema")
     updated_on: date
@@ -379,6 +469,16 @@ class ManualConfig(Strict):
     ccswitch: CCSwitch
     # Added after the first release; versions saved before it get the bundled intro and FAQ.
     groups: Groups = Field(default_factory=_default_groups)
+    image_mcp: ImageMCP = Field(default_factory=_default_image_mcp)
+
+    @model_validator(mode="after")
+    def image_group(self) -> "ManualConfig":
+        group_id = self.image_mcp.recommended_group_id
+        if group_id is not None:
+            matches = [item for item in self.groups.items if item.sub2api_id == group_id]
+            if len(matches) != 1 or not matches[0].visible:
+                raise ValueError("AI 生图推荐分组必须唯一关联一个公开显示的分组；请先处理删除、隐藏或重复关联")
+        return self
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
@@ -396,6 +496,12 @@ class ManualConfig(Strict):
         ids = set()
         if self.ccswitch.windows.source == "file" and self.ccswitch.windows.file_id:
             ids.add(self.ccswitch.windows.file_id)
+        for _, download in self.image_mcp.downloads:
+            if download.source == "file" and download.file_id:
+                ids.add(download.file_id)
+            match = MANUAL_FILE_URL_RE.fullmatch(download.url) if download.source == "url" else None
+            if match:
+                ids.add(int(match[1]))
         return ids
 
 

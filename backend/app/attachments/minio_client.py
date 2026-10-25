@@ -161,6 +161,9 @@ class MinioStorage:
         """Return the raw MinIO response for streaming; caller must close() and release_conn()."""
         return self.client.get_object(self.bucket, object_key)
 
+    def stat_object(self, object_key: str):
+        return self.client.stat_object(self.bucket, object_key)
+
     def remove(self, object_key: str) -> None:
         self.client.remove_object(self.bucket, object_key)
 

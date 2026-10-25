@@ -10,7 +10,8 @@ const {chromium} = createRequire(import.meta.url)('playwright');
 const root = fileURLToPath(new URL('../../manual/', import.meta.url));
 const output = resolve(process.env.MANUAL_LAYOUT_OUTPUT || '../output/manual-layout-review');
 const config = JSON.parse(await readFile(join(root, 'assets/manual-config.default.json'), 'utf8'));
-const release = JSON.parse(await readFile(join(root, 'assets/image-mcp-release.json'), 'utf8'));
+const release = {url:config.image_mcp.downloads.windows_x64.url, bytes:config.image_mcp.downloads.windows_x64.file_size, available:true};
+for (const item of Object.values(config.image_mcp.downloads)) item.download_url = item.url;
 config.groups.items = [
   {name:'布局测试 · Claude', platform:'anthropic', clients:['claude'], badge:'recommended', rate_multiplier:1,
     billing_note:'仅用于本地布局测试', summary:'较短的分组描述。', suitable_for:['编程'], models:['claude-layout-test'], notes:''},
@@ -87,7 +88,7 @@ try {
         await page.locator('#prepare').evaluate(section => scrollTo(0, section.offsetTop - document.querySelector('.topbar').offsetHeight));
         await page.screenshot({path:join(output, `preparations-${width}.png`)});
         const cards = await page.locator('.image-preparations > .card').evaluateAll(cards => cards.map(card => {
-          const r = card.getBoundingClientRect(), link = card.querySelector('a').getBoundingClientRect();
+          const r = card.getBoundingClientRect(), links = card.querySelector('.image-key-links') || card.querySelector('a'), link = links.getBoundingClientRect();
           return {top:r.top, height:r.height, width:r.width, linkBottom:link.bottom};
         }));
         if (width > 700) for (const key of ['top','height','width','linkBottom']) assert.ok(Math.abs(cards[0][key] - cards[1][key]) < 1, `${width}: preparation ${key} must align`);

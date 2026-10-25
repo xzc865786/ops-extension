@@ -79,6 +79,8 @@ export function suggestRoles(ids: string[], main: string, roles: Record<Role, st
 export function diffConfig(before: unknown, after: unknown, path = ''): { path: string; before: string; after: string }[] {
   const show = (v: unknown) => (v === undefined ? '（无）' : typeof v === 'string' ? v : JSON.stringify(v))
   const isObj = (v: unknown) => v !== null && typeof v === 'object' && !Array.isArray(v)
+  if (before === undefined && isObj(after)) return diffConfig({}, after, path)
+  if (after === undefined && isObj(before)) return diffConfig(before, {}, path)
   if (isObj(before) && isObj(after)) {
     const keys = new Set([...Object.keys(before as object), ...Object.keys(after as object)])
     return [...keys].flatMap((key) =>
@@ -174,6 +176,16 @@ FIELD_LABELS['groups.intro'] = '分组页开头说明'
 FIELD_LABELS['groups.notice'] = '分组页提示'
 FIELD_LABELS['groups.items'] = '分组列表'
 FIELD_LABELS['groups.faq'] = '分组常见问题'
+
+FIELD_LABELS.image_mcp = 'AI 生图'
+FIELD_LABELS['image_mcp.downloads'] = '生图安装包'
+FIELD_LABELS['image_mcp.recommended_group_id'] = '生图推荐分组'
+FIELD_LABELS['image_mcp.key_note'] = '生图 Key 补充说明'
+const IMAGE_FIELDS: Record<string, string> = {enabled:'开放下载', source:'下载来源', file_id:'上传文件', url:'下载地址', version:'版本号', system:'适用系统', signing:'签名状态', file_name:'文件名', file_size:'文件大小', sha256:'SHA-256', note:'补充提示'}
+for (const [platform, label] of Object.entries({windows_x64:'Windows x64', macos_arm64:'macOS ARM64', macos_x64:'macOS x64'})) {
+  FIELD_LABELS[`image_mcp.downloads.${platform}`] = `生图安装包 · ${label}`
+  for (const [field, name] of Object.entries(IMAGE_FIELDS)) FIELD_LABELS[`image_mcp.downloads.${platform}.${field}`] = `生图 ${label} · ${name}`
+}
 
 // Chinese name for a config path, including list entries such as groups.items.2.models.0.
 export function fieldLabel(path: string): string | undefined {

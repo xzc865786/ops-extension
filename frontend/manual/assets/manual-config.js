@@ -9,7 +9,7 @@ const DEFAULT_URL = 'assets/manual-config.default.json';
 const HTTPS_URL = /^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?(\/[A-Za-z0-9._~/-]*)?$/;
 
 async function fetchJson(url) {
-  const response = await fetch(url, {credentials: 'omit', redirect: 'error'});
+  const response = await fetch(url, {credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(10000)});
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   return response.json();
 }
@@ -78,7 +78,8 @@ function applyBindings(cfg) {
   }
 }
 
-export const manualConfigReady = load().then(result => {
+export const manualConfigState = load();
+export const manualConfigReady = manualConfigState.then(result => {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => applyBindings(result.config), {once: true});
   } else {

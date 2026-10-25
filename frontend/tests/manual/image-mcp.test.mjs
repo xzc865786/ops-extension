@@ -2,28 +2,30 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-
 const core = await readFile(new URL('../../manual/assets/image-mcp-core.js', import.meta.url), 'utf8');
 const sandbox = {}; vm.runInNewContext(core, sandbox);
-const validRelease = sandbox.HuimaImageManual.validRelease;
-const release = {schema:1, available:true, version:'0.1.0', url:'assets/downloads/HuimaImageSetup-0.1.0-win-x64.exe', sha256:'a'.repeat(64), bytes:123456789, signing:'unsigned-local'};
-
-test('download gate accepts a complete local release and rejects missing or unsafe artifacts', () => {
-  assert.equal(validRelease(release), true);
-  assert.equal(validRelease({...release, signing:'unsigned-preview'}), true);
-  for (const change of [{available:false}, {url:'https://example.com/setup.exe'}, {url:'assets/downloads/../../setup.exe'}, {bytes:0}, {bytes:'123'}, {sha256:'bad'}, {signing:'unknown'}]) {
-    assert.equal(validRelease({...release,...change}), false);
-  }
-  assert.equal(validRelease(null), false);
+const {validDownload, keyGuide} = sandbox.HuimaImageManual;
+const cfg = JSON.parse(await readFile(new URL('../../manual/assets/manual-config.default.json', import.meta.url), 'utf8'));
+const release = {...cfg.image_mcp.downloads.windows_x64, download_url:cfg.image_mcp.downloads.windows_x64.url};
+test('download gate verifies metadata, safe file paths and platform extensions', () => {
+  assert.equal(validDownload(release, 'windows_x64'), true);
+  assert.equal(validDownload({...release, download_url:'/ext/api/v1/public/manual-files/12/setup.exe', file_name:'setup.exe'}, 'windows_x64'), true);
+  assert.equal(validDownload({...release, download_url:'https://example.com/setup.exe', file_name:'setup.exe'}, 'windows_x64'), true);
+  for (const change of [{enabled:false}, {download_url:'javascript:bad'}, {download_url:'assets/downloads/../setup.exe'}, {download_url:'/ext/api/v1/public/manual-files/1/%2e%2e%2fsetup.exe'}, {file_size:0}, {file_size:'123'}, {sha256:'bad'}, {signing:'unsigned-local'}, {version:''}, {system:''}, {file_name:'wrong.exe'}]) assert.equal(validDownload({...release,...change}, 'windows_x64'), false);
+  assert.equal(validDownload(release, 'macos_arm64'), false);
+  assert.equal(validDownload(null, 'windows_x64'), false);
 });
-
-test('public manifest is either disabled or a complete preview/signed release', async () => {
-  const published = JSON.parse(await readFile(new URL('../../manual/assets/image-mcp-release.json', import.meta.url), 'utf8'));
-  if (published.available === false) assert.equal(validRelease(published), false);
-  else {
-    assert.equal(validRelease(published), true);
-    assert.ok(['unsigned-preview', 'signed'].includes(published.signing));
-  }
+test('key guide uses actual public group, known vendor only and generic fallback', () => {
+  assert.match(keyGuide(null).body, /已开放生图模型/);
+  const image = {recommended_group:{name:'测试组', platform:'openai', summary:'说明', notes:'条件'}, key_note:'附加'};
+  assert.match(keyGuide(image).body, /「测试组」/);
+  assert.match(keyGuide(image).detail, /OpenAI/);
+  assert.equal(keyGuide({...image, recommended_group:{...image.recommended_group, platform:'unknown'}}).detail, '说明 · 条件');
+  assert.equal(keyGuide(image).note, '附加');
+});
+test('image configuration does not participate in other manual section validation', async () => {
+  const {isSafeConfig} = await import('../../manual/assets/manual-config-core.js');
+  assert.equal(isSafeConfig({...cfg, image_mcp:{broken:true}}), true);
 });
 
 test('manual has local destinations, no duplicate anchors, and working section links', async () => {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="汇码生图使用手册：安装与连接，Flare / Sunburst 模型选择，指定尺寸的线路限制，以及生成、修改和保存原图。">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https:; base-uri 'none'; form-action 'none'; object-src 'none'">
   <title>AI 生图 · 汇码智能</title>
   <link rel="icon" href="assets/brand/favicon.ico" sizes="any">
   <link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
@@ -63,6 +63,9 @@
         <div class="image-hero">
           <div><p class="eyebrow">汇码智能 · AI 生图</p><h1>让创作，<br>从一句描述开始。</h1><p class="lead">在你熟悉的聊天软件里，生成图片、参考改图。原图自动保存到电脑，让想法变成看得见的作品。</p>
             <div class="image-actions"><a class="button image-download" id="image-download" aria-disabled="true">安装包准备中</a><a href="#first-image">已安装？开始生图 →</a></div>
+            <p>安装后，可在 WorkBuddy、Codex 或 Claude Code 中生成和修改图片。</p>
+            <p id="image-platform-note" class="caption">当前仅提供 Windows x64 安装包，Mac 暂无安装包。</p>
+            <div id="image-platform-control" hidden><label for="image-platform">系统和架构</label> <select id="image-platform"></select></div>
             <p id="image-release-status" class="caption" role="status">安装包信息加载中。页面不读取或保存你的 Key。</p>
             <details id="image-release-details" hidden><summary>查看版本与文件校验信息</summary><p id="image-release-meta"></p><p>SHA-256：</p><div class="copy-row"><pre class="copy-value" id="image-release-sha"></pre><button class="copy-button" type="button">复制校验值</button></div><p id="image-signing-note"></p></details>
           </div>
@@ -74,17 +77,17 @@
         <p class="eyebrow">01 · 使用前准备</p><h2>开始前，准备好这两样</h2>
         <div class="card-grid image-preparations">
           <article class="card"><span class="image-index">01</span><h3>一个能正常聊天的软件</h3><p>选择你正在使用的 WorkBuddy、Codex 或 Claude Code。先确认可以正常对话，再接入生图。</p><a href="quick.html">还没安装？查看新手路线 →</a></article>
-          <article class="card"><span class="image-index">02</span><h3>一把生图分组 API Key</h3><p>在汇码创建具有生图权限的 Key，稍后填进本机安装助手。</p><a href="index.html#api-key">查看创建 Key 的步骤 →</a></article>
+          <article class="card"><span class="image-index">02</span><h3>创建一把用于生图的 API Key</h3><p id="image-key-guide">创建 API Key 时，请选择已开放生图模型的分组。具体分组见分组说明；不确定时联系客服。</p><p id="image-key-detail"></p><p id="image-key-note"></p><div class="image-key-links"><a href="https://api.tysy.top/keys" data-cfg-href="/keys">前往创建 API Key ↗</a><a href="index.html#api-key">查看创建步骤 →</a><a href="groups.html">查看分组说明 →</a></div></article>
         </div>
-        <p>创建 Key 时，选择开放 Flare / Sunburst 生图模型的分组；分组权限和费用说明见<a href="groups.html">分组说明</a>。不确定时，先向客服确认。</p>
-        <div class="notice"><strong>生图 Key 单独配置。</strong>你原来的聊天 Key 和聊天模型继续使用，无需替换。即使通过 Claude Code 使用，生图工具也使用自己的 Key。</div>
+        <p>推荐分组仅为使用指引，不表示已验证你的 Key 权限。实际模型权限以安装助手查询结果为准。</p>
+        <div class="notice"><strong>生图 Key 单独配置。</strong>生图 Key 填入生图安装助手，原有聊天软件的 Key 无需替换。即使通过 Claude Code 使用，生图工具也使用自己的 Key。</div>
       </section>
       <section class="doc-section" id="install" data-title="安装 双击 exe Windows 软件 密钥 目录 配置 连接 检查">
         <p class="eyebrow">02 · 安装与连接</p><h2>跟着助手，一步步连接</h2><p>安装包包含配套运行环境，无需打开终端，也不用手动修改配置文件。当前下载入口提供 Windows x64 安装包，适用于 Windows 10 1809 或更新的 64 位 Windows。</p>
         <ol class="steps">
           <li class="step"><span class="step-number">1</span><div class="step-content"><h3>下载并双击安装助手</h3><p>在本页顶部下载完整安装包，双击打开“汇码生图安装助手”。欢迎页显示“把想法变成图片”，点击“开始设置”。</p><p>系统提示来源或安全检查时，先核对下载渠道和文件信息。不要关闭系统防护；无法确认时联系客服。</p></div></li>
           <li class="step"><span class="step-number">2</span><div class="step-content"><h3>选择你平时使用的软件</h3><p>可以选择多个。助手会标记是否发现用户配置；已经安装但未检测到时，可以打开过一次软件后“重新检测”，也可手动勾选。</p><p>保存正在进行的工作，并完全退出所选软件。助手不会强制结束你的聊天。</p></div></li>
-          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>粘贴生图 Key，验证并继续</h3><p>Key 只填进本机安装助手。点击“验证并继续”，助手只查询模型列表，不会生成图片。本机已有 Key 时，留空可继续使用。</p><p>提示 Key 无效时，请重新复制完整 Key；提示没有生图模型时，请检查分组权限。</p></div></li>
+          <li class="step"><span class="step-number">3</span><div class="step-content"><h3>粘贴生图 Key，验证并继续</h3><p>生图 Key 填入生图安装助手，原有聊天软件的 Key 无需替换。点击“验证并继续”，助手只查询模型列表，不会生成图片。本机已有 Key 时，留空可继续使用。</p><p>提示 Key 无效时，请重新复制完整 Key；提示没有生图模型时，请检查分组权限。</p></div></li>
           <li class="step"><span class="step-number">4</span><div class="step-content"><h3>选择图片保存位置</h3><p>默认放在“图片 / 汇码生图”。可以点击“更改位置”，选择可写的本地文件夹。助手会创建目录并检查写入权限。</p></div></li>
           <li class="step"><span class="step-number">5</span><div class="step-content"><h3>确认设置，安装并连接</h3><p>核对软件、Key 使用方式和图片目录，确认已退出客户端，再点击“安装并连接”。助手校验程序文件、写入本工具配置，并检查 MCP 工具能否启动和被发现。</p><p>发现已有其他“汇码生图”配置时，默认保留；只有你明确选择替换，才会覆盖此工具的条目。其他设置保留。</p></div></li>
           <li class="step"><span class="step-number">6</span><div class="step-content"><h3>查看结果，重新打开聊天软件</h3><p>每个软件分别显示连接结果。某个软件失败时，可以先使用成功的软件，再单独处理失败项。</p><p>“工具连接检查通过”表示本机工具可以启动并列出功能；第一张图片需要你主动发送指令。</p></div></li>
@@ -131,13 +134,14 @@
       <section class="doc-section" id="maintenance" data-title="维护 更换 Key 目录 卸载 删除 保留 连接检查">
         <p class="eyebrow">06 · 以后会用到</p><h2>更换配置，或者卸载工具</h2><p>在开始菜单打开“汇码生图安装助手”，进入“管理已安装的生图工具”。也可以重新打开原安装包。</p>
         <ul><li><strong>检查连接：</strong>检查工具启动与发现，不生成图片。</li><li><strong>更换 Key 或保存目录：</strong>重新配置，并勾选需要更新的客户端。留空 Key 可沿用已保存的 Key。</li><li><strong>接入其他软件：</strong>勾选新增的软件，完成配置后重新打开它。</li><li><strong>卸载：</strong>移除本助手管理的连接。没有剩余连接时删除当前版本运行文件；保留图片、Key 和安装助手。其他来源的配置与旧版本文件不会强制删除。</li></ul>
+        <p>随包离线手册可直接阅读，不连接后台获取下载配置；内容随安装包版本维护，网站更新不会自动更新已有离线手册。</p>
         <p>不再使用的 Key，可以在平台密钥页面禁用。卸载本机工具不会自动禁用平台 Key。</p>
       </section>
       <section class="doc-section" id="faq" data-title="报错 问题 超时 取消 Key 401 403 目录 冲突 校验 失败">
         <p class="eyebrow">07 · 遇到问题</p><h2>先看看这里</h2>
         <details><summary>助手说连接通过，聊天里却不能生图？</summary><p>完全退出软件后重新打开，新建聊天，明确要求“使用汇码生图工具”。仍不可用时，在安装助手里检查连接，并将脱敏诊断信息提供给客服。</p></details>
         <details><summary>一直在等，或者提示超时怎么办？</summary><p>先查看图片保存目录和平台使用记录。Codex 中停止聊天不一定取消生图请求，也不代表不会计费。没有显示进度时，不能据此认定请求已经停止；不要连续重复发送。</p></details>
-        <details><summary>提示 Key 无效、没有权限或没有生图模型？</summary><p>检查 Key 是否完整、有效，以及是否属于开放生图权限的分组。更换生图 Key 不需要改动聊天软件的 Key。网络连接失败时，先检查网络和服务地址。</p></details>
+        <details><summary>提示 Key 无效、没有权限或没有生图模型？</summary><p>检查 Key 是否完整、有效，以及是否属于开放生图权限的分组。生图 Key 填入生图安装助手，原有聊天软件的 Key 无需替换。网络连接失败时，先检查网络和服务地址。</p></details>
         <details><summary>图片尺寸和我请求的不一样？</summary><p>这是当前线路已知的尺寸控制限制：工具会提交指定尺寸，但接口仍可能返回不同像素，问题尚未修复。请求成功、换成 Sunburst 或提高质量都不能保证尺寸生效。请检查原图实际像素，保留原图、请求尺寸及请求记录联系支持，不要连续重复生成。工具不会自动重试或缩放原图，详见<a href="#models">尺寸限制说明</a>。</p></details>
         <details><summary>安装提示校验失败、文件占用或目录不可写？</summary><p>校验失败时重新下载完整安装包，不要跳过校验。文件占用时先保存工作并退出相关软件；目录不可写时改用自己的“图片”或“文档”目录。需要帮助时复制助手提供的诊断信息。</p></details>
         <details><summary>为什么有的软件成功，有的软件失败？</summary><p>每个客户端配置单独处理。已有其他同名配置、配置格式异常或文件正在被修改时，相应客户端会单独显示失败。可以先使用成功的软件，再重新配置失败的软件。</p></details>

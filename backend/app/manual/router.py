@@ -37,6 +37,7 @@ def _version_out(row, with_config: bool = False) -> dict:
         "restored_from": row.restored_from,
         "created_by_name": row.created_by_name,
         "created_at": row.created_at,
+        "image_mcp_compat_default": "image_mcp" not in row.config,
     }
     if with_config:
         out["config"] = row.config
@@ -55,10 +56,18 @@ def public_manual_config(request: Request, db: Session = Depends(get_db)):
     return JSONResponse(jsonable_encoder(payload), headers=headers)
 
 
-@public_router.get("/manual-files/{file_id}/{file_name}")
-def public_manual_file(file_id: int, file_name: str, db: Session = Depends(get_db)):
+@public_router.api_route("/manual-files/{file_id}/{file_name}", methods=["GET", "HEAD"])
+def public_manual_file(file_id: int, file_name: str, request: Request, db: Session = Depends(get_db)):
     record = service.get_public_file(db, file_id, file_name)
     try:
+        if request.method == "HEAD":
+            # Verify the actual object exists without downloading the installer.
+            get_storage().stat_object(record.object_key)
+            return Response(media_type=record.mime_type, headers={
+                "Content-Length": str(record.file_size),
+                "Content-Disposition": _content_disposition(record.file_name),
+                "Cache-Control": "public, max-age=86400", "X-Content-Type-Options": "nosniff",
+            })
         stream = get_storage().open_stream(record.object_key)
     except Exception as exc:
         logger.error("manual file storage error file_id=%s error_type=%s", file_id, type(exc).__name__)
@@ -131,7 +140,9 @@ async def admin_upload_file(
     db: Session = Depends(get_db),
     admin: CurrentUser = Depends(require_admin),
 ):
-    data = await file.read()
+    from app.config import get_settings
+    # Bound memory before reading an arbitrarily large upload into the application.
+    data = await file.read(get_settings().manual_file_max_bytes + 1)
     record = service.upload_file(db, user=admin, filename=file.filename or "file", data=data, description=description)
     return service.file_out(record)
 

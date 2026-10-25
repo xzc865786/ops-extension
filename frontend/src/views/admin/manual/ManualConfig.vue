@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import api from '@/api/client'
+import ManualImageEditor from '@/components/ManualImageEditor.vue'
 import ManualGroupsEditor from '@/components/ManualGroupsEditor.vue'
 import PatternList from '@/components/PatternList.vue'
 import { useToast } from '@/composables/useToast'
@@ -10,7 +11,7 @@ import {
   type Client, type Role,
 } from '@/utils/manualRules'
 
-type Tab = 'basic' | 'models' | 'roles' | 'clients' | 'ccswitch' | 'groups' | 'preview' | 'history'
+type Tab = 'basic' | 'models' | 'roles' | 'clients' | 'ccswitch' | 'groups' | 'image' | 'preview' | 'history'
 const TABS: { key: Tab; label: string }[] = [
   { key: 'basic', label: '基本信息' },
   { key: 'models', label: '推荐模型' },
@@ -18,6 +19,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'clients', label: '安装与客户端' },
   { key: 'ccswitch', label: 'CC Switch 下载' },
   { key: 'groups', label: '分组说明' },
+  { key: 'image', label: 'AI 生图' },
   { key: 'preview', label: '预览' },
   { key: 'history', label: '版本历史' },
 ]
@@ -129,7 +131,7 @@ const fileDescription = ref('')
 const uploading = ref(false)
 
 function formatSize(bytes: number) {
-  return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`
+  return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MiB` : `${Math.ceil(bytes / 1024)} KiB`
 }
 
 async function upload() {
@@ -224,12 +226,12 @@ const previewResult = computed(() => {
 })
 
 // ---- history -------------------------------------------------------------
-const compare = ref<{ version: number; rows: { path: string; before: string; after: string }[] } | null>(null)
+const compare = ref<{ version: number; legacy?: boolean; rows: { path: string; before: string; after: string }[] } | null>(null)
 
 async function showDiff(version: number) {
   try {
     const { data } = await api.get(`/admin/manual/versions/${version}`)
-    compare.value = { version, rows: diffConfig(data.config, live.value.config) }
+    compare.value = { version, legacy: data.image_mcp_compat_default, rows: diffConfig(data.config, live.value.config) }
   } catch (e: any) {
     toast.error(errMsg(e, '读取版本失败'))
   }
@@ -237,7 +239,8 @@ async function showDiff(version: number) {
 
 async function restore(version: number) {
   if (dirty.value && !confirm('当前有未保存的修改，恢复后这些修改会丢失。继续？')) return
-  if (!confirm(`恢复到版本 ${version}？会生成一个新版本，旧版本都保留。`)) return
+  const legacy = versions.value.find(v => v.version === version)?.image_mcp_compat_default
+  if (!confirm(`恢复到版本 ${version}？会生成一个新版本，旧版本都保留。${legacy ? '该旧版本没有 AI 生图配置，新增部分将使用兼容默认值（现有 Windows 静态安装包、无推荐分组）。' : ''}`)) return
   try {
     await api.post(`/admin/manual/versions/${version}/restore`, { base_version: live.value.version })
     compare.value = null
@@ -261,7 +264,7 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
         </p>
       </div>
       <div class="page-toolbar-actions">
-        <a class="btn-secondary btn-sm" :href="tab === 'groups' ? '/docs/groups.html' : '/docs/'" target="_blank" rel="noopener">{{ tab === 'groups' ? '打开分组页' : '打开手册' }} ↗</a>
+        <a class="btn-secondary btn-sm" :href="tab === 'groups' ? '/docs/groups.html' : tab === 'image' ? '/docs/image-mcp.html' : '/docs/'" target="_blank" rel="noopener">{{ tab === 'groups' ? '打开分组页' : tab === 'image' ? '打开生图页' : '打开手册' }} ↗</a>
         <button type="button" class="btn-ghost btn-sm" :disabled="!form" @click="loadDefaults">恢复默认值</button>
       </div>
     </div>
@@ -422,9 +425,11 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
         </section>
       </div>
 
+      <ManualImageEditor v-if="tab === 'image'" v-model="form.image_mcp" :files="files" :groups="form.groups.items" class="mb-4" />
+
       <!-- CC Switch 下载 -->
-      <div v-if="tab === 'ccswitch'" class="space-y-4">
-        <section class="card p-5 sm:p-6 space-y-4">
+      <div v-if="tab === 'ccswitch' || tab === 'image'" class="space-y-4">
+        <section v-if="tab === 'ccswitch'" class="card p-5 sm:p-6 space-y-4">
           <h2 class="font-semibold">Windows 安装包</h2>
           <div class="grid gap-4 sm:grid-cols-2">
             <div><label class="input-label">版本号</label><input v-model.trim="form.ccswitch.version" class="input" placeholder="3.20.4" /></div>
@@ -448,7 +453,7 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
         </section>
 
         <section class="card p-5 sm:p-6 space-y-4">
-          <h2 class="font-semibold">文件库 <span class="muted text-sm font-normal">· 安装包、压缩包、PDF、图片，单个最大 100 MB</span></h2>
+          <h2 class="font-semibold">文件库 <span class="muted text-sm font-normal">· 安装包、压缩包、PDF、图片，单个最大 256 MiB</span></h2>
           <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             <input ref="fileInput" type="file" class="input" accept=".msi,.exe,.dmg,.pkg,.zip,.7z,.pdf,.png,.jpg,.jpeg,.webp" />
             <input v-model="fileDescription" class="input" maxlength="200" placeholder="说明（可选），例如 CC Switch 3.21.0" />
@@ -466,7 +471,7 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
                   <td class="whitespace-nowrap">{{ formatSize(f.file_size) }}</td>
                   <td class="whitespace-nowrap text-xs">{{ f.uploaded_by_name || '-' }}<br />{{ formatDateTime(f.created_at) }}</td>
                   <td class="whitespace-nowrap text-right">
-                    <button type="button" class="btn-ghost btn-sm" @click="useFile(f)">设为 Windows 下载</button>
+                    <button v-if="tab === 'ccswitch'" type="button" class="btn-ghost btn-sm" @click="useFile(f)">设为 CC Switch 下载</button>
                     <button type="button" class="btn-ghost btn-sm text-red-600" @click="removeFile(f)">删除</button>
                   </td>
                 </tr>
@@ -525,7 +530,7 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
                 </td>
                 <td class="whitespace-nowrap text-sm">{{ formatDateTime(v.created_at) }}</td>
                 <td class="text-sm">{{ v.created_by_name || '系统' }}</td>
-                <td class="text-sm">{{ v.note || '-' }}</td>
+                <td class="text-sm">{{ v.note || '-' }}<p v-if="v.image_mcp_compat_default" class="muted text-xs">旧版本：AI 生图将使用兼容默认值</p></td>
                 <td class="whitespace-nowrap text-right">
                   <template v-if="v.version !== live.version">
                     <button type="button" class="btn-ghost btn-sm" @click="showDiff(v.version)">与当前对比</button>
@@ -537,6 +542,7 @@ const roleList = (role: Role) => form.value.claude_roles[role] as string[]
           </table>
         </div>
         <section v-if="compare" class="card p-5 sm:p-6">
+          <p v-if="compare.legacy" class="muted text-sm">此旧版本缺少 AI 生图配置，恢复时新增部分使用兼容默认值（现有 Windows 静态安装包、无推荐分组）。</p>
           <div class="flex items-center justify-between">
             <h2 class="font-semibold">版本 {{ compare.version }} → 当前版本 {{ live.version }}</h2>
             <button type="button" class="btn-ghost btn-sm" @click="compare = null">关闭</button>

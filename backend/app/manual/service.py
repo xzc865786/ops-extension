@@ -15,7 +15,7 @@ from app.common.errors import AppError, bad_request, conflict, not_found
 from app.config import get_settings
 from app.db.models.manual import ManualConfigVersion, ManualFile
 from app.deps import CurrentUser
-from app.manual.schema import MODEL_PATTERN_RE, Groups, ManualConfig, load_default_config
+from app.manual.schema import MODEL_PATTERN_RE, MANUAL_FILE_URL_RE, Groups, ImageMCP, ManualConfig, load_default_config
 from app.orders.sub2api import Sub2APIError, Sub2APIUnavailable, admin_reason, get_admin_client
 
 # The manual is read in China; "today" for the update date follows Beijing time.
@@ -76,6 +76,19 @@ def _check_files(db: Session, config: ManualConfig) -> None:
         record = db.get(ManualFile, file_id)
         if not record or record.deleted:
             raise bad_request(f"引用的下载文件（编号 {file_id}）不存在或已删除", "MANUAL_FILE_MISSING")
+    for platform, download in config.image_mcp.downloads:
+        match = MANUAL_FILE_URL_RE.fullmatch(download.url) if download.source == "url" else None
+        file_id = download.file_id if download.source == "file" else int(match[1]) if match else None
+        if not file_id:
+            continue
+        record = db.get(ManualFile, file_id)
+        if match and download.url != file_download_path(record):
+            raise bad_request("生图安装包站内文件地址与文件记录不匹配", "MANUAL_FILE_MISSING")
+        allowed = (".exe", ".msi") if platform == "windows_x64" else (".dmg", ".pkg", ".zip")
+        if not record.file_name.lower().endswith(allowed):
+            raise bad_request(f"{platform} 安装包扩展名不匹配", "MANUAL_CONFIG_INVALID")
+        # File metadata is always owned by the server, including site-file URLs.
+        download.file_name, download.file_size, download.sha256 = record.file_name, record.file_size, record.sha256
 
 
 def _insert_version(db: Session, *, base_version: int, config: ManualConfig, note: str | None,
@@ -262,12 +275,46 @@ def normalized_config(config: dict) -> dict:
     try:
         return ManualConfig.model_validate(config).dump()
     except ValidationError:
-        return dict(config)
+        # A corrupt new section must not discard unrelated manual configuration.
+        safe = {**config, "image_mcp": ImageMCP().model_dump(mode="json")}
+        try:
+            return ManualConfig.model_validate(safe).dump()
+        except ValidationError:
+            return safe
+
+
+def _public_image(db: Session, raw: dict, groups: dict) -> dict:
+    try:
+        image = ImageMCP.model_validate(raw)
+    except ValidationError:
+        image = ImageMCP()
+    downloads = {}
+    for platform, item in image.downloads:
+        data = item.model_dump(mode="json", exclude={"file_id"})
+        data["download_url"] = item.url
+        data["unavailable_reason"] = "" if item.enabled else "管理员已暂停此系统的安装包下载。"
+        match = MANUAL_FILE_URL_RE.fullmatch(item.url) if item.source == "url" else None
+        file_id = item.file_id if item.source == "file" else int(match[1]) if match else None
+        if item.source == "file" or match:
+            record = db.get(ManualFile, file_id) if file_id else None
+            if record and not record.deleted and (not match or item.url == file_download_path(record)):
+                data.update(download_url=file_download_path(record), file_name=record.file_name,
+                            file_size=record.file_size, sha256=record.sha256)
+            else:
+                data.update(enabled=False, download_url="", unavailable_reason="安装包文件不存在或已删除，请联系客服。")
+        if not data["enabled"]:
+            data["download_url"] = ""
+        downloads[platform] = data
+    matches = [g for g in groups.get("items", []) if g.get("sub2api_id") == image.recommended_group_id]
+    group = matches[0] if image.recommended_group_id and len(matches) == 1 and matches[0].get("visible", True) else None
+    return {"downloads": downloads, "key_note": image.key_note,
+            "recommended_group": {k: group.get(k, "") for k in ("name", "platform", "summary", "notes")} if group else None}
 
 
 def public_payload(db: Session) -> dict:
     live = get_live(db)
     config = normalized_config(live.config)
+    config["image_mcp"] = _public_image(db, config.get("image_mcp"), config.get("groups") or {})
     try:
         config["groups"] = Groups.model_validate(config.get("groups") or {}).public()
     except ValidationError:
