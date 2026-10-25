@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="汇码生图使用手册：下载 Windows 安装助手，连接 WorkBuddy、Codex 或 Claude Code，生成图片、参考图修改并保存原图。">
+  <meta name="description" content="汇码生图使用手册：安装与连接，Flare / Sunburst 模型选择，指定尺寸的线路限制，以及生成、修改和保存原图。">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <title>AI 生图 · 汇码智能</title>
@@ -41,6 +41,7 @@
         <div class="nav-sub">
           <a href="#prepare">使用前准备</a>
           <a href="#install">安装与连接</a>
+          <a href="#models">模型选择与尺寸限制</a>
           <a href="#first-image">生成第一张图</a>
           <a href="#edit">参考图与继续修改</a>
           <a href="#files">找到你的原图</a>
@@ -90,6 +91,20 @@
         </ol>
         <div class="notice"><strong>安装与连接检查不生成图片。</strong>发送生图或改图指令后，才会调用相应服务并产生费用。</div>
       </section>
+      <section class="doc-section" id="models" data-title="模型选择 Flare Sunburst 对比 速度 画质 精细编辑 尺寸 限制 分辨率 像素 2K 4K">
+        <p class="eyebrow">生图前先了解</p><h2>选哪个模型？尺寸能否保证？</h2>
+        <p>日常创作、想尽快看到效果，先选 <strong>Flare</strong>；对画质和修改精度要求较高，优先试 <strong>Sunburst</strong>。两个模型都支持生成图片和参考图编辑。</p>
+        <div class="table-wrap"><table class="field-table"><caption>Flare 与 Sunburst 的选择建议</caption><thead><tr><th scope="col">模型</th><th scope="col">侧重点</th><th scope="col">适合什么时候用</th></tr></thead><tbody>
+          <tr><th scope="row">Flare</th><td>速度优先，适合日常生图</td><td>尝试创意和构图、快速出草稿、制作日常配图，或做较简单的参考图修改。</td></tr>
+          <tr><th scope="row">Sunburst</th><td>画质优先，适合精细编辑</td><td>制作对细节要求较高的成图，按参考图精细修改，或需要更好地保留主体特征与画面细节。</td></tr>
+        </tbody></table></div>
+        <p>先用 Flare 看效果；细节或修改精度达不到要求时，再用 Sunburst 比较。同样的提示词、参考图和质量设置更便于判断差异。实际效果与耗时取决于任务，不保证每次都由某个模型更快或更好。</p>
+        <p class="caption">模型定位参考 <a href="https://developers.openai.com/api/docs/guides/image-prompting" target="_blank" rel="noopener noreferrer">OpenAI 官方模型选择说明 ↗</a>（2026-10-25 核对）。上表场景是使用建议，不是当前线路的效果或速度承诺。</p>
+        <h3>模型和质量分别选择</h3><p>可以在指令中指定 Flare 或 Sunburst，本工具质量可选 low、medium、high。切换质量不会自动更换生图模型；聊天模型也与生图模型分开选择。质量档位不等于分辨率，实际费用以平台使用记录为准。</p>
+        <div class="notice warning" id="size-limit"><strong>当前线路限制：指定尺寸不保证生效。</strong>工具会提交你指定的尺寸，但现有生图线路可能返回不同的像素尺寸，生成和参考图编辑都应以原图实际像素为准。请求成功、选择 Sunburst 或提高质量，都不代表已获得指定尺寸或原生 2K / 4K 图片。</div>
+        <p>例如，一次参考图编辑请求 3072 × 2048，实际返回了 1536 × 1024。尺寸不符属于当前线路已知的接口异常，尚未修复。工具会保留原图并提示差异，不会自动重试或缩放原图；请勿为了追尺寸连续重发，以免重复产生费用。</p>
+        <p>有严格交付尺寸要求时，先检查原图的实际宽高，再决定是否另行缩放、裁剪或补边。后期调整只改变导出结果，放大不等于模型原生生成了更多细节。</p>
+      </section>
       <section class="doc-section" id="first-image" data-title="第一张图 提示词 Flare low 品牌理念 模型 生成 复制">
         <p class="eyebrow">03 · 生成第一张图</p><h2>把汇码的理念，画成一张图</h2><p>先选你使用的软件，再复制下面的指令。</p>
         <div class="image-clients" role="group" aria-label="选择你使用的客户端"><button type="button" data-image-client="workbuddy" aria-pressed="true">WorkBuddy</button><button type="button" data-image-client="codex" aria-pressed="false">Codex</button><button type="button" data-image-client="claude" aria-pressed="false">Claude Code</button></div>
@@ -97,7 +112,7 @@
         <div class="notice warning">发送指令后会调用生图服务并产生费用。出现工具授权提示时，请核对是“汇码生图”及本次需要执行的操作，再决定是否允许。</div>
         <div class="image-prompt"><div class="image-prompt-title"><h3>示例：汇码品牌理念插画</h3><span>Flare · low</span></div><div class="copy-row"><pre class="copy-value" id="image-first-prompt">请使用汇码生图工具，调用 Flare 模型，以 low 质量生成一张“汇码智能”的品牌理念插画。汇码智能提供 AI API、软件服务与定制开发。画面以一个智能青色的核心连接多个石墨色模块，模块逐步构成应用界面、代码窗口和创作画布，表达技术能力汇聚、连接并转化为实际应用的过程。采用简洁的几何插画风格，以石墨色和智能青为主，白色或浅灰背景，构图有秩序、留白充足，体现专业、现代、克制的科技感。不要添加文字，不要绘制或改造官方 Logo，不使用霓虹、发光或金属效果。完成后展示预览，并告诉我原图保存位置。</pre><button class="copy-button" type="button">复制生图指令</button></div></div>
         <p>成功后，助手会返回图片预览和原图保存位置。聊天界面没有显示图片时，可以打开 HTML 预览或原图文件。</p>
-        <div class="notice">此示例不指定尺寸。图片的实际像素以生成结果为准；以后如果明确请求了尺寸，却收到不同像素的图片，属于接口返回异常。保留原图和请求记录，不要反复重发。</div>
+        <div class="notice"><strong>指定尺寸不保证生效。</strong>此示例不额外指定尺寸；即使以后指定了尺寸，当前线路也可能返回不同像素。请以原图实际像素为准，详见<a href="#models">模型选择与尺寸限制</a>。</div>
       </section>
       <section class="doc-section" id="edit" data-title="改图 编辑 参考图 路径 上一张 图片 PNG JPEG WebP">
         <p class="eyebrow">04 · 日常创作</p><h2>有了第一张图，还可以这样用</h2>
@@ -106,7 +121,7 @@
         <h3>修改电脑里的图片</h3><p>在文件资源管理器里选中图片，使用“复制文件地址”或“复制为路径”，把完整路径替换到下面的指令中。</p>
         <div class="copy-row"><pre class="copy-value">请使用汇码改图工具，读取“这里替换为图片的完整路径”，保留画面主体，把背景改为简洁的浅灰色，并保存为新图片。</pre><button class="copy-button" type="button">复制参考图指令</button></div>
         <p>仅把图片拖进聊天框，不一定能让工具读取本地原图。请提供工具可访问的完整文件路径。参考图支持 PNG、JPEG、WebP，单张不超过 10 MiB。</p>
-        <details><summary>怎么选模型和质量？</summary><p>可以在指令中指定 Flare 或 Sunburst，质量可选 low、medium、high。聊天模型和生图模型分别选择；切换质量不会自动替换生图模型。实际费用以平台使用记录为准。</p></details>
+        <details><summary>改图时怎么选模型？</summary><p>简单修改、优先速度时可先选 Flare；需要精细修改或保留主体细节时，优先试 Sunburst。两个模型都能改图，选择 Sunburst 也不能保证指定尺寸生效。详见<a href="#models">模型选择与尺寸限制</a>。</p></details>
       </section>
       <section class="doc-section" id="files" data-title="保存 分享 原图 预览 像素 HTML 文件夹">
         <p class="eyebrow">05 · 保存与分享</p><h2>分享作品时，记得使用原图</h2><p>聊天里的预览方便查看，原图保存在你安装时选择的文件夹中。每次生成或修改都有独立的结果目录。</p>
@@ -123,7 +138,7 @@
         <details><summary>助手说连接通过，聊天里却不能生图？</summary><p>完全退出软件后重新打开，新建聊天，明确要求“使用汇码生图工具”。仍不可用时，在安装助手里检查连接，并将脱敏诊断信息提供给客服。</p></details>
         <details><summary>一直在等，或者提示超时怎么办？</summary><p>先查看图片保存目录和平台使用记录。Codex 中停止聊天不一定取消生图请求，也不代表不会计费。没有显示进度时，不能据此认定请求已经停止；不要连续重复发送。</p></details>
         <details><summary>提示 Key 无效、没有权限或没有生图模型？</summary><p>检查 Key 是否完整、有效，以及是否属于开放生图权限的分组。更换生图 Key 不需要改动聊天软件的 Key。网络连接失败时，先检查网络和服务地址。</p></details>
-        <details><summary>图片尺寸和我请求的不一样？</summary><p>当前接口可能返回与明确请求尺寸不一致的图片，这是接口返回异常。请以实际图片像素为准，保留原图、请求尺寸及请求记录联系支持。工具不会自动重复生成，也不会偷偷缩放原图。</p></details>
+        <details><summary>图片尺寸和我请求的不一样？</summary><p>这是当前线路已知的尺寸控制限制：工具会提交指定尺寸，但接口仍可能返回不同像素，问题尚未修复。请求成功、换成 Sunburst 或提高质量都不能保证尺寸生效。请检查原图实际像素，保留原图、请求尺寸及请求记录联系支持，不要连续重复生成。工具不会自动重试或缩放原图，详见<a href="#models">尺寸限制说明</a>。</p></details>
         <details><summary>安装提示校验失败、文件占用或目录不可写？</summary><p>校验失败时重新下载完整安装包，不要跳过校验。文件占用时先保存工作并退出相关软件；目录不可写时改用自己的“图片”或“文档”目录。需要帮助时复制助手提供的诊断信息。</p></details>
         <details><summary>为什么有的软件成功，有的软件失败？</summary><p>每个客户端配置单独处理。已有其他同名配置、配置格式异常或文件正在被修改时，相应客户端会单独显示失败。可以先使用成功的软件，再重新配置失败的软件。</p></details>
       </section>
