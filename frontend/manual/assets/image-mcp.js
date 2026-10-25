@@ -28,10 +28,14 @@
       const file = await fetch(release.url, {method: 'HEAD', credentials: 'omit', redirect: 'error', cache: 'no-store'});
       if (!file.ok || Number(file.headers.get('Content-Length')) !== release.bytes) throw new Error('Package unavailable');
       download.href = release.url; download.download = release.url.split('/').pop(); download.removeAttribute('aria-disabled'); download.textContent = '下载 Windows 安装助手';
-      status.textContent = `v${release.version} · Windows x64 · ${(release.bytes / 1048576).toFixed(1)} MiB`;
+      status.textContent = `v${release.version} · Windows x64 · ${(release.bytes / 1048576).toFixed(1)} MiB${release.signing === 'unsigned-preview' ? ' · 未签名预览版' : ''}`;
       document.getElementById('image-release-meta').textContent = `版本 ${release.version}，适用于 Windows 10 1809 或更新的 64 位 Windows。`;
       document.getElementById('image-release-sha').textContent = release.sha256;
-      document.getElementById('image-signing-note').textContent = release.signing === 'signed' ? '下载后可在文件属性中查看数字签名，并核对发布者。' : '此包为本地测试构建，尚未进行代码签名，不作为公开发行包。';
+      document.getElementById('image-signing-note').textContent = release.signing === 'signed'
+        ? '下载后可在文件属性中查看数字签名，并核对发布者。'
+        : release.signing === 'unsigned-preview'
+          ? '未签名预览版：尚无可信发布者数字签名，Windows 可能提示未知发布者或阻止运行。请确认下载来源，并核对下方 SHA-256；如不确定，请等待签名版。'
+          : '此包为本地测试构建，尚未进行代码签名，不作为公开发行包。';
       document.getElementById('image-release-details').hidden = false;
     } catch {
       download.removeAttribute('href'); download.setAttribute('aria-disabled', 'true'); download.textContent = '安装包准备中';

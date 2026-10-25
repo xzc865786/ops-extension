@@ -1,0 +1,5 @@
+# For a manual-only release, inherit the exact current production image.
+# This preserves the application, its historical hashed assets and Nginx config.
+ARG PREVIOUS_FRONTEND_IMAGE
+FROM ${PREVIOUS_FRONTEND_IMAGE}
+COPY manual/ /usr/share/nginx/html/docs/

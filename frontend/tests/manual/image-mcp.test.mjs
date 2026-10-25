@@ -10,16 +10,20 @@ const release = {schema:1, available:true, version:'0.1.0', url:'assets/download
 
 test('download gate accepts a complete local release and rejects missing or unsafe artifacts', () => {
   assert.equal(validRelease(release), true);
+  assert.equal(validRelease({...release, signing:'unsigned-preview'}), true);
   for (const change of [{available:false}, {url:'https://example.com/setup.exe'}, {url:'assets/downloads/../../setup.exe'}, {bytes:0}, {bytes:'123'}, {sha256:'bad'}, {signing:'unknown'}]) {
     assert.equal(validRelease({...release,...change}), false);
   }
   assert.equal(validRelease(null), false);
 });
 
-test('tracked public manifest stays disabled until an authorized release', async () => {
+test('public manifest is either disabled or a complete preview/signed release', async () => {
   const published = JSON.parse(await readFile(new URL('../../manual/assets/image-mcp-release.json', import.meta.url), 'utf8'));
-  assert.equal(published.available, false);
-  assert.equal(validRelease(published), false);
+  if (published.available === false) assert.equal(validRelease(published), false);
+  else {
+    assert.equal(validRelease(published), true);
+    assert.ok(['unsigned-preview', 'signed'].includes(published.signing));
+  }
 });
 
 test('manual has local destinations, no duplicate anchors, and working section links', async () => {

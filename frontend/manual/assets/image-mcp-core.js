@@ -7,7 +7,7 @@
       && /^assets\/downloads\/HuimaImageSetup-[A-Za-z0-9.-]+-win-x64\.exe$/.test(value.url)
       && /^[a-f0-9]{64}$/.test(value.sha256)
       && Number.isSafeInteger(value.bytes) && value.bytes > 0 && value.bytes < 2_000_000_000
-      && ['unsigned-local', 'signed'].includes(value.signing));
+      && ['unsigned-local', 'unsigned-preview', 'signed'].includes(value.signing));
   }
   root.HuimaImageManual = Object.freeze({validRelease});
 })(globalThis);

@@ -1,4 +1,9 @@
 {
   "schema": 1,
-  "available": false
+  "available": true,
+  "version": "0.1.0",
+  "url": "assets/downloads/HuimaImageSetup-0.1.0-cebbe26b4286-win-x64.exe",
+  "sha256": "cebbe26b4286a0ade27284e5f17369c8254257214c914ede09ba4de3045bda66",
+  "bytes": 127966065,
+  "signing": "unsigned-preview"
 }
